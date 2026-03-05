@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Админка{% endblock %}</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="adm-body">
+  <header class="adm-header">
+    <a class="adm-brand" href="/admin">Админка</a>
+    <nav class="adm-nav">
+      <a href="/admin/products">Товары</a>
+      <a href="/admin/categories">Категории</a>
+      <a href="/admin/groups">Группы</a>
+      <a href="/admin/leads">Заявки</a>
+      <a href="/admin/import">Импорт CSV</a>
+      <a href="/admin/export">Экспорт CSV</a>
+      <a href="/admin/main-page">Текст на главной</a>
+      <a href="/admin/bonus-page">Страница: Получить бонус</a>
+      <a href="/admin/db-restore">Восстановление базы</a>
+      <a href="/admin/logout" class="adm-nav-logout">Выход</a>
+    </nav>
+  </header>
+  <main class="adm-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

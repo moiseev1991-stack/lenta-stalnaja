@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-content">
+  <h1>{{ h1 }}</h1>
+  
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <p><strong>Телефон:</strong> <a href="tel:+74951234567">+7 (495) 123-45-67</a></p>
+    <p><strong>Email:</strong> <a href="mailto:info@example.com">info@example.com</a></p>
+    <p><strong>Режим работы:</strong> пн–пт 9:00–18:00</p>
+  </div>
+
+  <div class="lead-form-compact" id="lead">
+    <h3>Оставить заявку</h3>
+    {% if leadStatus == 'ok' %}
+    <p class="lead-message success">Заявка отправлена! Мы свяжемся с вами в ближайшее время.</p>
+    {% endif %}
+    {% if leadStatus == 'error' %}
+    <p class="lead-message error">Пожалуйста, укажите имя и телефон.</p>
+    {% endif %}
+    <form class="lead-form" method="post" action="/lead">
+      <input type="hidden" name="redirect" value="/contacts/#lead">
+      <div class="form-group">
+        <label>Имя *</label>
+        <input type="text" name="name" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон *</label>
+        <input type="tel" name="phone" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Комментарий</label>
+        <textarea name="message" class="input" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Отправить</button>
+    </form>
+  </div>
+
+  {% include "partials/usp_block.html" %}
+</div>
+{% endblock %}

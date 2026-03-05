@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{ h1 }}</h1>
+<form class="search-form" method="get" action="/search/">
+  <input type="search" name="q" value="{{ query }}" placeholder="Название, марка, ГОСТ...">
+  <button type="submit">Искать</button>
+</form>
+<p class="results-info">Найдено: {{ total }}. Страница {{ page }} из {{ totalPages }}.</p>
+<ul class="product-list">
+  {% for p in products %}
+  <li class="product-card">
+    <a href="/product/{{ p.slug }}/">
+      <strong>{{ p.name }}</strong>
+      {% if p.mark %}<span class="meta">Марка: {{ p.mark }}</span>{% endif %}
+      {% if p.category_name %}<span class="meta">Категория: {{ p.category_name }}</span>{% endif %}
+      {% if p.price != null %}<span class="price">{{ p.price }} ₽</span>{% endif %}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% if totalPages > 1 %}
+<nav class="pagination">
+  {% if page > 1 %}<a href="?q={{ query | e }}&page={{ page - 1 }}">Назад</a>{% endif %}
+  <span>Стр. {{ page }} / {{ totalPages }}</span>
+  {% if page < totalPages %}<a href="?q={{ query | e }}&page={{ page + 1 }}">Вперёд</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

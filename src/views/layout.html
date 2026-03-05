@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ title | default(siteName) }}{% endblock %}</title>
+  {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
+  {% if robots %}<meta name="robots" content="{{ robots }}">{% endif %}
+  {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">
+        <img src="/img/logo-icon.png" alt="{{ siteName }}" width="36" height="36">
+        <span>{{ siteName }}</span>
+      </a>
+      <button class="burger" type="button" aria-label="Меню" onclick="document.body.classList.toggle('menu-open')">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav">
+        <a href="/">Главная</a>
+        <div class="nav-drop" id="gradesDropdown">
+          <button type="button" class="nav-drop-toggle">Марки стали</button>
+          <div class="nav-drop-menu nav-drop-menu--grades">
+            <div class="nav-drop-header">
+              <input type="text" class="nav-drop-search" placeholder="Поиск марки..." id="navGradeSearch" autocomplete="off">
+            </div>
+            <ul class="nav-drop-list" id="navGradeList">
+              {% for gr in menuGrades %}
+              <li data-name="{{ gr.name | lower }}"><a href="/{{ gr.slug }}/">{{ gr.name }} <span>{{ gr.product_count }}</span></a></li>
+              {% endfor %}
+            </ul>
+            <div class="nav-drop-footer">
+              <a href="/" class="nav-drop-link">Все марки</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-drop" id="groupsDropdown">
+          <button type="button" class="nav-drop-toggle">По назначению</button>
+          <div class="nav-drop-menu nav-drop-menu--groups">
+            <ul class="nav-drop-list nav-drop-list--groups">
+              {% for g in menuGroups %}
+              <li>
+                <a href="/{{ g.slug }}/">
+                  <span class="nav-drop-item-name">{{ g.name }}</span>
+                  <span class="nav-drop-item-count">{{ g.product_count }}</span>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <a href="/about/">О компании</a>
+        <a href="/delivery/">Доставка</a>
+        <a href="/contacts/">Контакты</a>
+      </nav>
+      <div class="header-cta">
+        <a href="/contacts/#lead" class="btn btn-primary btn-sm">Оставить заявку</a>
+      </div>
+    </div>
+  </header>
+  <div class="header-strip">
+    <div class="container">
+      <div class="header-strip-chips">
+        <div class="chips-group" data-collapsible="grades" id="chipsGroupGrades">
+          <div class="chips-group-header">
+            <span class="chips-label">Марки стали:</span>
+            <button type="button" class="chips-group-toggle" aria-expanded="false" aria-controls="chipsGroupGradesList" id="chipsToggleGrades" hidden>
+              <span class="chips-group-toggle-text">Показать все</span>
+              <svg class="chips-group-toggle-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div class="chips-group-inner" id="chipsGroupGradesList">
+            <div class="header-chips">
+              {% for gr in menuGrades %}
+              <a href="/{{ gr.slug }}/" class="chip">{{ gr.name }} ({{ gr.product_count }})</a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="chips-group" data-collapsible="purpose" id="chipsGroupPurpose">
+          <div class="chips-group-header">
+            <span class="chips-label">По назначению:</span>
+            <button type="button" class="chips-group-toggle" aria-expanded="false" aria-controls="chipsGroupPurposeList" id="chipsTogglePurpose" hidden>
+              <span class="chips-group-toggle-text">Показать все</span>
+              <svg class="chips-group-toggle-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div class="chips-group-inner" id="chipsGroupPurposeList">
+            <div class="header-chips">
+              {% for g in menuGroups %}
+              <a href="/{{ g.slug }}/" class="chip">{{ g.name }} ({{ g.product_count }})</a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="header-strip-usp">
+        <div class="usp-card">
+          <span class="usp-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </span>
+          <span class="usp-title">Предоставляем образцы лент</span>
+        </div>
+        <div class="usp-card">
+          <span class="usp-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </span>
+          <span class="usp-title">Обработка кромки</span>
+        </div>
+        <div class="usp-card">
+          <span class="usp-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </span>
+          <span class="usp-title">Доставка по РФ</span>
+        </div>
+        <div class="usp-card">
+          <span class="usp-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
+          <span class="usp-title">Быстрый расчёт (15 минут)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mobile-menu">
+    <nav class="mobile-nav">
+      <a href="/">Главная</a>
+      <details class="mobile-accordion">
+        <summary>Марки стали</summary>
+        <div class="mobile-accordion-content">
+          <input type="text" class="mobile-search" placeholder="Поиск марки..." id="mobileGradeSearch" autocomplete="off">
+          <ul class="mobile-grade-list" id="mobileGradeList">
+            {% for gr in menuGrades %}
+            <li data-name="{{ gr.name | lower }}"><a href="/{{ gr.slug }}/">{{ gr.name }} <span>{{ gr.product_count }}</span></a></li>
+            {% endfor %}
+          </ul>
+          <a href="/" class="mobile-all-link">Все марки</a>
+        </div>
+      </details>
+      <details class="mobile-accordion">
+        <summary>По назначению</summary>
+        <div class="mobile-accordion-content">
+          <ul class="mobile-group-list">
+            {% for g in menuGroups %}
+            <li><a href="/{{ g.slug }}/">{{ g.name }} <span>{{ g.product_count }}</span></a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </details>
+      <a href="/about/">О компании</a>
+      <a href="/delivery/">Доставка</a>
+      <a href="/contacts/">Контакты</a>
+    </nav>
+    <div class="mobile-menu-cta">
+      <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
+    </div>
+  </div>
+  <main class="main">
+    <div class="container">
+    {% if breadcrumbs and breadcrumbs.length %}
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      {% for b in breadcrumbs %}
+        {% if loop.last %}
+          <span>{{ b.name }}</span>
+        {% else %}
+          <a href="{{ b.url }}">{{ b.name }}</a>
+          <span class="sep">/</span>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    {% endif %}
+    {% block content %}{% endblock %}
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; {{ siteName }}</p>
+      <nav>
+        <a href="/about/">О компании</a> · 
+        <a href="/delivery/">Доставка</a> · 
+        <a href="/payment/">Оплата</a> · 
+        <a href="/sitemap/">Карта сайта</a>
+      </nav>
+    </div>
+  </footer>
+  <script>
+  (function() {
+    function filterList(input, list) {
+      const q = input.value.toLowerCase().trim();
+      list.querySelectorAll('li[data-name]').forEach(li => {
+        li.style.display = !q || li.dataset.name.includes(q) ? '' : 'none';
+      });
+    }
+
+    // Desktop dropdowns
+    const dropdowns = document.querySelectorAll('.nav-drop');
+    dropdowns.forEach(drop => {
+      const toggle = drop.querySelector('.nav-drop-toggle');
+      const menu = drop.querySelector('.nav-drop-menu');
+      if (!toggle || !menu) return;
+      
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = drop.classList.contains('open');
+        dropdowns.forEach(d => d.classList.remove('open'));
+        if (!wasOpen) drop.classList.add('open');
+      });
+    });
+
+    document.addEventListener('click', () => {
+      dropdowns.forEach(d => d.classList.remove('open'));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdowns.forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    document.querySelectorAll('.nav-drop-menu').forEach(menu => {
+      menu.addEventListener('click', e => e.stopPropagation());
+    });
+
+    // Grade search filtering
+    const navInput = document.getElementById('navGradeSearch');
+    const navList = document.getElementById('navGradeList');
+    if (navInput && navList) {
+      navInput.addEventListener('input', () => filterList(navInput, navList));
+    }
+
+    const mobileInput = document.getElementById('mobileGradeSearch');
+    const mobileList = document.getElementById('mobileGradeList');
+    if (mobileInput && mobileList) {
+      mobileInput.addEventListener('input', () => filterList(mobileInput, mobileList));
+    }
+
+    // Chips groups: show "Показать все" only when content overflows one line
+    function initChipsGroups() {
+      document.querySelectorAll('.chips-group[data-collapsible]').forEach(function(group) {
+        var inner = group.querySelector('.chips-group-inner');
+        var toggle = group.querySelector('.chips-group-toggle');
+        if (!inner || !toggle) return;
+        var expanded = false;
+        function needToggle() {
+          var maxH = parseFloat(getComputedStyle(inner).maxHeight);
+          return inner.scrollHeight > maxH + 1;
+        }
+        if (needToggle()) {
+          group.classList.add('chips-group--collapsible');
+          toggle.hidden = false;
+        }
+        toggle.addEventListener('click', function() {
+          expanded = !expanded;
+          group.classList.toggle('is-expanded', expanded);
+          toggle.setAttribute('aria-expanded', expanded);
+          toggle.querySelector('.chips-group-toggle-text').textContent = expanded ? 'Свернуть' : 'Показать все';
+        });
+      });
+    }
+    initChipsGroups();
+  })();
+  </script>
+</body>
+</html>

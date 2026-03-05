@@ -1,0 +1,32 @@
+{% macro product_card(product, showImage=true, showButtons=true, showOrderButton=true, isAdmin=false) %}
+{% set _productUrl = '/' + product.grade_slug + '/' + product.slug + '/' if product.grade_slug else '/' + product.slug + '/' %}
+<li class="product-card{% if not showOrderButton %} product-card--compact{% endif %}">
+  {% if showImage %}
+  <a href="{{ _productUrl }}" class="product-card__media-link">
+    {% set _src = (product.image_url | imgUrl) | default('/img/placeholder.svg') %}
+    <div class="product-card__media">
+      <img class="product-card__img" src="{{ _src }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" loading="lazy" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
+    </div>
+  </a>
+  {% endif %}
+  <div class="product-card-body">
+    <a href="{{ _productUrl }}" class="product-card-title"><strong>{{ product.name | normalizeName }}</strong></a>
+    {% if product.mark %}<p class="product-card-meta">Марка: {{ product.mark }}</p>{% endif %}
+    {% if product.thickness_mm != null and product.width_mm != null %}<p class="product-card-meta">{{ product.thickness_mm }} × {{ product.width_mm }} мм</p>{% endif %}
+    {% if product.surface %}<p class="product-card-meta">Поверхность: {{ product.surface }}</p>{% endif %}
+    {% if product.standard %}<p class="product-card-meta">{{ product.standard }}</p>{% endif %}
+    {% if product.price != null %}<p class="product-card-price">{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}</p>{% endif %}
+    {% if showButtons and showOrderButton %}
+    <p class="product-card-actions">
+      <a href="{{ _productUrl }}#order" class="btn btn-primary btn-sm">Заказать</a>
+    </p>
+    {% endif %}
+    {% if isAdmin %}
+    <a href="/admin/products/{{ product.id }}/edit" class="product-card__admin-edit" target="_blank">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Редактировать
+    </a>
+    {% endif %}
+  </div>
+</li>
+{% endmacro %}

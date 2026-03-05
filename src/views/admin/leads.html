@@ -1,0 +1,58 @@
+{% extends "admin/layout.html" %}
+{% block title %}Заявки ({{ total }}){% endblock %}
+{% block content %}
+<h1>Заявки <span class="adm-count">{{ total }}</span></h1>
+
+{% if not leads.length %}
+  <p class="adm-empty">Заявок пока нет.</p>
+{% else %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Дата</th>
+        <th>Имя</th>
+        <th>Телефон</th>
+        <th>Сообщение</th>
+        <th>Товар</th>
+        <th>Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lead in leads %}
+      <tr class="{{ 'adm-lead-done' if lead.is_done else '' }}">
+        <td>{{ lead.id }}</td>
+        <td class="adm-nowrap">{{ lead.created_at | replace('T', ' ') | truncate(16, true, '') }}</td>
+        <td>{{ lead.name }}</td>
+        <td><a href="tel:{{ lead.phone }}">{{ lead.phone }}</a></td>
+        <td>{{ lead.message or '—' }}</td>
+        <td>
+          {% if lead.product_name %}
+            <a href="/{{ lead.product_slug }}/" target="_blank">{{ lead.product_name }}</a>
+          {% else %}—{% endif %}
+        </td>
+        <td class="adm-nowrap">
+          <form method="post" action="/admin/leads/{{ lead.id }}/done" style="display:inline">
+            {% if lead.is_done %}
+              <input type="hidden" name="done" value="0">
+              <button type="submit" class="adm-btn-sm adm-btn-muted">✓ Обработана</button>
+            {% else %}
+              <input type="hidden" name="done" value="1">
+              <button type="submit" class="adm-btn-sm adm-btn-primary">Отметить</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if totalPages > 1 %}
+  <div class="adm-pagination">
+    {% if page > 1 %}<a href="?page={{ page - 1 }}">&laquo; Назад</a>{% endif %}
+    <span>Страница {{ page }} из {{ totalPages }}</span>
+    {% if page < totalPages %}<a href="?page={{ page + 1 }}">Вперёд &raquo;</a>{% endif %}
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

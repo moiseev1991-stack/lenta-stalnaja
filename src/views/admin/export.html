@@ -1,0 +1,11 @@
+{% extends "admin/layout.html" %}
+{% block title %}Экспорт CSV{% endblock %}
+{% block content %}
+<h1>Экспорт CSV</h1>
+<p>Скачать данные в формате CSV (UTF-8, разделитель ;):</p>
+<ul>
+  <li><a href="/admin/export?type=products">Экспорт товаров</a></li>
+  <li><a href="/admin/export?type=categories">Экспорт категорий</a></li>
+  <li><a href="/admin/export?type=landings">Экспорт посадочных страниц</a></li>
+</ul>
+{% endblock %}

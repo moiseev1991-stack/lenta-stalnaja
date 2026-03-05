@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{ h1 }}</h1>
+<ul class="sitemap-links">
+  {% for link in links %}
+  <li><a href="{{ link.url }}">{{ link.label }}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

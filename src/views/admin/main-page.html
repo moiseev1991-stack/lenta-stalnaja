@@ -1,0 +1,49 @@
+{% extends "admin/layout.html" %}
+{% block title %}Текст на главной — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Главная страница: SEO и контент</h1>
+  <a href="/" target="_blank" class="adm-btn adm-btn-outline">Открыть главную</a>
+</div>
+
+{% if saved %}
+<div class="adm-alert adm-alert-success">Сохранено успешно.</div>
+{% endif %}
+
+<form method="post" action="/admin/main-page">
+  <div class="adm-card adm-card-section">
+    <h2 class="adm-section-title">SEO и заголовки</h2>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Title (meta title)</label>
+      <input type="text" name="home_title" value="{{ home_title }}" class="adm-input">
+      <p class="adm-hint">Рекомендуем 40–70 символов. Сейчас: {{ home_title | length }}</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">H1 на главной</label>
+      <input type="text" name="home_h1" value="{{ home_h1 }}" class="adm-input">
+      <p class="adm-hint">Заголовок в hero-блоке на главной. Если пусто — будет «Лента нержавеющая AISI».</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Meta description</label>
+      <textarea name="home_meta_description" class="adm-textarea" rows="3">{{ home_meta_description }}</textarea>
+      <p class="adm-hint">Рекомендуем 120–160 символов. Сейчас: {{ home_meta_description | length }}</p>
+    </div>
+  </div>
+
+  <div class="adm-card adm-card-section">
+    <h2 class="adm-section-title">HTML-текстовый блок</h2>
+    <p class="adm-hint-block">Блок показывается между «Категории» и «Популярные товары». Можно использовать теги: &lt;p&gt;, &lt;h2&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, &lt;a&gt;, &lt;strong&gt;, &lt;em&gt;.</p>
+    <div class="adm-form-group">
+      <label class="adm-label">HTML-текст</label>
+      <textarea name="home_html" class="adm-textarea adm-textarea-tall" rows="14">{{ home_html }}</textarea>
+    </div>
+  </div>
+
+  <div class="adm-form-actions">
+    <button type="submit" class="adm-btn adm-btn-green">Сохранить</button>
+  </div>
+</form>
+{% endblock %}

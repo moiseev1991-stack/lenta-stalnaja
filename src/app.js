@@ -1,0 +1,114 @@
+const path = require('path');
+const fs = require('fs');
+const express = require('express');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const nunjucks = require('nunjucks');
+const config = require('./config');
+
+const dbDir = path.dirname(path.isAbsolute(config.dbPath) ? config.dbPath : path.join(process.cwd(), config.dbPath));
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+require('./db/migrations.js');
+
+const app = express();
+
+// Run async MySQL migrations (add new columns if needed)
+require('./db/mysql_migrate').runMysqlMigrations().catch(() => {});
+
+
+// Статика первой — чтобы /img/, /css/ и т.д. отдавались без участия маршрутов
+const publicDir = path.join(__dirname, '..', 'public');
+// Явная раздача /img/* из public/img (надёжные пути, без сбоев)
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || !req.path.startsWith('/img/')) return next();
+  const subpath = req.path.slice(5).replace(/\\/g, '/');
+  if (!subpath || subpath.includes('..')) return res.status(400).end();
+  const filePath = path.join(publicDir, 'img', subpath);
+  const resolved = path.resolve(filePath);
+  const publicResolved = path.resolve(publicDir);
+  if (!resolved.startsWith(publicResolved) || !fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) return next();
+  res.sendFile(resolved);
+});
+app.use(express.static(publicDir));
+
+app.use(cookieParser());
+app.use(session({
+  secret: config.sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
+}));
+
+const viewsPath = path.join(__dirname, 'views');
+const njkEnv = nunjucks.configure(viewsPath, {
+  autoescape: true,
+  express: app,
+  noCache: config.nodeEnv === 'development',
+});
+// Нормализация URL картинки: всегда начинается с /, без пробелов
+njkEnv.addFilter('imgUrl', (s) => {
+  if (s == null || typeof s !== 'string') return '';
+  const t = s.trim();
+  return t.startsWith('/') ? t : '/' + t;
+});
+// Форматирование числа с пробелами тысяч (5 501 ₽)
+njkEnv.addFilter('formatNumber', (n) => {
+  if (n == null || Number.isNaN(Number(n))) return '';
+  return String(Math.round(Number(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+});
+// Удаление числа-остатка в конце названия товара (1 720,312 и т.п.)
+njkEnv.addFilter('normalizeName', (s) => {
+  if (s == null || typeof s !== 'string') return '';
+  return s.replace(/\s+\d[\d\s]*([.,]\d+)?\s*$/, '').trim();
+});
+// Форматирование толщины: 1.00 -> "1", 0.10 -> "0.1", 0.01 -> "0.01"
+njkEnv.addFilter('formatThickness', (n) => {
+  if (n == null || Number.isNaN(Number(n))) return '';
+  const num = Number(n);
+  if (Number.isInteger(num)) return String(num);
+  const str = num.toFixed(2);
+  return str.replace(/\.?0+$/, '');
+});
+app.set('view engine', 'html');
+
+app.use(express.urlencoded({ extended: true }));
+
+// Menu data middleware - adds grades and groups to all pages (async, MySQL)
+const lentaService = require('./services/lenta');
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/admin')) return next();
+  try {
+    const [menuGrades, menuGroups] = await Promise.all([
+      lentaService.getAllGrades(),
+      lentaService.getAllGroups(),
+    ]);
+    res.locals.menuGrades = menuGrades;
+    res.locals.menuGroups = menuGroups;
+    res.locals.siteName   = config.siteName;
+    res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
+    next();
+  } catch (err) {
+    // If MySQL is unavailable, still render the page with empty menus.
+    res.locals.menuGrades = [];
+    res.locals.menuGroups = [];
+    res.locals.siteName   = config.siteName;
+    res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
+    next();
+  }
+});
+
+app.use('/', require('./routes/public'));
+app.use('/admin', require('./routes/admin'));
+
+app.use((req, res) => {
+  res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send('Server error');
+});
+
+app.listen(config.port, () => {
+  console.log('Server at http://localhost:' + config.port);
+});

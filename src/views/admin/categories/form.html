@@ -1,0 +1,127 @@
+{% extends "admin/layout.html" %}
+{% block title %}{{ 'Редактировать категорию' if grade else 'Новая категория' }} — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">{{ 'Редактировать категорию' if grade else 'Новая категория' }}</h1>
+  <a href="/admin/categories" class="adm-btn adm-btn-outline">Назад к списку</a>
+</div>
+
+{% if error %}
+<div class="adm-alert adm-alert-error">Заполните обязательные поля.</div>
+{% endif %}
+
+<form method="post" action="{{ '/admin/categories/' + grade.id if grade else '/admin/categories' }}">
+
+  <div class="adm-card adm-card-section">
+
+    <div class="adm-form-group">
+      <label class="adm-label">Название *</label>
+      <input type="text" name="name" value="{{ grade.name if grade else '' }}" class="adm-input" required>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Slug</label>
+      <input type="text" name="slug" value="{{ grade.slug if grade else '' }}" class="adm-input" placeholder="авто из названия">
+      <p class="adm-hint">Автогенерируется из названия, если пусто. Уникален среди категорий.</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Группа (по назначению)</label>
+      <select name="group_id" class="adm-select">
+        <option value="">— не выбрано —</option>
+        {% for grp in groups %}
+        <option value="{{ grp.id }}" {% if grade and grade.group_id == grp.id %}selected{% endif %}>{{ grp.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">H1</label>
+      <input type="text" name="seo_h1" value="{{ grade.seo_h1 if grade and grade.seo_h1 else '' }}" class="adm-input"
+             placeholder="{{ seoDefaults.h1 if seoDefaults else 'Авто из названия' }}">
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.h1 if seoDefaults else '(задайте название)' }}</em></p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Title (SEO)</label>
+      <input type="text" name="seo_title" value="{{ grade.seo_title if grade and grade.seo_title else '' }}" class="adm-input"
+             placeholder="{{ seoDefaults.title if seoDefaults else 'Авто из названия' }}">
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.title if seoDefaults else '(задайте название)' }}</em></p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Description (SEO)</label>
+      <textarea name="seo_description" class="adm-textarea" rows="3"
+                placeholder="{{ seoDefaults.metaDescription if seoDefaults else 'Авто из названия' }}">{{ grade.seo_description if grade and grade.seo_description else '' }}</textarea>
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.metaDescription if seoDefaults else '(задайте название)' }}</em></p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Intro (описание на странице)</label>
+      <textarea name="intro" class="adm-textarea" rows="3">{{ grade.intro if grade and grade.intro else '' }}</textarea>
+      <p class="adm-hint">Короткий текст под заголовком страницы. Если пусто — не выводится.</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-checkbox-label">
+        <input type="checkbox" name="is_active" value="1" {% if not grade or grade.is_active %}checked{% endif %}>
+        Активна
+      </label>
+    </div>
+
+  </div>
+
+  <div class="adm-card adm-card-section">
+    <h2 class="adm-section-title">Контент / Статья (низ страницы)</h2>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Формат текста</label>
+      <div class="adm-radio-group">
+        <label class="adm-radio-label">
+          <input type="radio" name="article_format" value="markdown"
+            {% if grade and grade.article_format == 'markdown' %}checked{% endif %}>
+          Markdown / Текст
+        </label>
+        <label class="adm-radio-label">
+          <input type="radio" name="article_format" value="html"
+            {% if not grade or grade.article_format != 'markdown' %}checked{% endif %}>
+          HTML
+        </label>
+      </div>
+      <p class="adm-hint">Можно вставлять HTML. Разрешены безопасные теги (таблицы поддерживаются).</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Заголовок статьи</label>
+      <input type="text" name="article_title" value="{{ grade.article_title if grade else '' }}"
+             class="adm-input" placeholder="Например: Описание марки AISI 304">
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Текст статьи</label>
+      <textarea name="article_text" class="adm-textarea adm-textarea-tall" rows="12">{{ grade.article_text if grade else '' }}</textarea>
+    </div>
+
+    <div class="adm-form-actions">
+      <button type="submit" class="adm-btn adm-btn-green">Сохранить</button>
+      {% if grade %}
+      <button type="button" class="adm-btn adm-btn-red" onclick="confirmDelete()">Удалить</button>
+      {% endif %}
+    </div>
+
+  </div>
+
+</form>
+
+{% if grade %}
+<form id="delete-form" method="post" action="/admin/categories/{{ grade.id }}/delete" style="display:none;"></form>
+<script>
+  function confirmDelete() {
+    if (confirm('Удалить категорию «{{ grade.name }}»? Все товары этой марки останутся, но марка будет удалена.')) {
+      document.getElementById('delete-form').submit();
+    }
+  }
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "admin/layout.html" %}
+{% block title %}Страница «Получить бонус» — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Страница «Получить бонус»</h1>
+  <a href="/bonus" target="_blank" class="adm-btn adm-btn-outline">Открыть страницу</a>
+</div>
+
+{% if saved %}
+<div class="adm-alert adm-alert-success">Сохранено успешно.</div>
+{% endif %}
+
+<form method="post" action="/admin/bonus-page">
+  <div class="adm-card adm-card-section">
+    <h2 class="adm-section-title">Основное</h2>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Заголовок (H1 / Title)</label>
+      <input type="text" name="bonus_h1" value="{{ bonus_h1 }}" class="adm-input">
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">HTML-контент страницы</label>
+      <textarea name="bonus_html" class="adm-textarea adm-textarea-tall" rows="16">{{ bonus_html }}</textarea>
+      <p class="adm-hint">Допустим произвольный HTML. Текст в примере содержит все обязательные условия (1%, до 10%, 10 000 бонусов и т.п.) — при редактировании не меняйте числа.</p>
+    </div>
+  </div>
+
+  <div class="adm-form-actions">
+    <button type="submit" class="adm-btn adm-btn-green">Сохранить</button>
+  </div>
+</form>
+{% endblock %}

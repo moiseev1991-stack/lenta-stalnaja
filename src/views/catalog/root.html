@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+{% from "partials/product_card.html" import product_card %}
+{% block content %}
+<div class="hero--simple">
+  <h1>{{ h1 }}</h1>
+  <p class="lead">Выберите категорию или воспользуйтесь поиском</p>
+</div>
+
+{% include "partials/usp_block.html" %}
+
+<section class="categories-section">
+  <h2 class="section-title">Категории</h2>
+  <ul class="category-grid">
+    {% for cat in categories %}
+    {% if cat.slug != 'list' %}
+    <li><a href="/{{ cat.slug }}/">{{ cat.name }}</a></li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="products-section" id="products">
+  <h2 class="section-title">{% if hasActiveFilters %}Результаты поиска{% else %}Товары{% endif %}</h2>
+  
+  <div class="catalog-layout">
+    <aside class="catalog-sidebar">
+      <form class="filters" method="get" action="/#products">
+        <details class="filter-group" open>
+          <summary class="filter-group-summary">Поиск</summary>
+          <div class="filters-search">
+            <input type="search" name="q" value="{{ filters.q or '' }}" placeholder="Марка, размер, ГОСТ..." class="input">
+            <div class="filters-actions">
+              <button type="submit" class="btn btn-primary btn-sm">Найти</button>
+              <a href="/" class="btn btn-ghost btn-sm">Сбросить</a>
+            </div>
+          </div>
+        </details>
+        {% if filterValues.marks and filterValues.marks.length %}
+        <details class="filter-group">
+          <summary class="filter-group-summary">Марка</summary>
+          <fieldset class="filter-fieldset">
+            {% for v in filterValues.marks %}
+            <label><input type="checkbox" name="mark" value="{{ v }}" {% if v in filters.mark %}checked{% endif %}> {{ v }}</label>
+            {% endfor %}
+          </fieldset>
+        </details>
+        {% endif %}
+        {% if filterValues.thickness and filterValues.thickness.length %}
+        <details class="filter-group">
+          <summary class="filter-group-summary">Толщина, мм</summary>
+          <fieldset class="filter-fieldset filter-fieldset--grid">
+            {% for v in filterValues.thickness %}
+            <label><input type="checkbox" name="thickness" value="{{ v }}" {% if v in filters.thickness %}checked{% endif %}> {{ v | formatThickness }}</label>
+            {% endfor %}
+          </fieldset>
+        </details>
+        {% endif %}
+        {% if filterValues.width and filterValues.width.length %}
+        <details class="filter-group">
+          <summary class="filter-group-summary">Ширина, мм</summary>
+          <fieldset class="filter-fieldset filter-fieldset--grid">
+            {% for v in filterValues.width %}
+            <label><input type="checkbox" name="width" value="{{ v }}" {% if v in filters.width %}checked{% endif %}> {{ v }}</label>
+            {% endfor %}
+          </fieldset>
+        </details>
+        {% endif %}
+        <details class="filter-group">
+          <summary class="filter-group-summary">Состояние</summary>
+          <fieldset class="filter-fieldset">
+            <label><input type="checkbox" name="state" value="soft" {% if 'soft' in filters.state %}checked{% endif %}> Мягкая</label>
+            <label><input type="checkbox" name="state" value="hard" {% if 'hard' in filters.state %}checked{% endif %}> Нагартованная</label>
+            <label><input type="checkbox" name="state" value="semi" {% if 'semi' in filters.state %}checked{% endif %}> Полунагартованная</label>
+            <label><input type="checkbox" name="state" value="extra" {% if 'extra' in filters.state %}checked{% endif %}> Высоконагартованная</label>
+          </fieldset>
+        </details>
+      </form>
+    </aside>
+
+    <section class="catalog-main">
+      {% if hasActiveFilters %}
+      <div class="catalog-top-bar">
+        <span class="results-info">Найдено: {{ total }}</span>
+        {% if totalPages > 1 %}
+        <span class="results-info">Страница {{ page }} из {{ totalPages }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+      
+      {% if products and products.length %}
+      <ul class="product-list">
+        {% for p in products %}
+        {{ product_card(p, true, true, true, isAdmin) }}
+        {% endfor %}
+      </ul>
+      {% if totalPages > 1 %}
+      <nav class="pagination">
+        {% if page > 1 %}
+        <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page - 1 }}#products" class="btn btn-outline btn-sm">Назад</a>
+        {% endif %}
+        <span>Стр. {{ page }} / {{ totalPages }}</span>
+        {% if page < totalPages %}
+        <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page + 1 }}#products" class="btn btn-outline btn-sm">Вперёд</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+      {% else %}
+      <p class="no-products">Товары не найдены. Попробуйте изменить параметры поиска.</p>
+      {% endif %}
+    </section>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "admin/layout.html" %}
+{% block title %}Группы (по назначению) — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Группы (по назначению)</h1>
+  <a href="/admin/groups/new" class="adm-btn adm-btn-green">Добавить группу</a>
+</div>
+
+{% if error %}
+<div class="adm-alert adm-alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="adm-card">
+  {% if groups.length %}
+  <table class="adm-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Название</th>
+        <th>Slug</th>
+        <th>Активна</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in groups %}
+      <tr>
+        <td class="adm-td-id">{{ g.id }}</td>
+        <td class="adm-td-name">{{ g.name }}</td>
+        <td class="adm-td-slug">{{ g.slug }}</td>
+        <td class="adm-td-center">{% if g.is_active %}✓{% endif %}</td>
+        <td class="adm-td-actions">
+          <a href="/admin/groups/{{ g.id }}/edit" class="adm-link-edit">Редактировать</a>
+          <a href="/{{ g.slug }}/" target="_blank" class="adm-link-open">Открыть</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="adm-empty">Группы не найдены. Проверьте подключение к MySQL.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "admin/layout.html" %}
+{% block title %}Восстановление базы — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Восстановление базы данных</h1>
+</div>
+
+<div class="adm-card">
+  <p class="adm-text">Загрузите файл <strong>database.sqlite</strong> с вашего компьютера (из папки <code>data/</code> проекта). Текущая база на сервере будет сохранена с резервной копией.</p>
+
+  {% if message %}
+  <div class="adm-alert adm-alert-success">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="adm-alert adm-alert-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/admin/db-restore" enctype="multipart/form-data">
+    <div class="adm-form-group">
+      <label class="adm-label">Файл database.sqlite</label>
+      <input type="file" name="db_file" accept=".sqlite,.db" class="adm-file" required>
+    </div>
+
+    <div class="adm-form-actions">
+      <button type="submit" class="adm-btn adm-btn-green"
+              onclick="return confirm('Текущая база будет заменена. Продолжить?')">
+        Загрузить и заменить базу
+      </button>
+    </div>
+  </form>
+
+  <p class="adm-back-link"><a href="/admin/products">← К товарам</a></p>
+</div>
+{% endblock %}

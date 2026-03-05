@@ -1,0 +1,149 @@
+{% extends "admin/layout.html" %}
+{% block title %}{{ 'Редактировать товар' if product else 'Новый товар' }} — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">{{ 'Редактировать товар' if product else 'Новый товар' }}</h1>
+  <a href="/admin/products" class="adm-btn adm-btn-outline">Назад к списку</a>
+</div>
+
+{% if error %}
+<div class="adm-alert adm-alert-error">Заполните все обязательные поля.</div>
+{% endif %}
+
+<div class="adm-card">
+  <form method="post"
+        action="{{ '/admin/products/' + product.id if product else '/admin/products' }}"
+        enctype="multipart/form-data">
+
+    <input type="hidden" name="current_image_filename" value="{{ product.image_filename if product else '' }}">
+
+    <div class="adm-form-group">
+      <label class="adm-label">Категория *</label>
+      <select name="grade_id" class="adm-select" required>
+        {% for g in grades %}
+        <option value="{{ g.id }}" {% if product and product.grade_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Название *</label>
+      <input type="text" name="name" value="{{ product.name if product else '' }}" class="adm-input" required>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Slug</label>
+      <input type="text" name="slug" value="{{ product.slug if product else '' }}" class="adm-input" placeholder="авто из названия">
+      <p class="adm-hint">Автогенерируется из названия, если пусто. Уникален среди товаров.</p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">H1</label>
+      <input type="text" name="h1" value="{{ product.h1 if product and product.h1 else '' }}" class="adm-input"
+             placeholder="{{ seoDefaults.h1 if seoDefaults else 'Авто из названия и характеристик' }}">
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.h1 if seoDefaults else '(сохраните товар для предпросмотра)' }}</em></p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Title (SEO)</label>
+      <input type="text" name="seo_title" value="{{ product.seo_title if product and product.seo_title else '' }}" class="adm-input"
+             placeholder="{{ seoDefaults.title if seoDefaults else 'Авто из названия и характеристик' }}">
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.title if seoDefaults else '(сохраните товар для предпросмотра)' }}</em></p>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Description (SEO)</label>
+      <textarea name="seo_description" class="adm-textarea" rows="3"
+                placeholder="{{ seoDefaults.metaDescription if seoDefaults else 'Авто из названия и характеристик' }}">{{ product.seo_description if product and product.seo_description else '' }}</textarea>
+      <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.metaDescription if seoDefaults else '(сохраните товар для предпросмотра)' }}</em></p>
+    </div>
+
+    <div class="adm-form-row">
+      <div class="adm-form-group">
+        <label class="adm-label">Толщина (мм)</label>
+        <input type="number" step="any" name="thickness_mm" value="{{ product.thickness_mm if product and product.thickness_mm != null else '' }}" class="adm-input">
+      </div>
+      <div class="adm-form-group">
+        <label class="adm-label">Ширина (мм)</label>
+        <input type="number" step="any" name="width_mm" value="{{ product.width_mm if product and product.width_mm != null else '' }}" class="adm-input">
+      </div>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Состояние</label>
+      <select name="state" class="adm-select">
+        <option value="">— не указано —</option>
+        <option value="Нагартованная" {% if product and product.state == 'Нагартованная' %}selected{% endif %}>Нагартованная</option>
+        <option value="Высоконагартованная" {% if product and product.state == 'Высоконагартованная' %}selected{% endif %}>Высоконагартованная</option>
+        <option value="Мягкая" {% if product and product.state == 'Мягкая' %}selected{% endif %}>Мягкая</option>
+        <option value="Полунагартованная" {% if product and product.state == 'Полунагартованная' %}selected{% endif %}>Полунагартованная</option>
+      </select>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-checkbox-label">
+        <input type="checkbox" name="spring_props" value="1" {% if product and product.spring_props %}checked{% endif %}>
+        Пружинные свойства
+      </label>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Поверхность</label>
+      <select name="surface" class="adm-select">
+        <option value="">— не указано —</option>
+        <option value="2B" {% if product and product.surface == '2B' %}selected{% endif %}>2B</option>
+        <option value="2BA" {% if product and product.surface == '2BA' %}selected{% endif %}>2BA</option>
+        <option value="BA" {% if product and product.surface == 'BA' %}selected{% endif %}>BA</option>
+        <option value="шлифованная" {% if product and product.surface == 'шлифованная' %}selected{% endif %}>шлифованная</option>
+      </select>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Цена за кг (₽) *</label>
+      <input type="number" step="any" name="price_per_kg" value="{{ product.price_per_kg if product and product.price_per_kg != null else '' }}" class="adm-input" placeholder="Оставьте пустым — «Цена по запросу»">
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-checkbox-label">
+        <input type="checkbox" name="in_stock" value="1" {% if not product or product.stock_kg %}checked{% endif %}>
+        В наличии
+      </label>
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Срок поставки</label>
+      <input type="text" name="lead_time" value="{{ product.lead_time if product else '' }}" class="adm-input" placeholder="например: 7-14 дней">
+    </div>
+
+    <div class="adm-form-group">
+      <label class="adm-label">Изображение</label>
+      {% if product and product.image_filename %}
+      <div class="adm-img-preview">
+        <img src="/uploads/products/{{ product.image_filename }}" alt="Фото товара">
+      </div>
+      <p class="adm-hint">Текущее: /uploads/products/{{ product.image_filename }}</p>
+      {% endif %}
+      <input type="file" name="image" accept=".jpg,.jpeg,.png,.webp" class="adm-file">
+      <p class="adm-hint">JPG, PNG, WebP, макс. 5MB</p>
+    </div>
+
+    <div class="adm-form-actions">
+      <button type="submit" class="adm-btn adm-btn-green">Сохранить</button>
+      {% if product %}
+      <button type="button" class="adm-btn adm-btn-red" onclick="confirmDelete()">Удалить</button>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if product %}
+  <form id="delete-form" method="post" action="/admin/products/{{ product.id }}/delete" style="display:none;"></form>
+  <script>
+    function confirmDelete() {
+      if (confirm('Удалить товар «{{ product.name }}»? Это действие нельзя отменить.')) {
+        document.getElementById('delete-form').submit();
+      }
+    }
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

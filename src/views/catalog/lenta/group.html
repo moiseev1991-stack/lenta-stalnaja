@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+{% from "partials/product_card.html" import product_card %}
+{% block content %}
+{% if isAdmin %}
+<div class="admin-edit-bar">
+  <a href="/admin/groups/{{ group.id }}/edit" class="admin-edit-link" target="_blank">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Редактировать группу
+  </a>
+</div>
+{% endif %}
+<h1>{{ h1 }}</h1>
+{% if group.intro %}
+<p class="lead">{{ group.intro }}</p>
+{% endif %}
+
+{% if topGrades and topGrades.length %}
+<section class="grades-in-group">
+  <h2 class="section-title">Марки в группе</h2>
+  <ul class="grade-grid grade-grid--compact">
+    {% for gr in topGrades %}
+    <li>
+      <a href="/{{ gr.slug }}/" class="grade-card grade-card--small">
+        <span class="grade-name">{{ gr.name }}</span>
+        <span class="grade-count">{{ gr.product_count }} поз.</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% if gradesInGroup.length > 8 %}
+  <p class="grades-more"><a href="/?group={{ group.slug }}" class="btn btn-ghost btn-sm">Все марки группы ({{ gradesInGroup.length }})</a></p>
+  {% endif %}
+</section>
+{% endif %}
+
+<div class="catalog-layout">
+  <aside class="catalog-sidebar">
+    <button type="button" class="filters-toggle btn btn-outline" onclick="this.parentElement.classList.toggle('open')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      Фильтры
+    </button>
+    <form class="filters filters--sidebar" method="get" action="">
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Поиск</summary>
+        <div class="filters-search">
+          <input type="search" name="q" value="{{ filters.q or '' }}" placeholder="Поиск..." class="input">
+          <div class="filters-actions">
+            <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+            <a href="?" class="btn btn-ghost btn-sm">Сбросить</a>
+          </div>
+        </div>
+      </details>
+      {% if filterValues.thickness and filterValues.thickness.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Толщина, мм</summary>
+        <fieldset class="filter-fieldset filter-fieldset--grid">
+          {% for v in filterValues.thickness %}
+          <label><input type="checkbox" name="thickness" value="{{ v }}" {% if v in filters.thickness %}checked{% endif %}> {{ v | formatThickness }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      {% if filterValues.width and filterValues.width.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Ширина, мм</summary>
+        <fieldset class="filter-fieldset filter-fieldset--grid">
+          {% for v in filterValues.width %}
+          <label><input type="checkbox" name="width" value="{{ v }}" {% if v in filters.width %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      {% if filterValues.surface and filterValues.surface.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Поверхность</summary>
+        <fieldset class="filter-fieldset">
+          {% for v in filterValues.surface %}
+          <label><input type="checkbox" name="surface" value="{{ v }}" {% if v in filters.surface %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Состояние</summary>
+        <fieldset class="filter-fieldset">
+          <label><input type="checkbox" name="state" value="soft" {% if 'soft' in filters.state %}checked{% endif %}> Мягкая</label>
+          <label><input type="checkbox" name="state" value="hard" {% if 'hard' in filters.state %}checked{% endif %}> Нагартованная</label>
+          <label><input type="checkbox" name="state" value="semi" {% if 'semi' in filters.state %}checked{% endif %}> Полунагартованная</label>
+          <label><input type="checkbox" name="state" value="extra" {% if 'extra' in filters.state %}checked{% endif %}> Высоконагартованная</label>
+        </fieldset>
+      </details>
+      {% if filterValues.standard and filterValues.standard.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">ГОСТ</summary>
+        <fieldset class="filter-fieldset">
+          {% for v in filterValues.standard %}
+          <label><input type="checkbox" name="standard" value="{{ v }}" {% if v in filters.standard %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+    </form>
+  </aside>
+
+  <section class="catalog-main products-section">
+    <h2 class="section-title">Товары</h2>
+    {% if total == 0 %}
+    <p class="no-products">Товары не найдены.</p>
+    {% else %}
+    <div class="catalog-top-bar">
+      <span class="results-info">Найдено: {{ total }}</span>
+      {% if totalPages > 1 %}
+      <span class="results-info results-info--page">Страница {{ page }} из {{ totalPages }}</span>
+      {% endif %}
+    </div>
+    <ul class="product-list product-list--cards">
+      {% for p in products %}
+      {{ product_card(p, true, true, true, isAdmin) }}
+      {% endfor %}
+    </ul>
+    {% if totalPages > 1 %}
+    <nav class="pagination">
+      {% if page > 1 %}
+      <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page - 1 }}" class="btn btn-outline btn-sm">Назад</a>
+      {% endif %}
+      <span>Стр. {{ page }} / {{ totalPages }}</span>
+      {% if page < totalPages %}
+      <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page + 1 }}" class="btn btn-outline btn-sm">Вперёд</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+    {% endif %}
+  </section>
+</div>
+{% if group.article_text %}
+<section class="page-article content">
+  {% if group.article_title %}<h2>{{ group.article_title }}</h2>{% endif %}
+  {% if group.article_format == 'html' %}
+    {{ group.article_text | safe }}
+  {% else %}
+    {% for line in group.article_text.split('\n') %}
+      {% if line.trim() %}<p>{{ line }}</p>{% endif %}
+    {% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+{% include "partials/lead_section.html" %}
+{% endblock %}

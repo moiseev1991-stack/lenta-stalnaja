@@ -1,0 +1,57 @@
+const express = require('express');
+const router = express.Router();
+const controller = require('../controllers/publicController');
+const lentaController = require('../controllers/lentaController');
+
+router.get('/', controller.home);
+
+// ── Static / utility pages (must precede parameterized catch-all routes) ───────
+router.get('/about/', controller.about);
+router.get('/contacts/', controller.contacts);
+router.get('/delivery/', controller.delivery);
+router.get('/payment/', controller.payment);
+router.get('/faq/', controller.faq);
+router.get('/certificates/', controller.certificates);
+router.get('/search/', controller.search);
+router.get('/sitemap/', controller.sitemapHtml);
+router.get('/sitemap.xml', controller.sitemapXml);
+router.get('/robots.txt', controller.robotsTxt);
+router.post('/lead', controller.submitLead);
+
+// ── 301 redirects from old /catalog/lenta/ URLs ───────────────────────────────
+router.get('/catalog/', (req, res) => res.redirect(301, '/'));
+router.get('/catalog/lenta/', (req, res) => {
+  const qs = Object.keys(req.query).length ? '?' + new URLSearchParams(req.query).toString() : '';
+  res.redirect(301, '/' + qs);
+});
+router.get('/catalog/lenta/grades/', (req, res) => res.redirect(301, '/'));
+router.get('/catalog/lenta/groups/', (req, res) => res.redirect(301, '/'));
+router.get('/catalog/lenta/grade/:gradeSlug/:productSlug/', (req, res) =>
+  res.redirect(301, '/' + req.params.gradeSlug + '/' + req.params.productSlug + '/'));
+router.get('/catalog/lenta/grade/:slug/', (req, res) =>
+  res.redirect(301, '/' + req.params.slug + '/'));
+router.get('/catalog/lenta/group/:slug/', (req, res) =>
+  res.redirect(301, '/' + req.params.slug + '/'));
+router.get(/^\/catalog\/(.+?)\/?$/, (req, res) => res.redirect(301, '/'));
+
+// ── 301 redirects from old /product/ and /lenta/ URLs ────────────────────────
+router.get('/product/:productSlug/', controller.oldProductRedirect);
+router.get('/lenta/', (req, res) => {
+  const qs = Object.keys(req.query).length ? '?' + new URLSearchParams(req.query).toString() : '';
+  res.redirect(301, '/' + qs);
+});
+router.get('/lenta/marka/:slug/', (req, res) =>
+  res.redirect(301, '/' + req.params.slug + '/'));
+router.get('/lenta/naznachenie/:slug/', (req, res) =>
+  res.redirect(301, '/' + req.params.slug + '/'));
+router.get('/lenta/:gradeSlug/:productSlug/', (req, res) =>
+  res.redirect(301, '/' + req.params.gradeSlug + '/' + req.params.productSlug + '/'));
+
+// ── 301 redirect from old /group/:slug/ URLs ─────────────────────────────────
+router.get('/group/:slug/', (req, res) => res.redirect(301, '/' + req.params.slug + '/'));
+
+// ── Canonical routes ──────────────────────────────────────────────────────────
+router.get('/:gradeSlug/:productSlug/', controller.productPage, controller.genericCatalogPage);
+router.get('/:slug/', lentaController.gradePage, lentaController.groupPage, controller.genericCatalogPage, controller.productBySlugPage);
+
+module.exports = router;

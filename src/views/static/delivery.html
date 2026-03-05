@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-content">
+  <h1>{{ h1 }}</h1>
+  
+  <div class="content">
+    <p>Доставка металлопроката осуществляется по Москве, Московской области и в регионы России. Стоимость и сроки зависят от объёма заказа и адреса.</p>
+    
+    <h2>Самовывоз</h2>
+    <p>Со склада в Москве. Бесплатно при заказе от 30 000 ₽. В остальных случаях уточняйте у менеджера.</p>
+    
+    <h2>Доставка по Москве и МО</h2>
+    <p>Рассчитывается индивидуально. Возможна доставка манипулятором при необходимости разгрузки.</p>
+    
+    <h2>В регионы</h2>
+    <p>Отправка транспортными компаниями (Деловые Линии, ПЭК, ЖелДорЭкспедиция и др.) или ж/д. Сроки от 2–3 дней в зависимости от направления.</p>
+    
+    <p>Точную стоимость доставки сообщим после оформления заявки с указанием адреса и объёма.</p>
+  </div>
+
+  {% include "partials/usp_block.html" %}
+
+  <div class="lead-form-compact" id="lead">
+    <h3>Рассчитать доставку</h3>
+    <form class="lead-form" method="post" action="/lead">
+      <input type="hidden" name="redirect" value="/delivery/#lead">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" name="name" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон</label>
+        <input type="tel" name="phone" class="input" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Узнать стоимость</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

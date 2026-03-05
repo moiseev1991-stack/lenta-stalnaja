@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% from "partials/product_card.html" import product_card %}
+{% block content %}
+<article class="product-detail">
+  {% if isAdmin %}
+  <div class="admin-edit-bar">
+    <a href="/admin/products/{{ product.id }}/edit" class="admin-edit-link" target="_blank">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Редактировать товар
+    </a>
+  </div>
+  {% endif %}
+  <h1>{{ h1 }}</h1>
+
+  <div class="product-detail-top">
+    <div class="product-image-wrap">
+      {% set _imgSrc = (product.image_url | imgUrl) | default('/img/placeholder.svg') %}
+      <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
+    </div>
+    <div class="product-detail-main">
+      {% if product.short_text_html %}
+      <div class="product-short content">{{ product.short_text_html | safe }}</div>
+      {% endif %}
+      <table class="product-specs">
+        <tbody>
+          {% if product.mark %}<tr><th>Марка</th><td>{{ product.mark }}</td></tr>{% endif %}
+          {% if product.thickness_mm != null %}<tr><th>Толщина, мм</th><td>{{ product.thickness_mm }}</td></tr>{% endif %}
+          {% if product.width_mm != null %}<tr><th>Ширина, мм</th><td>{{ product.width_mm }}</td></tr>{% endif %}
+          {% if product.length_mm != null %}<tr><th>Длина, мм</th><td>{{ product.length_mm }}</td></tr>{% endif %}
+          {% if product.surface %}<tr><th>Поверхность</th><td>{{ product.surface }}</td></tr>{% endif %}
+          {% if product.state %}<tr><th>Состояние</th><td>{{ product.state }}</td></tr>{% endif %}
+          {% if product.standard %}<tr><th>ГОСТ</th><td>{{ product.standard }}</td></tr>{% endif %}
+          {% if product.sku_code %}<tr><th>Артикул</th><td>{{ product.sku_code }}</td></tr>{% endif %}
+          {% if product.price != null %}<tr><th>Цена</th><td><strong>{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}</strong></td></tr>{% endif %}
+          {% if product.stock_qty != null %}<tr><th>На складе</th><td>{{ product.stock_qty | formatNumber }} кг</td></tr>{% endif %}
+        </tbody>
+      </table>
+      <div class="product-actions">
+        <a href="/contacts/#lead" class="btn btn-primary btn-lg">Заказать</a>
+        <a href="/contacts/" class="btn btn-outline">Задать вопрос</a>
+      </div>
+    </div>
+  </div>
+  
+  {% if product.full_text_html %}
+  <div class="product-full content">{{ product.full_text_html | safe }}</div>
+  {% endif %}
+
+  {% if similarProducts and similarProducts.length %}
+  <section class="similar-products">
+    <h2 class="section-title">Похожие товары</h2>
+    <ul class="product-list">
+      {% for p in similarProducts %}
+      {{ product_card(p, true, true, false, isAdmin) }}
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% include "partials/lead_section.html" %}
+</article>
+{% endblock %}

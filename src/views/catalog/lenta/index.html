@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+{% from "partials/product_card.html" import product_card %}
+{% block content %}
+<div class="page-top page-top--lenta page-top--simple">
+  <h1>{{ h1 }}</h1>
+  <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
+</div>
+
+<div class="catalog-layout">
+  <aside class="catalog-sidebar" id="catalogSidebar">
+    <button type="button" class="filters-toggle btn btn-outline" aria-label="Фильтры" onclick="document.getElementById('catalogSidebar').classList.toggle('open')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      Фильтры
+    </button>
+    <form class="filters filters--sidebar" method="get" action="">
+      {% if activeGrade %}<input type="hidden" name="grade" value="{{ activeGrade.slug }}">{% endif %}
+      {% if activeGroup %}<input type="hidden" name="group" value="{{ activeGroup.slug }}">{% endif %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Поиск</summary>
+        <div class="filters-search">
+          <input type="search" name="q" value="{{ filters.q or '' }}" placeholder="Марка, размер..." class="input">
+          <div class="filters-actions">
+            <button type="submit" class="btn btn-primary btn-sm">Найти</button>
+            <a href="?{% if activeGrade %}grade={{ activeGrade.slug }}{% endif %}{% if activeGroup %}group={{ activeGroup.slug }}{% endif %}" class="btn btn-ghost btn-sm">Сбросить</a>
+          </div>
+        </div>
+      </details>
+      {% if filterValues.thickness and filterValues.thickness.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Толщина, мм</summary>
+        <fieldset class="filter-fieldset filter-fieldset--grid">
+          {% for v in filterValues.thickness %}
+          <label><input type="checkbox" name="thickness" value="{{ v }}" {% if v in filters.thickness %}checked{% endif %}> {{ v | formatThickness }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      {% if filterValues.width and filterValues.width.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Ширина, мм</summary>
+        <fieldset class="filter-fieldset filter-fieldset--grid">
+          {% for v in filterValues.width %}
+          <label><input type="checkbox" name="width" value="{{ v }}" {% if v in filters.width %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      {% if filterValues.surface and filterValues.surface.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Поверхность</summary>
+        <fieldset class="filter-fieldset">
+          {% for v in filterValues.surface %}
+          <label><input type="checkbox" name="surface" value="{{ v }}" {% if v in filters.surface %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">Состояние</summary>
+        <fieldset class="filter-fieldset">
+          <label><input type="checkbox" name="state" value="soft" {% if 'soft' in filters.state %}checked{% endif %}> Мягкая</label>
+          <label><input type="checkbox" name="state" value="hard" {% if 'hard' in filters.state %}checked{% endif %}> Нагартованная</label>
+          <label><input type="checkbox" name="state" value="semi" {% if 'semi' in filters.state %}checked{% endif %}> Полунагартованная</label>
+          <label><input type="checkbox" name="state" value="extra" {% if 'extra' in filters.state %}checked{% endif %}> Высоконагартованная</label>
+        </fieldset>
+      </details>
+      {% if filterValues.standard and filterValues.standard.length %}
+      <details class="filter-group" open>
+        <summary class="filter-group-summary">ГОСТ</summary>
+        <fieldset class="filter-fieldset">
+          {% for v in filterValues.standard %}
+          <label><input type="checkbox" name="standard" value="{{ v }}" {% if v in filters.standard %}checked{% endif %}> {{ v }}</label>
+          {% endfor %}
+        </fieldset>
+      </details>
+      {% endif %}
+    </form>
+  </aside>
+
+  <section class="catalog-main products-section">
+    {% if total == 0 %}
+    <p class="no-products">Товары не найдены. Снимите фильтры или выберите другую марку/группу.</p>
+    {% else %}
+    <div class="catalog-top-bar">
+      <span class="results-info">Найдено: {{ total }}</span>
+      {% if totalPages > 1 %}
+      <span class="results-info results-info--page">Страница {{ page }} из {{ totalPages }}</span>
+      {% endif %}
+    </div>
+    <ul class="product-list product-list--cards">
+      {% for p in products %}
+      {{ product_card(p, true, true, true, isAdmin) }}
+      {% endfor %}
+    </ul>
+    {% if totalPages > 1 %}
+    <nav class="pagination">
+      {% if page > 1 %}
+      <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page - 1 }}" class="btn btn-outline btn-sm">Назад</a>
+      {% endif %}
+      <span>Стр. {{ page }} / {{ totalPages }}</span>
+      {% if page < totalPages %}
+      <a href="?{% if queryString %}{{ queryString }}&{% endif %}page={{ page + 1 }}" class="btn btn-outline btn-sm">Вперёд</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+    {% endif %}
+  </section>
+</div>
+{% include "partials/lead_section.html" %}
+{% endblock %}

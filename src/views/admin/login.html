@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — Админка</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="adm-body">
+  <main>
+    <div class="adm-login-wrap">
+      <h1>Вход в админку</h1>
+      {% if error %}
+      <div class="adm-alert adm-alert-error">{{ error }}</div>
+      {% endif %}
+      <form method="post" action="/admin/login">
+        <div class="adm-form-group">
+          <label class="adm-label">Логин</label>
+          <input type="text" name="username" class="adm-input" required autofocus>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-label">Пароль</label>
+          <input type="password" name="password" class="adm-input" required>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-green" style="width:100%">Войти</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "admin/layout.html" %}
+{% block title %}Импорт CSV{% endblock %}
+{% block content %}
+<h1>Импорт CSV</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if rowsProcessed != null %}<p>Обработано: {{ rowsProcessed }}, ошибок: {{ rowsFailed }}</p>{% endif %}
+<form method="post" action="/admin/import" enctype="multipart/form-data">
+  <p><label>Тип <select name="type"><option value="products">Товары</option><option value="categories">Категории</option></select></label></p>
+  <p><label>Файл CSV (UTF-8, разделитель ;) <input type="file" name="file" accept=".csv" required></label></p>
+  <button type="submit">Импортировать</button>
+</form>
+{% if logs and logs.length %}
+<h2>Лог по строкам</h2>
+<table class="admin-table">
+  <thead><tr><th>Строка</th><th>Сообщение</th><th>Данные</th></tr></thead>
+  <tbody>
+    {% for log in logs %}
+    <tr><td>{{ log.line }}</td><td>{{ log.message }}</td><td>{{ log.row }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

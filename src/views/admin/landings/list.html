@@ -1,0 +1,25 @@
+{% extends "admin/layout.html" %}
+{% block title %}Посадочные страницы{% endblock %}
+{% block content %}
+<h1>Посадочные страницы</h1>
+<p><a href="/admin/landing-pages/new">Добавить посадочную</a></p>
+<table class="admin-table">
+  <thead>
+    <tr><th>ID</th><th>Категория</th><th>Slug</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for lp in landings %}
+    <tr>
+      <td>{{ lp.id }}</td>
+      <td>{{ lp.category_name }}</td>
+      <td>{{ lp.slug }}</td>
+      <td><a href="/admin/landing-pages/{{ lp.id }}/edit">Изменить</a>
+        <form method="post" action="/admin/landing-pages/{{ lp.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить?');">
+          <button type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

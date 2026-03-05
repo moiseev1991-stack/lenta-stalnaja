@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-content">
+  <h1>{{ h1 }}</h1>
+  
+  <div class="content">
+    <p>Мы занимаемся поставками металлопроката: нержавеющая и конструкционная сталь, лента, крепёж. Работаем с производственными предприятиями, строительными компаниями и частными заказчиками.</p>
+    <p>В каталоге — лента по ГОСТ 4986-79 (марки 12Х18Н10Т, 08Х18Н10 и др.), резка в размер. Цены зависят от объёма и марки. Наличие уточняйте по телефону или через форму заявки.</p>
+    <p>Доставка по Москве, Московской области и регионам России. Самовывоз со склада. Оплата по счёту для юридических лиц, наличный и безналичный расчёт для физических лиц.</p>
+  </div>
+
+  {% include "partials/usp_block.html" %}
+
+  <div class="lead-form-compact" id="lead">
+    <h3>Остались вопросы?</h3>
+    <form class="lead-form" method="post" action="/lead">
+      <input type="hidden" name="redirect" value="/about/#lead">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" name="name" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон</label>
+        <input type="tel" name="phone" class="input" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Перезвоните мне</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

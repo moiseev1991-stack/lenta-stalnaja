@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-content">
+  <h1>{{ h1 }}</h1>
+  
+  <div class="content">
+    <p>Оплата возможна следующими способами:</p>
+    
+    <h2>Для юридических лиц</h2>
+    <p>По счёту (безналичный расчёт). Работаем по НДС и без НДС. Счёт выставляется в течение одного рабочего дня после согласования заказа.</p>
+    
+    <h2>Для физических лиц</h2>
+    <p>Наличный расчёт при самовывозе, безналичная оплата по реквизитам или банковской картой в офисе.</p>
+    
+    <p>Предоплата от 100%. Отгрузка после поступления средств на счёт. При необходимости обсудим индивидуальные условия для крупных и постоянных заказчиков.</p>
+  </div>
+
+  {% include "partials/usp_block.html" %}
+
+  <div class="lead-form-compact" id="lead">
+    <h3>Получить счёт</h3>
+    <form class="lead-form" method="post" action="/lead">
+      <input type="hidden" name="redirect" value="/payment/#lead">
+      <div class="form-group">
+        <label>Имя</label>
+        <input type="text" name="name" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон</label>
+        <input type="tel" name="phone" class="input" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Запросить счёт</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

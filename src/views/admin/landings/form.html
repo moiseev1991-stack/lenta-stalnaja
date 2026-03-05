@@ -1,0 +1,19 @@
+{% extends "admin/layout.html" %}
+{% block title %}{{ 'Редактирование посадочной' if landing else 'Новая посадочная' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактирование посадочной' if landing else 'Новая посадочная' }}</h1>
+{% if error %}<p class="error">Заполните обязательные поля.</p>{% endif %}
+<form method="post" action="{{ '/admin/landing-pages/' + landing.id if landing else '/admin/landing-pages' }}">
+  <p><label>Категория * <select name="category_id" required>{% for c in categories %}<option value="{{ c.id }}" {% if landing and landing.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label></p>
+  <p><label>Slug * <input type="text" name="slug" value="{{ landing.slug if landing else '' }}" required></label></p>
+  <p><label>filter_json (JSON)<br><textarea name="filter_json" rows="4" placeholder='{"mark":["12Х18Н10Т"],"thickness":[0.2]}'>{{ landing.filter_json if landing else '' }}</textarea></label></p>
+  <p><label>SEO title <input type="text" name="seo_title" value="{{ landing.seo_title if landing else '' }}"></label></p>
+  <p><label>SEO H1 <input type="text" name="seo_h1" value="{{ landing.seo_h1 if landing else '' }}"></label></p>
+  <p><label>SEO description <textarea name="seo_description" rows="2">{{ landing.seo_description if landing else '' }}</textarea></label></p>
+  <p><label>Текст (HTML)<br><textarea name="text_html" rows="6">{{ landing.text_html if landing else '' }}</textarea></label></p>
+  <p><label>Robots <select name="robots"><option value="index,follow" {% if landing and landing.robots == 'index,follow' %}selected{% endif %}>index,follow</option><option value="noindex,follow" {% if landing and landing.robots == 'noindex,follow' %}selected{% endif %}>noindex,follow</option></select></label></p>
+  <p><label>Canonical URL <input type="url" name="canonical_url" value="{{ landing.canonical_url if landing else '' }}"></label></p>
+  <p><label><input type="checkbox" name="is_published" value="1" {% if not landing or landing.is_published %}checked{% endif %}> Опубликована</label></p>
+  <p><button type="submit">Сохранить</button> <a href="/admin/landing-pages">Отмена</a></p>
+</form>
+{% endblock %}
