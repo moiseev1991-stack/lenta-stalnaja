@@ -32,6 +32,7 @@ services:
       - MYSQL_DATABASE=metal_catalog
     volumes:
       - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
 
 volumes:
   mysql_data:

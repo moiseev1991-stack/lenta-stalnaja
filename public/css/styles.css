@@ -388,12 +388,19 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .catalog-sidebar {
   position: sticky;
   top: 70px;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1rem;
   box-shadow: var(--shadow-sm);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
+.catalog-sidebar::-webkit-scrollbar { width: 4px; }
+.catalog-sidebar::-webkit-scrollbar-track { background: transparent; }
+.catalog-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .filter-group { border-bottom: 1px solid var(--border); }
 .filter-group:last-child { border-bottom: none; }
 .filter-group-summary {
@@ -603,8 +610,21 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .content { line-height: 1.65; }
 .content h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
 .content h2:first-child { margin-top: 0.75rem; }
+.content h3 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 0.4rem; }
+.content h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.35rem; }
+.content p { margin: 0.55rem 0; }
 .content ul, .content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
 .content li { margin: 0.25rem 0; }
+.content strong { font-weight: 600; }
+.content code { font-family: monospace; background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.9em; }
+.content pre { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; overflow-x: auto; font-size: 0.875rem; margin: 0.75rem 0; }
+.content table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+.content table th, .content table td { border: 1px solid var(--border); padding: 0.45rem 0.7rem; text-align: left; vertical-align: top; }
+.content table th { background: var(--surface); font-weight: 600; }
+.content table tr:nth-child(even) td { background: var(--bg); }
+@media (max-width: 768px) {
+  .content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
 
 /* Article blocks on grade/group pages and homepage text block */
 .page-article {

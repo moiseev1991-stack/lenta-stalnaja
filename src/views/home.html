@@ -14,12 +14,6 @@
   </div>
 </section>
 
-{% if homeHtml %}
-<section class="home-content-block content">
-  {{ homeHtml | safe }}
-</section>
-{% endif %}
-
 <section id="catalog">
   <h2 class="section-title">{% if hasActiveFilters %}Результаты поиска{% else %}Популярные товары{% endif %}</h2>
   
@@ -110,6 +104,11 @@
       {% endif %}
       {% else %}
       <p class="no-products">Товары не найдены. Попробуйте изменить параметры поиска.</p>
+      {% endif %}
+      {% if homeHtml %}
+      <section class="page-article content">
+        {{ homeHtml | safe }}
+      </section>
       {% endif %}
     </section>
   </div>

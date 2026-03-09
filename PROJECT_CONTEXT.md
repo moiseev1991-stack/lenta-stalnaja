@@ -108,6 +108,18 @@
 
 ### Последние выполненные изменения (журнал)
 
+- **2026-03-09** — Импорт SEO-статей в все разделы каталога.
+  - **Задача:** Вставить текстовые статьи из папки `text/` на все страницы разделов (марки, группы, главная) — между блоком товаров и `lead-section`.
+  - **Что изменено:**
+    - `text/` — 25 файлов `.txt` с markdown+HTML статьями добавлены пользователем.
+    - `tools/import_articles.js` — новый скрипт: читает файлы из `text/`, конвертирует Markdown → HTML, записывает в поля `article_title`, `article_text`, `article_format='html'` таблиц `grades` и `groups` (MySQL), а также `home_html` в SQLite `settings`.
+    - `public/css/styles.css` — расширены стили `.content`: добавлены `h3`, `h4`, `p`, `table`, `th`, `td`, `code`, `pre`, адаптив таблиц для мобильных.
+    - Шаблоны `grade.html`, `group.html` уже содержали блоки `{% if grade.article_text %}` / `{% if group.article_text %}`, `home.html` — `{% if homeHtml %}`. Изменений в шаблонах не потребовалось.
+  - **Какие файлы затронуты:** `tools/import_articles.js` (создан), `public/css/styles.css`.
+  - **Как повторно запустить импорт:** `docker cp text lenta-stalnaja-web-1:/app/ && docker cp tools/import_articles.js lenta-stalnaja-web-1:/app/tools/ && docker exec lenta-stalnaja-web-1 sh -c "cd /app && node tools/import_articles.js"`
+  - **Что проверить:** Открыть `/h15n60/`, `/korrozionno-stojkie-stali/`, `/` — под блоком товаров должна быть статья с заголовками, таблицами, списками, перед `lead-section`.
+  - **Примечание:** Марки 27КХ и 29НК не имели файлов — статей для них нет.
+
 - **2026-03-04** — Авто-SEO значения видны в формах админки (placeholders + подписи).
   - **Задача:** В формах редактирования категорий, групп и товаров показывать текущие авто-генерируемые значения H1, Title, Description как placeholder и подпись «Если пусто — используется: …».
   - **Что изменено:**

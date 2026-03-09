@@ -130,19 +130,19 @@
     </nav>
     {% endif %}
     {% endif %}
+    {% if group.article_text %}
+    <section class="page-article content">
+      {% if group.article_title %}<h2>{{ group.article_title }}</h2>{% endif %}
+      {% if group.article_format == 'html' %}
+        {{ group.article_text | safe }}
+      {% else %}
+        {% for line in group.article_text.split('\n') %}
+          {% if line.trim() %}<p>{{ line }}</p>{% endif %}
+        {% endfor %}
+      {% endif %}
+    </section>
+    {% endif %}
   </section>
 </div>
-{% if group.article_text %}
-<section class="page-article content">
-  {% if group.article_title %}<h2>{{ group.article_title }}</h2>{% endif %}
-  {% if group.article_format == 'html' %}
-    {{ group.article_text | safe }}
-  {% else %}
-    {% for line in group.article_text.split('\n') %}
-      {% if line.trim() %}<p>{{ line }}</p>{% endif %}
-    {% endfor %}
-  {% endif %}
-</section>
-{% endif %}
 {% include "partials/lead_section.html" %}
 {% endblock %}

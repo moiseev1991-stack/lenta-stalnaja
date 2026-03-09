@@ -115,19 +115,19 @@
     </nav>
     {% endif %}
     {% endif %}
+    {% if grade.article_text %}
+    <section class="page-article content">
+      {% if grade.article_title %}<h2>{{ grade.article_title }}</h2>{% endif %}
+      {% if grade.article_format == 'html' %}
+        {{ grade.article_text | safe }}
+      {% else %}
+        {% for line in grade.article_text.split('\n') %}
+          {% if line.trim() %}<p>{{ line }}</p>{% endif %}
+        {% endfor %}
+      {% endif %}
+    </section>
+    {% endif %}
   </section>
 </div>
-{% if grade.article_text %}
-<section class="page-article content">
-  {% if grade.article_title %}<h2>{{ grade.article_title }}</h2>{% endif %}
-  {% if grade.article_format == 'html' %}
-    {{ grade.article_text | safe }}
-  {% else %}
-    {% for line in grade.article_text.split('\n') %}
-      {% if line.trim() %}<p>{{ line }}</p>{% endif %}
-    {% endfor %}
-  {% endif %}
-</section>
-{% endif %}
 {% include "partials/lead_section.html" %}
 {% endblock %}
