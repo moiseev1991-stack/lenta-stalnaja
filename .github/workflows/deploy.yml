@@ -13,6 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Normalize FTP path
+        run: |
+          RAW="${{ secrets.FTP_PATH }}"
+          echo "FTP_DIR=${RAW%/}/" >> $GITHUB_ENV
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -23,7 +28,7 @@ jobs:
           protocol: ftps
           security: loose
           local-dir: ./
-          server-dir: ${{ secrets.FTP_PATH }}
+          server-dir: ${{ env.FTP_DIR }}
           exclude: |
             **/.git*
             **/.git*/**
