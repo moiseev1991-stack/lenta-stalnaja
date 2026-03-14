@@ -25,8 +25,7 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-          protocol: ftps
-          security: loose
+          protocol: ftp
           local-dir: ./
           server-dir: ${{ env.FTP_DIR }}
           exclude: |
