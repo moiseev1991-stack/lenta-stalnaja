@@ -3,7 +3,7 @@ const catalog         = require('../services/catalog');
 const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
 const { normalizeProductName } = require('../helpers/normalize');
-const { buildProductSEO }      = require('../helpers/seoTemplates');
+const { buildProductSEO, buildProductShortText } = require('../helpers/seoTemplates');
 const db              = require('../db/db');
 
 function getSetting(key, fallback = '') {
@@ -69,6 +69,7 @@ async function home(req, res, next) {
       title: homeTitle,
       h1:    homeH1,
       metaDescription: homeMetaDesc,
+      canonical: config.siteUrl + '/',
       homeHtml,
       breadcrumbs: [],
       categories: catalog.getRootCategories(),
@@ -108,6 +109,7 @@ async function catalogRoot(req, res, next) {
       title: 'Каталог | ' + config.siteName,
       h1:    'Каталог',
       metaDescription: 'Каталог категорий металлопроката.',
+      canonical: config.siteUrl + '/catalog/',
       breadcrumbs: [],
       categories: catalog.getRootCategories(),
       products, total, page, totalPages,
@@ -139,6 +141,8 @@ async function productPage(req, res, next) {
     const productName = normalizeProductName(product.name);
     const canonical   = productCanonical(product);
     const gradeUrl    = '/' + product.grade_slug + '/';
+
+    if (!product.short_text_html) product.short_text_html = buildProductShortText(product);
 
     renderPage(res, 'product.html', {
       title:           productSeo.title,
@@ -182,6 +186,9 @@ async function productBySlugPage(req, res, next) {
     const productSeo  = buildProductSEO(product, config.siteName);
     const productName = normalizeProductName(product.name);
     const canonical   = '/' + product.slug + '/';
+
+    if (!product.short_text_html) product.short_text_html = buildProductShortText(product);
+
     renderPage(res, 'product.html', {
       title:           productSeo.title,
       h1:              productSeo.h1,
@@ -318,21 +325,23 @@ function landingPage(req, res, next) {
 function staticPage(req, res, templateName, title, h1, metaDesc) {
   renderPage(res, templateName, {
     title: title + ' | ' + config.siteName, h1, metaDescription: metaDesc,
+    canonical: config.siteUrl + req.path,
     breadcrumbs: [{ name: h1, url: req.path }],
   });
 }
 
-function about(req, res)        { staticPage(req, res, 'static/about.html',   'О компании',        'О компании',        'Информация о компании.'); }
-function delivery(req, res)     { staticPage(req, res, 'static/delivery.html', 'Доставка',          'Доставка',          'Условия доставки.'); }
-function payment(req, res)      { staticPage(req, res, 'static/payment.html',  'Оплата',            'Оплата',            'Способы оплаты.'); }
-function faq(req, res)          { staticPage(req, res, 'static/faq.html',      'Вопросы и ответы',  'Вопросы и ответы',  'Часто задаваемые вопросы.'); }
-function certificates(req, res) { staticPage(req, res, 'static/certificates.html','Сертификаты',    'Сертификаты',       'Сертификаты качества.'); }
+function about(req, res)        { staticPage(req, res, 'static/about.html',   'О компании',        'О компании',        'О компании «' + config.siteName + '»: металлическая лента от поставщика. Документы, сертификаты, сроки поставки по всей России.'); }
+function delivery(req, res)     { staticPage(req, res, 'static/delivery.html', 'Доставка',          'Доставка',          'Условия доставки металлической ленты: самовывоз, транспортная компания, доставка по Москве и регионам. Сроки и стоимость.'); }
+function payment(req, res)      { staticPage(req, res, 'static/payment.html',  'Оплата',            'Оплата',            'Способы оплаты металлопроката: безналичный расчёт для юридических лиц, оплата по счёту. Работаем с НДС.'); }
+function faq(req, res)          { staticPage(req, res, 'static/faq.html',      'Вопросы и ответы',  'Вопросы и ответы',  'Ответы на часто задаваемые вопросы о металлической ленте: подбор марки, расчёт веса, минимальный заказ, сроки.'); }
+function certificates(req, res) { staticPage(req, res, 'static/certificates.html','Сертификаты',    'Сертификаты',       'Сертификаты качества на металлическую ленту: ГОСТ, протоколы испытаний. Документы предоставляются с каждой партией.'); }
 
 function contacts(req, res) {
   renderPage(res, 'static/contacts.html', {
     title: 'Контакты | ' + config.siteName,
     h1:    'Контакты',
-    metaDescription: 'Контактная информация. Заявка на расчёт и заказ металлопроката.',
+    metaDescription: 'Контакты «' + config.siteName + '»: телефон, e-mail, адрес. Оставьте заявку на расчёт стоимости металлической ленты — ответим за 15 минут.',
+    canonical: config.siteUrl + '/contacts/',
     breadcrumbs: [{ name: 'Контакты', url: '/contacts/' }],
     leadStatus: req.query.lead,
   });
@@ -346,6 +355,8 @@ async function sitemapHtml(req, res, next) {
     renderPage(res, 'sitemap.html', {
       title: 'Карта сайта | ' + config.siteName,
       h1:    'Карта сайта',
+      metaDescription: 'Карта сайта «' + config.siteName + '»: все разделы каталога металлической ленты, страницы марок, назначений и отдельных позиций.',
+      canonical: config.siteUrl + '/sitemap/',
       breadcrumbs: [{ name: 'Карта сайта', url: '/sitemap/' }],
       links,
     });
@@ -362,7 +373,15 @@ async function sitemapXml(req, res, next) {
 
 function robotsTxt(req, res) {
   res.type('text/plain');
-  res.send('User-agent: *\nAllow: /\n\nSitemap: ' + config.siteUrl + '/sitemap.xml');
+  res.send(
+    'User-agent: *\n' +
+    'Allow: /\n' +
+    'Disallow: /admin/\n' +
+    'Disallow: /search/\n' +
+    'Disallow: /download/\n' +
+    'Disallow: /*?\n\n' +
+    'Sitemap: ' + config.siteUrl + '/sitemap.xml'
+  );
 }
 
 // ── Lead (SQLite) ─────────────────────────────────────────────────────────────

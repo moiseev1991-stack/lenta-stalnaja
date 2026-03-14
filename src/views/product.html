@@ -1,5 +1,12 @@
 {% extends "layout.html" %}
 {% from "partials/product_card.html" import product_card %}
+{% block head %}
+{% if product.image_url %}<meta property="og:image" content="{{ siteUrl ~ (product.image_url | imgUrl) }}">{% endif %}
+<meta property="og:type" content="product">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Product","name":{{ (product.name | normalizeName) | json | safe }}{% if product.image_url %},"image":{{ (siteUrl ~ (product.image_url | imgUrl)) | json | safe }}{% endif %}{% if metaDescription %},"description":{{ metaDescription | json | safe }}{% endif %},"sku":{{ product.slug | json | safe }}{% if product.mark %},"brand":{"@type":"Brand","name":{{ product.mark | json | safe }}}{% endif %},"offers":{"@type":"Offer","priceCurrency":"RUB"{% if product.price != null %},"price":{{ product.price }}{% endif %},"availability":"https://schema.org/{% if product.stock_qty %}InStock{% else %}OutOfStock{% endif %}","seller":{"@type":"Organization","name":{{ siteName | json | safe }}}}}
+</script>
+{% endblock %}
 {% block content %}
 <article class="product-detail">
   {% if isAdmin %}
@@ -18,9 +25,6 @@
       <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
     </div>
     <div class="product-detail-main">
-      {% if product.short_text_html %}
-      <div class="product-short content">{{ product.short_text_html | safe }}</div>
-      {% endif %}
       <table class="product-specs">
         <tbody>
           {% if product.mark %}<tr><th>Марка</th><td>{{ product.mark }}</td></tr>{% endif %}
@@ -32,7 +36,6 @@
           {% if product.standard %}<tr><th>ГОСТ</th><td>{{ product.standard }}</td></tr>{% endif %}
           {% if product.sku_code %}<tr><th>Артикул</th><td>{{ product.sku_code }}</td></tr>{% endif %}
           {% if product.price != null %}<tr><th>Цена</th><td><strong>{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}</strong></td></tr>{% endif %}
-          {% if product.stock_qty != null %}<tr><th>На складе</th><td>{{ product.stock_qty | formatNumber }} кг</td></tr>{% endif %}
         </tbody>
       </table>
       <div class="product-actions">
@@ -41,7 +44,11 @@
       </div>
     </div>
   </div>
-  
+
+  {% if product.short_text_html %}
+  <div class="product-short content">{{ product.short_text_html | safe }}</div>
+  {% endif %}
+
   {% if product.full_text_html %}
   <div class="product-full content">{{ product.full_text_html | safe }}</div>
   {% endif %}

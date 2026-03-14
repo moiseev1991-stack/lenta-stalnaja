@@ -21,8 +21,9 @@ function mapStateValues(stateFilters) {
 
 function imageUrl(filename) {
   if (!filename) return null;
-  if (filename.startsWith('/')) return filename;
-  return '/uploads/products/' + filename;
+  const f = filename.trim();
+  if (f.startsWith('/')) return f;
+  return '/uploads/products/' + f;
 }
 
 // Normalise a MySQL product row to the shape expected by Nunjucks templates.

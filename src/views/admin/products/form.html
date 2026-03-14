@@ -58,6 +58,13 @@
       <p class="adm-hint">Если пусто — используется: <em>{{ seoDefaults.metaDescription if seoDefaults else '(сохраните товар для предпросмотра)' }}</em></p>
     </div>
 
+    <div class="adm-form-group">
+      <label class="adm-label">Текст на странице товара (HTML)</label>
+      <textarea name="short_text_html" class="adm-textarea" rows="4"
+                placeholder="Авто-генерируется из марки, размеров и состояния, если оставить пустым">{{ product.short_text_html if product and product.short_text_html else '' }}</textarea>
+      <p class="adm-hint">Отображается над таблицей характеристик. Если пусто — текст генерируется автоматически на основе свойств товара.</p>
+    </div>
+
     <div class="adm-form-row">
       <div class="adm-form-group">
         <label class="adm-label">Толщина (мм)</label>

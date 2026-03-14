@@ -319,6 +319,7 @@ async function saveProduct(req, res) {
   const h1 = body.h1 || null;
   const seo_title = body.seo_title || null;
   const seo_description = body.seo_description || null;
+  const short_text_html = body.short_text_html || null;
   const thickness_mm = body.thickness_mm !== '' ? parseFloat(body.thickness_mm) || null : null;
   const width_mm = body.width_mm !== '' ? parseFloat(body.width_mm) || null : null;
   const state = body.state || null;
@@ -335,18 +336,21 @@ async function saveProduct(req, res) {
     if (id) {
       await pool.query(`
         UPDATE products SET name=?, slug=?, grade_id=?, h1=?, seo_title=?, seo_description=?,
-          thickness_mm=?, width_mm=?, state=?, spring_props=?, surface=?, price_per_kg=?,
-          stock_kg=?, lead_time=?, image_filename=?
+          short_text_html=?, thickness_mm=?, width_mm=?, state=?, spring_props=?, surface=?,
+          price_per_kg=?, stock_kg=?, lead_time=?, image_filename=?
         WHERE id=?
-      `, [name, slug, grade_id, h1, seo_title, seo_description, thickness_mm, width_mm,
-          state, spring_props, surface, price_per_kg, in_stock, lead_time, image_filename, id]);
+      `, [name, slug, grade_id, h1, seo_title, seo_description, short_text_html,
+          thickness_mm, width_mm, state, spring_props, surface,
+          price_per_kg, in_stock, lead_time, image_filename, id]);
     } else {
       await pool.query(`
         INSERT INTO products (name, slug, grade_id, h1, seo_title, seo_description,
-          thickness_mm, width_mm, state, spring_props, surface, price_per_kg, stock_kg, lead_time, image_filename)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [name, slug, grade_id, h1, seo_title, seo_description, thickness_mm, width_mm,
-          state, spring_props, surface, price_per_kg, in_stock, lead_time, image_filename]);
+          short_text_html, thickness_mm, width_mm, state, spring_props, surface,
+          price_per_kg, stock_kg, lead_time, image_filename)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [name, slug, grade_id, h1, seo_title, seo_description, short_text_html,
+          thickness_mm, width_mm, state, spring_props, surface,
+          price_per_kg, in_stock, lead_time, image_filename]);
     }
     res.redirect('/admin/products');
   } catch (err) {

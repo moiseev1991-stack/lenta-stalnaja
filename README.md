@@ -108,6 +108,74 @@ npm run dev
 - Страницы с query-фильтрами: `noindex,follow`
 - В sitemap.xml только опубликованные категории/товары и посадочные с `robots` содержащим `index`
 
+## Деплой на SpaceWeb (production)
+
+### Требования на сервере
+
+- Node.js 18+
+- PM2: `npm install -g pm2`
+- MySQL (SpaceWeb → Базы данных → MySQL — создать БД и пользователя)
+
+### Первый деплой (вручную через SSH)
+
+```bash
+# 1. Подключиться по SSH
+ssh infogkmeta@77.222.40.49
+
+# 2. Склонировать репозиторий в папку сайта
+cd ~
+git clone https://github.com/moiseev1991-stack/lenta-stalnaja.git lenta-stalnaja
+cd lenta-stalnaja
+
+# 3. Установить зависимости
+npm ci --omit=dev
+
+# 4. Настроить переменные окружения
+cp .env.production.example .env
+nano .env   # заполнить MYSQL_*, SITE_URL, SESSION_SECRET, ADMIN_PASSWORD
+
+# 5. Инициализировать SQLite (заявки, настройки)
+npm run init-db
+
+# 6. Запустить через PM2
+pm2 start ecosystem.config.js --env production
+pm2 save
+pm2 startup   # выполнить команду, которую выведет PM2
+```
+
+### Автодеплой через GitHub Actions
+
+При каждом `git push origin main` GitHub автоматически деплоит на сервер.
+
+**Настройка секретов** (GitHub → Settings → Secrets and variables → Actions):
+
+| Secret | Значение |
+|--------|----------|
+| `DEPLOY_HOST` | `77.222.40.49` |
+| `DEPLOY_USER` | `infogkmeta` |
+| `DEPLOY_SSH_KEY` | Приватный SSH-ключ (см. ниже) |
+| `DEPLOY_PATH` | Полный путь к папке приложения на сервере |
+
+**Создать SSH-ключ для деплоя:**
+
+```bash
+# На локальной машине
+ssh-keygen -t ed25519 -C "github-deploy" -f ~/.ssh/deploy_lenta_stalnaja
+
+# Добавить публичный ключ на сервер
+ssh-copy-id -i ~/.ssh/deploy_lenta_stalnaja.pub infogkmeta@77.222.40.49
+
+# Содержимое приватного ключа скопировать в GitHub Secret DEPLOY_SSH_KEY
+cat ~/.ssh/deploy_lenta_stalnaja
+```
+
+### Настройка Nginx / проксирование (если требуется)
+
+SpaceWeb может требовать проксировать порт 3000 через Apache/Nginx.
+Обратитесь в поддержку SpaceWeb за настройкой reverse proxy для Node.js приложения.
+
+---
+
 ## Критерии приёмки
 
 - Локальный запуск по README без правок кода

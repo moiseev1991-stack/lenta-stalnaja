@@ -4,3 +4,6 @@ data
 *.log
 .git
 public/uploads
+*.zip
+images_new_extract/
+images/

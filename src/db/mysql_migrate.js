@@ -56,6 +56,7 @@ async function runMysqlMigrations() {
     // products
     `ALTER TABLE products ADD COLUMN full_gost_name TEXT NULL AFTER seo_description`,
     `ALTER TABLE products ADD COLUMN spring_props TINYINT(1) NOT NULL DEFAULT 0`,
+    `ALTER TABLE products ADD COLUMN short_text_html TEXT NULL`,
     // grades — SEO + content fields
     `ALTER TABLE grades ADD COLUMN seo_h1 VARCHAR(512) NULL`,
     `ALTER TABLE grades ADD COLUMN seo_title VARCHAR(512) NULL`,

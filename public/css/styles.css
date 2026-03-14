@@ -152,6 +152,50 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
 .header-cta { margin-left: 0.5rem; }
 .header-cta .btn { font-size: 0.8125rem; padding: 0.45rem 0.9rem; }
+.header-contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+.header-contacts__phone {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.header-contacts__phone:hover { color: #93c5fd; text-decoration: none; }
+.header-contacts__email {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.header-contacts__email:hover { color: #cbd5e1; text-decoration: none; }
+
+/* Footer contacts */
+.footer-contacts {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0;
+}
+.footer-contacts__phone {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.footer-contacts__phone:hover { color: var(--primary); text-decoration: none; }
+.footer-contacts__email {
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.footer-contacts__email:hover { color: var(--primary); text-decoration: none; }
 
 /* Header strip: chips + advantages (all pages) */
 .header-strip {
@@ -473,14 +517,14 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
   width: 100%;
   border-collapse: collapse;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 2px solid #b8c0cc;
   border-radius: var(--radius-md);
   overflow: hidden;
   font-size: 0.875rem;
 }
-.product-specs th, .product-specs td { padding: 0.6rem 0.85rem; text-align: left; border-bottom: 1px solid var(--border); }
+.product-specs th, .product-specs td { padding: 0.65rem 0.9rem; text-align: left; border-bottom: 1px solid #ced3da; }
 .product-specs tr:last-child th, .product-specs tr:last-child td { border-bottom: none; }
-.product-specs th { width: 40%; font-weight: 500; color: var(--muted); background: #fafbfc; }
+.product-specs th { width: 40%; font-weight: 600; color: var(--text); background: #eef1f5; border-right: 2px solid #b8c0cc; }
 .product-actions { margin: 1.25rem 0; display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .product-short, .product-full, .category-description { margin: 1rem 0; line-height: 1.6; }
 
@@ -862,7 +906,28 @@ body.menu-open .mobile-menu { display: block; }
   border-top: 1px solid var(--border);
   margin-top: 0.5rem;
 }
-.mobile-menu-cta { margin-top: 1.5rem; }
+.mobile-menu-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.mobile-menu-contacts__phone {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+.mobile-menu-contacts__phone:hover { color: var(--primary); }
+.mobile-menu-contacts__email {
+  font-size: 0.825rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.mobile-menu-contacts__email:hover { color: var(--primary); }
+.mobile-menu-cta { margin-top: 1rem; }
 .mobile-menu-cta .btn { width: 100%; }
 
 /* ========== TABS ========== */
@@ -1056,6 +1121,7 @@ body.menu-open .mobile-menu { display: block; }
   .burger { display: block; }
   .nav { display: none; }
   .header-cta { display: none; }
+  .header-contacts { display: none; }
   .header .container { justify-content: space-between; }
   .header-strip { display: none; }
   .filters-toggle { display: flex; }

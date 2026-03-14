@@ -69,6 +69,8 @@ njkEnv.addFilter('formatThickness', (n) => {
   const str = num.toFixed(2);
   return str.replace(/\.?0+$/, '');
 });
+// JSON-сериализация для использования в JSON-LD (совместно с | safe)
+njkEnv.addFilter('json', (v) => JSON.stringify(v));
 app.set('view engine', 'html');
 
 app.use(express.urlencoded({ extended: true }));

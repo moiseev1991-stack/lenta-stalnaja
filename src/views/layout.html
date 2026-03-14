@@ -7,6 +7,21 @@
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
   {% if robots %}<meta name="robots" content="{{ robots }}">{% endif %}
   {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+  <meta property="og:site_name" content="{{ siteName }}">
+  <meta property="og:type" content="{{ ogType | default('website') }}">
+  <meta property="og:title" content="{{ title | default(siteName) }}">
+  {% if metaDescription %}<meta property="og:description" content="{{ metaDescription }}">{% endif %}
+  {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
+  {% if ogImage %}<meta property="og:image" content="{{ ogImage }}">{% endif %}
+  <script type="application/ld+json">
+  [{"@context":"https://schema.org","@type":"WebSite","name":{{ siteName | json | safe }},"url":{{ siteUrl | json | safe }}},{"@context":"https://schema.org","@type":"Organization","name":{{ siteName | json | safe }},"url":{{ siteUrl | json | safe }}}]
+  </script>
+  {% if breadcrumbs and breadcrumbs.length %}
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":{{ (siteUrl ~ "/") | json | safe }}}{% for b in breadcrumbs %},{"@type":"ListItem","position":{{ loop.index + 1 }},"name":{{ b.name | json | safe }},"item":{{ (siteUrl ~ b.url) | json | safe }}}{% endfor %}]}
+  </script>
+  {% endif %}
+  {% block head %}{% endblock %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +36,6 @@
     <div class="container">
       <a href="/" class="logo">
         <img src="/img/logo-icon.png" alt="{{ siteName }}" width="36" height="36">
-        <span>{{ siteName }}</span>
       </a>
       <button class="burger" type="button" aria-label="Меню" onclick="document.body.classList.toggle('menu-open')">
         <span></span><span></span><span></span>
@@ -63,6 +77,10 @@
         <a href="/delivery/">Доставка</a>
         <a href="/contacts/">Контакты</a>
       </nav>
+      <div class="header-contacts">
+        <a href="tel:+78001000874" class="header-contacts__phone">+7 (800) 100-08-74</a>
+        <a href="mailto:corp-metalinvest01265@yandex.ru" class="header-contacts__email">corp-metalinvest01265@yandex.ru</a>
+      </div>
       <div class="header-cta">
         <a href="/contacts/#lead" class="btn btn-primary btn-sm">Оставить заявку</a>
       </div>
@@ -161,6 +179,10 @@
       <a href="/delivery/">Доставка</a>
       <a href="/contacts/">Контакты</a>
     </nav>
+    <div class="mobile-menu-contacts">
+      <a href="tel:+78001000874" class="mobile-menu-contacts__phone">+7 (800) 100-08-74</a>
+      <a href="mailto:corp-metalinvest01265@yandex.ru" class="mobile-menu-contacts__email">corp-metalinvest01265@yandex.ru</a>
+    </div>
     <div class="mobile-menu-cta">
       <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
     </div>
@@ -185,6 +207,10 @@
   <footer class="footer">
     <div class="container">
       <p>&copy; {{ siteName }}</p>
+      <div class="footer-contacts">
+        <a href="tel:+78001000874" class="footer-contacts__phone">+7 (800) 100-08-74</a>
+        <a href="mailto:corp-metalinvest01265@yandex.ru" class="footer-contacts__email">corp-metalinvest01265@yandex.ru</a>
+      </div>
       <nav>
         <a href="/about/">О компании</a> · 
         <a href="/delivery/">Доставка</a> · 

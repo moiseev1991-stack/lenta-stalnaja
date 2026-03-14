@@ -1,9 +1,27 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/publicController');
 const lentaController = require('../controllers/lentaController');
 
 router.get('/', controller.home);
+
+// ── File downloads ────────────────────────────────────────────────────────────
+const dataDir = path.join(__dirname, '..', '..', 'data');
+
+router.get('/download/price', (req, res) => {
+  const file = path.join(dataDir, 'price.xlsx');
+  if (!fs.existsSync(file)) return res.status(404).send('Файл не найден');
+  res.download(file, 'price.xlsx');
+});
+
+router.get('/download/certificates', (req, res) => {
+  const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.pdf'));
+  if (!files.length) return res.status(404).send('Файл не найден');
+  const file = path.join(dataDir, files[0]);
+  res.download(file, 'certificates.pdf');
+});
 
 // ── Static / utility pages (must precede parameterized catch-all routes) ───────
 router.get('/about/', controller.about);

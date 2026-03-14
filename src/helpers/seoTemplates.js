@@ -45,6 +45,109 @@ function rangeStr(arr, unit = 'мм') {
 // ── Product ───────────────────────────────────────────────────────────────────
 
 /**
+ * Detect material category and application from the grade name.
+ * Returns { materialDesc, application } strings for use in short text.
+ */
+function detectMaterial(mark) {
+  if (!mark) return { materialDesc: 'металлическая лента', application: 'в промышленном производстве' };
+
+  if (mark.startsWith('Бр') || mark.startsWith('бр')) {
+    return { materialDesc: 'бронзовая лента', application: 'для пружин, подшипников и электрических контактов' };
+  }
+  if (mark.startsWith('МН') || mark.startsWith('МНЦ')) {
+    return { materialDesc: 'лента из мельхиора', application: 'в декоративных изделиях, медицинских инструментах и ювелирном производстве' };
+  }
+  if (/^М[123][рРpP]?$|^М[123][А-ЯёЁ]/.test(mark)) {
+    return { materialDesc: 'медная лента', application: 'в электротехнике, теплообменном оборудовании и приборостроении' };
+  }
+  if (/^Л[0-9А-ЯёЁA-Z]/.test(mark)) {
+    return { materialDesc: 'латунная лента', application: 'в машиностроении, электронике и производстве декоративных изделий' };
+  }
+  if (mark.startsWith('ХН') || mark.startsWith('хн')) {
+    return { materialDesc: 'жаропрочная лента', application: 'в авиационных двигателях, высокотемпературных установках и химреакторах' };
+  }
+  if (/^[01][0-9]?Х|^[123][04]Х/.test(mark)) {
+    return { materialDesc: 'нержавеющая лента', application: 'в пищевой, медицинской, химической промышленности и машиностроении' };
+  }
+  if (/^Н[0-9]|^НП[0-9]/.test(mark)) {
+    return { materialDesc: 'никелевая лента', application: 'в химической промышленности, авиакосмической и электровакуумной технике' };
+  }
+  if (/^[0-9]/.test(mark)) {
+    return { materialDesc: 'лента из конструкционной стали', application: 'в общем машиностроении, пружинах и режущем инструменте' };
+  }
+  return { materialDesc: 'металлическая лента', application: 'в промышленном производстве' };
+}
+
+/**
+ * Build a state description clause, e.g. "в мягком (отожжённом) состоянии".
+ */
+function buildStateClause(state) {
+  if (!state) return '';
+  const s = state.toUpperCase().replace(/\s/g, '');
+  if (/^М$|^М[ЯА]|МЯГК|SOFT/.test(s))  return 'в мягком (отожжённом) состоянии, обеспечивающем высокую пластичность при последующей обработке';
+  if (/^ВН|ВЫСОКО/.test(s))             return 'в высоконагартованном состоянии с максимальной твёрдостью и упругостью';
+  if (/^ПН|ПОЛУ/.test(s))               return 'в полунагартованном состоянии, сочетающем пластичность и повышенную упругость';
+  if (/^Н$|^НАГ|HARD/.test(s))          return 'в нагартованном состоянии с повышенными показателями прочности и твёрдости';
+  return '';
+}
+
+/**
+ * Generate a unique 2-3 sentence SEO short text for a product page.
+ * Uses H1 keyword in sentence 1, state+GOST in sentence 2, CTA in sentence 3.
+ * @param {object} product - mapProduct() result from lenta.js
+ * @returns {string} HTML string (one <p> tag)
+ */
+function buildProductShortText(product) {
+  const mark      = product.mark || '';
+  const thickness = product.thickness_mm != null ? String(product.thickness_mm) : '';
+  const width     = product.width_mm     != null ? String(product.width_mm)     : '';
+  const surface   = product.surface || '';
+  const dims      = thickness && width ? `${thickness}×${width} мм` : (thickness || width ? `${thickness || width} мм` : '');
+  const state = product.state    || '';
+  const gost  = product.standard || '';
+  const id    = product.id       || 0;
+
+  const h1Key = join(['Лента', mark, dims, state, gost]);
+  const { materialDesc, application } = detectMaterial(mark);
+  const stateClause = buildStateClause(state);
+
+  const s1 = `${h1Key} — ${materialDesc}, применяется ${application}.`;
+
+  // Build a dimension+surface clause that is unique to every product
+  const dimParts = [];
+  if (thickness) dimParts.push(`толщина ${thickness} мм`);
+  if (width)     dimParts.push(`ширина ${width} мм`);
+  if (surface)   dimParts.push(`поверхность ${surface}`);
+  const dimClause = dimParts.join(', ');
+
+  let s2 = '';
+  if (dimClause && stateClause && gost) {
+    s2 = `Параметры: ${dimClause}; поставляется ${stateClause}, соответствует ${gost}.`;
+  } else if (dimClause && stateClause) {
+    s2 = `Параметры: ${dimClause}; поставляется ${stateClause}.`;
+  } else if (dimClause && gost) {
+    s2 = `Параметры: ${dimClause}; изготавливается по ${gost}.`;
+  } else if (dimClause) {
+    s2 = `Параметры данной позиции: ${dimClause}.`;
+  } else if (stateClause && gost) {
+    s2 = `Поставляется ${stateClause}, соответствует требованиям ${gost}.`;
+  } else if (stateClause) {
+    s2 = `Поставляется ${stateClause}.`;
+  } else if (gost) {
+    s2 = `Изготавливается в соответствии с требованиями ${gost}.`;
+  }
+
+  const ctas = [
+    'Уточните наличие на складе и стоимость у наших менеджеров — расчёт за 15 минут, доставка по всей России.',
+    'Принимаем заказы от одного рулона: расчёт стоимости в течение 15 минут, доставка по России.',
+    'Оформите заявку на сайте или по телефону — ответим в течение 15 минут и организуем доставку по РФ.',
+  ];
+  const s3 = ctas[id % 3];
+
+  return `<p>${[s1, s2, s3].filter(Boolean).join(' ')}</p>`;
+}
+
+/**
  * @param {object} product  - mapProduct() result from lenta.js
  * @param {string} siteName - value from config.siteName
  */
@@ -138,4 +241,4 @@ function buildCategorySEO(siteName) {
   return { title, h1, metaDescription };
 }
 
-module.exports = { buildProductSEO, buildGradeSEO, buildGroupSEO, buildCategorySEO };
+module.exports = { buildProductSEO, buildProductShortText, buildGradeSEO, buildGroupSEO, buildCategorySEO };
