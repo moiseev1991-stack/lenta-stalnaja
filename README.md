@@ -143,36 +143,35 @@ pm2 save
 pm2 startup   # выполнить команду, которую выведет PM2
 ```
 
-### Автодеплой через GitHub Actions
+### Автодеплой через GitHub Actions (FTP)
 
-При каждом `git push origin main` GitHub автоматически деплоит на сервер.
+При каждом `git push origin main` GitHub автоматически загружает файлы на SpaceWeb по FTP.
 
-**Настройка секретов** (GitHub → Settings → Secrets and variables → Actions):
+**Настройка секретов** (GitHub → Settings → Secrets and variables → Actions → New repository secret):
 
-| Secret | Значение |
-|--------|----------|
-| `DEPLOY_HOST` | `77.222.40.49` |
-| `DEPLOY_USER` | `infogkmeta` |
-| `DEPLOY_SSH_KEY` | Приватный SSH-ключ (см. ниже) |
-| `DEPLOY_PATH` | Полный путь к папке приложения на сервере |
+| Secret | Где взять |
+|--------|-----------|
+| `FTP_HOST` | SpaceWeb панель → FTP-аккаунты → Сервер (обычно `ftp.ваш-домен.ru`) |
+| `FTP_USER` | SpaceWeb панель → FTP-аккаунты → Логин |
+| `FTP_PASSWORD` | SpaceWeb панель → FTP-аккаунты → Пароль |
+| `FTP_PATH` | Путь к папке сайта на сервере (например `/lenta-stalnaja.ru/`) |
 
-**Создать SSH-ключ для деплоя:**
+**Шаги:**
+1. Перейти: [github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions](https://github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions)
+2. Добавить все 4 секрета из таблицы выше
+3. После этого каждый `git push origin main` будет автоматически загружать изменения
 
+### Настройка Node.js на SpaceWeb
+
+После первой загрузки через FTP — зайти по SSH и выполнить один раз:
 ```bash
-# На локальной машине
-ssh-keygen -t ed25519 -C "github-deploy" -f ~/.ssh/deploy_lenta_stalnaja
-
-# Добавить публичный ключ на сервер
-ssh-copy-id -i ~/.ssh/deploy_lenta_stalnaja.pub infogkmeta@77.222.40.49
-
-# Содержимое приватного ключа скопировать в GitHub Secret DEPLOY_SSH_KEY
-cat ~/.ssh/deploy_lenta_stalnaja
+cd ~/lenta-stalnaja.ru/
+npm ci --omit=dev
+cp .env.production.example .env
+# Заполнить .env данными из SpaceWeb панель
+pm2 start ecosystem.config.js --env production
+pm2 save
 ```
-
-### Настройка Nginx / проксирование (если требуется)
-
-SpaceWeb может требовать проксировать порт 3000 через Apache/Nginx.
-Обратитесь в поддержку SpaceWeb за настройкой reverse proxy для Node.js приложения.
 
 ---
 

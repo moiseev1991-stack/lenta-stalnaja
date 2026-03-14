@@ -55,30 +55,34 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
+  // Grade pages — /:slug/  (grades table has no updated_at, use created_at)
   try {
-    // Grade pages — /:slug/
-    const [grades] = await pool.query('SELECT slug, updated_at FROM grades ORDER BY slug');
+    const [grades] = await pool.query('SELECT slug, created_at FROM grades ORDER BY slug');
     grades.forEach(g => {
       urls.push({
         loc: base + '/' + g.slug + '/',
         changefreq: 'weekly',
         priority: 0.8,
-        lastmod: g.updated_at ? toLastmod(new Date(g.updated_at)) : today,
+        lastmod: g.created_at ? toLastmod(new Date(g.created_at)) : today,
       });
     });
+  } catch (_) {}
 
-    // Group pages — /:slug/
-    const [groups] = await pool.query('SELECT slug, updated_at FROM `groups` ORDER BY slug');
+  // Group pages — /:slug/  (groups table has no updated_at, use created_at)
+  try {
+    const [groups] = await pool.query('SELECT slug, created_at FROM `groups` ORDER BY slug');
     groups.forEach(g => {
       urls.push({
         loc: base + '/' + g.slug + '/',
         changefreq: 'weekly',
         priority: 0.7,
-        lastmod: g.updated_at ? toLastmod(new Date(g.updated_at)) : today,
+        lastmod: g.created_at ? toLastmod(new Date(g.created_at)) : today,
       });
     });
+  } catch (_) {}
 
-    // Product pages — /:gradeSlug/:productSlug/
+  // Product pages — /:gradeSlug/:productSlug/
+  try {
     const [products] = await pool.query(`
       SELECT p.slug, p.updated_at, gr.slug AS grade_slug
       FROM products p
