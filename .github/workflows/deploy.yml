@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Normalize FTP path
-        run: |
-          RAW="${{ secrets.FTP_PATH }}"
-          echo "FTP_DIR=${RAW%/}/" >> $GITHUB_ENV
-
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -27,7 +22,9 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: ./
-          server-dir: ${{ env.FTP_DIR }}
+          # FTP_PATH must be a path RELATIVE to the FTP root (e.g. "/" or "/myproject/")
+          # Do NOT set it to an absolute server path like /home/i/user/ — FTP already starts there
+          server-dir: ${{ secrets.FTP_PATH }}
           exclude: |
             **/.git*
             **/.git*/**

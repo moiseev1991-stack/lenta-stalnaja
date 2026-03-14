@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Proxy all requests to Node.js app on port 3000
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]

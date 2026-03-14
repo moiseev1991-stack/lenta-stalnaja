@@ -149,12 +149,14 @@ pm2 startup   # выполнить команду, которую выведет
 
 **Настройка секретов** (GitHub → Settings → Secrets and variables → Actions → New repository secret):
 
-| Secret | Где взять |
-|--------|-----------|
+| Secret | Значение |
+|--------|----------|
 | `FTP_HOST` | SpaceWeb панель → FTP-аккаунты → Сервер (обычно `ftp.ваш-домен.ru`) |
-| `FTP_USER` | SpaceWeb панель → FTP-аккаунты → Логин |
+| `FTP_USER` | SpaceWeb панель → FTP-аккаунты → Логин (например `infogkmeta`) |
 | `FTP_PASSWORD` | SpaceWeb панель → FTP-аккаунты → Пароль |
-| `FTP_PATH` | Путь к папке сайта на сервере (например `/lenta-stalnaja.ru/`) |
+| `FTP_PATH` | **`/`** — FTP уже стартует из домашней папки (`~/`), поэтому значение `/` кладёт файлы прямо в `~`. **Не указывать** абсолютный путь вида `/home/i/infogkmeta/` — иначе файлы уйдут в `~/home/i/infogkmeta/` (вложены сами в себя) |
+
+> **Важно про `FTP_PATH`**: FTP-сессия на SpaceWeb открывается уже внутри `~/` пользователя. Значение `/` → файлы в `~/`. Значение `/myproject/` → файлы в `~/myproject/`. Абсолютный серверный путь здесь писать **нельзя**.
 
 **Шаги:**
 1. Перейти: [github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions](https://github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions)
