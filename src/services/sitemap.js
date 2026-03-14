@@ -19,6 +19,42 @@ async function getSitemapUrls() {
     { loc: base + '/certificates/', changefreq: 'monthly', priority: 0.5, lastmod: today },
   ];
 
+  // SQLite: published categories — /:slug/
+  try {
+    const categories = db.prepare(
+      'SELECT slug, updated_at FROM categories WHERE is_published = 1 ORDER BY slug'
+    ).all();
+    categories.forEach(c => {
+      urls.push({
+        loc: base + '/' + c.slug + '/',
+        changefreq: 'weekly',
+        priority: 0.8,
+        lastmod: c.updated_at ? toLastmod(new Date(c.updated_at)) : today,
+      });
+    });
+  } catch (_) {}
+
+  // SQLite: published landing pages with robots=index — /:categorySlug/:landingSlug/
+  try {
+    const landings = db.prepare(`
+      SELECT lp.slug, lp.updated_at, lp.robots, c.slug AS cat_slug
+      FROM landing_pages lp
+      JOIN categories c ON lp.category_id = c.id
+      WHERE lp.is_published = 1
+        AND c.is_published = 1
+        AND (lp.robots IS NULL OR lp.robots LIKE '%index%')
+      ORDER BY c.slug, lp.slug
+    `).all();
+    landings.forEach(l => {
+      urls.push({
+        loc: base + '/' + l.cat_slug + '/' + l.slug + '/',
+        changefreq: 'weekly',
+        priority: 0.7,
+        lastmod: l.updated_at ? toLastmod(new Date(l.updated_at)) : today,
+      });
+    });
+  } catch (_) {}
+
   try {
     // Grade pages — /:slug/
     const [grades] = await pool.query('SELECT slug, updated_at FROM grades ORDER BY slug');

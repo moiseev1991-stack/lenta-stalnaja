@@ -372,15 +372,39 @@ async function sitemapXml(req, res, next) {
 }
 
 function robotsTxt(req, res) {
+  const sitemap = 'Sitemap: ' + config.siteUrl + '/sitemap.xml';
+  const filterParams = 'thickness&width&surface&state&standard&mark&q';
   res.type('text/plain');
   res.send(
+    '# All bots\n' +
     'User-agent: *\n' +
-    'Allow: /\n' +
     'Disallow: /admin/\n' +
     'Disallow: /search/\n' +
     'Disallow: /download/\n' +
-    'Disallow: /*?\n\n' +
-    'Sitemap: ' + config.siteUrl + '/sitemap.xml'
+    'Disallow: /*?\n' +
+    '\n' +
+    '# Google\n' +
+    'User-agent: Googlebot\n' +
+    'Disallow: /admin/\n' +
+    'Disallow: /search/\n' +
+    'Disallow: /download/\n' +
+    'Disallow: /*?\n' +
+    '\n' +
+    '# Yandex — Clean-param is the correct way to handle filter duplicates\n' +
+    'User-agent: YandexBot\n' +
+    'Disallow: /admin/\n' +
+    'Disallow: /search/\n' +
+    'Disallow: /download/\n' +
+    'Clean-param: ' + filterParams + '\n' +
+    '\n' +
+    '# Bing\n' +
+    'User-agent: Bingbot\n' +
+    'Disallow: /admin/\n' +
+    'Disallow: /search/\n' +
+    'Disallow: /download/\n' +
+    'Disallow: /*?\n' +
+    '\n' +
+    sitemap
   );
 }
 
