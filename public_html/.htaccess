@@ -1,4 +1,5 @@
 RewriteEngine On
 
-# Proxy all requests to Node.js app on port 3000
+# Proxy requests to Node.js ONLY for lenta-stalnaja.ru
+RewriteCond %{HTTP_HOST} ^(www\.)?lenta-stalnaja\.ru$ [NC]
 RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
