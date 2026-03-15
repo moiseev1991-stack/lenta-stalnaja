@@ -6,10 +6,6 @@ const cookieParser = require('cookie-parser');
 const nunjucks = require('nunjucks');
 const config = require('./config');
 
-const dbDir = path.dirname(path.isAbsolute(config.dbPath) ? config.dbPath : path.join(process.cwd(), config.dbPath));
-if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
-require('./db/migrations.js');
-
 const app = express();
 
 // Run async MySQL migrations (add new columns if needed)

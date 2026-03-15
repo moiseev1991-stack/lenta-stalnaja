@@ -1,4 +1,3 @@
-const db = require('../db/db');
 const pool = require('../db/mysql');
 const config = require('../config');
 
@@ -19,11 +18,11 @@ async function getSitemapUrls() {
     { loc: base + '/certificates/', changefreq: 'monthly', priority: 0.5, lastmod: today },
   ];
 
-  // SQLite: published categories — /:slug/
+  // MySQL: published categories
   try {
-    const categories = db.prepare(
+    const [categories] = await pool.query(
       'SELECT slug, updated_at FROM categories WHERE is_published = 1 ORDER BY slug'
-    ).all();
+    );
     categories.forEach(c => {
       urls.push({
         loc: base + '/' + c.slug + '/',
@@ -34,9 +33,9 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // SQLite: published landing pages with robots=index — /:categorySlug/:landingSlug/
+  // MySQL: published landing pages with robots=index
   try {
-    const landings = db.prepare(`
+    const [landings] = await pool.query(`
       SELECT lp.slug, lp.updated_at, lp.robots, c.slug AS cat_slug
       FROM landing_pages lp
       JOIN categories c ON lp.category_id = c.id
@@ -44,7 +43,7 @@ async function getSitemapUrls() {
         AND c.is_published = 1
         AND (lp.robots IS NULL OR lp.robots LIKE '%index%')
       ORDER BY c.slug, lp.slug
-    `).all();
+    `);
     landings.forEach(l => {
       urls.push({
         loc: base + '/' + l.cat_slug + '/' + l.slug + '/',
@@ -55,7 +54,7 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // Grade pages — /:slug/  (grades table has no updated_at, use created_at)
+  // Grade pages
   try {
     const [grades] = await pool.query('SELECT slug, created_at FROM grades ORDER BY slug');
     grades.forEach(g => {
@@ -68,7 +67,7 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // Group pages — /:slug/  (groups table has no updated_at, use created_at)
+  // Group pages
   try {
     const [groups] = await pool.query('SELECT slug, created_at FROM `groups` ORDER BY slug');
     groups.forEach(g => {
@@ -81,7 +80,7 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // Product pages — /:gradeSlug/:productSlug/
+  // Product pages
   try {
     const [products] = await pool.query(`
       SELECT p.slug, p.updated_at, gr.slug AS grade_slug

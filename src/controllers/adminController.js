@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const db = require('../db/db');
 const pool = require('../db/mysql');
 const bcrypt = require('bcrypt');
 const config = require('../config');
@@ -17,17 +16,20 @@ function makeSlug(name) {
     .replace(/^-|-$/g, '');
 }
 
-function getSetting(key) {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
-  return row ? row.value : '';
+async function getSetting(key) {
+  try {
+    const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', [key]);
+    return (row && row.value) ? row.value : '';
+  } catch (_) { return ''; }
 }
 
-function setSetting(key, value) {
-  const now = new Date().toISOString();
-  db.prepare(`
-    INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
-    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
-  `).run(key, value || '', now);
+async function setSetting(key, value) {
+  try {
+    await pool.query(
+      'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)',
+      [key, value || '']
+    );
+  } catch (_) {}
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -37,14 +39,19 @@ function loginForm(req, res) {
   res.render('admin/login.html', { error: null });
 }
 
-function login(req, res) {
-  const { username, password } = req.body || {};
-  const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-  if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
-    return res.render('admin/login.html', { error: 'Неверный логин или пароль' });
+async function login(req, res) {
+  try {
+    const { username, password } = req.body || {};
+    const [[user]] = await pool.query('SELECT * FROM admin_users WHERE username = ?', [username || '']);
+    if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
+      return res.render('admin/login.html', { error: 'Неверный логин или пароль' });
+    }
+    req.session.adminUserId = user.id;
+    req.session.save(() => res.redirect('/admin'));
+  } catch (err) {
+    console.error('login error:', err.message);
+    res.render('admin/login.html', { error: 'Ошибка сервера' });
   }
-  req.session.adminUserId = user.id;
-  req.session.save(() => res.redirect('/admin'));
 }
 
 function logout(req, res) {
@@ -297,7 +304,6 @@ async function productForm(req, res, edit = false) {
       WHERE p.id = ?
     `, [req.params.id]);
     if (!product) return res.status(404).send('Not found');
-    // Build a product-like object for SEO generation (mirrors mapProduct() mapping)
     const productForSeo = { ...product, mark: product.grade_name, standard: product.gost, seo_h1: product.h1 };
     const seoDefaults = buildProductSEO(productForSeo, config.siteName);
     res.render('admin/products/form.html', { product, grades, seoDefaults, error: req.query.error });
@@ -369,31 +375,36 @@ async function deleteProduct(req, res) {
   res.redirect('/admin/products');
 }
 
-// ─── Leads (SQLite) ───────────────────────────────────────────────────────────
+// ─── Leads (MySQL) ───────────────────────────────────────────────────────────
 
-function listLeads(req, res) {
-  const page    = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const perPage = 50;
-  const offset  = (page - 1) * perPage;
+async function listLeads(req, res) {
+  try {
+    const page    = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const perPage = 50;
+    const offset  = (page - 1) * perPage;
 
-  const total = db.prepare('SELECT COUNT(*) AS c FROM leads').get().c;
-  const leads = db.prepare(`
-    SELECT l.*, p.name AS product_name, p.slug AS product_slug
-    FROM leads l
-    LEFT JOIN products p ON l.product_id = p.id
-    ORDER BY l.created_at DESC
-    LIMIT ? OFFSET ?
-  `).all(perPage, offset);
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM leads');
+    const [leads] = await pool.query(`
+      SELECT l.*, p.name AS product_name, p.slug AS product_slug
+      FROM leads l
+      LEFT JOIN products p ON l.product_id = p.id
+      ORDER BY l.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [perPage, offset]);
 
-  const totalPages = Math.ceil(total / perPage) || 1;
-  res.render('admin/leads.html', { leads, total, page, totalPages });
+    const totalPages = Math.ceil(total / perPage) || 1;
+    res.render('admin/leads.html', { leads, total, page, totalPages });
+  } catch (err) {
+    console.error('listLeads error:', err.message);
+    res.render('admin/leads.html', { leads: [], total: 0, page: 1, totalPages: 1 });
+  }
 }
 
-function markLeadDone(req, res) {
-  const id   = parseInt(req.params.id, 10);
-  const done = req.body.done === '1' ? 1 : 0;
+async function markLeadDone(req, res) {
   try {
-    db.prepare('UPDATE leads SET is_done = ? WHERE id = ?').run(done, id);
+    const id   = parseInt(req.params.id, 10);
+    const done = req.body.done === '1' ? 1 : 0;
+    await pool.query('UPDATE leads SET is_done = ? WHERE id = ?', [done, id]);
   } catch (_) {}
   const back = req.headers.referer || '/admin/leads';
   res.redirect(back);
@@ -405,52 +416,46 @@ function importForm(req, res) {
   res.render('admin/import.html', { error: null, rowsProcessed: null, rowsFailed: null, logs: [] });
 }
 
-function handleImport(req, res) {
+async function handleImport(req, res) {
   if (!req.file || !req.file.buffer) {
     return res.render('admin/import.html', { error: 'Выберите файл CSV', rowsProcessed: null, rowsFailed: null, logs: [] });
   }
   const type = req.body.type || 'products';
-  let result;
   try {
+    let result;
     if (type === 'categories') {
-      result = csv.importCategories(req.file.buffer);
+      result = await csv.importCategories(req.file.buffer);
     } else {
-      result = csv.importProducts(req.file.buffer);
+      result = await csv.importProducts(req.file.buffer);
     }
+    res.render('admin/import.html', {
+      error: result.error || null,
+      rowsProcessed: result.rowsProcessed,
+      rowsFailed: result.rowsFailed,
+      logs: result.logs,
+    });
   } catch (err) {
-    return res.render('admin/import.html', {
+    res.render('admin/import.html', {
       error: 'Ошибка обработки файла: ' + err.message,
       rowsProcessed: null, rowsFailed: null, logs: [],
     });
   }
-  res.render('admin/import.html', {
-    error: result.error || null,
-    rowsProcessed: result.rowsProcessed,
-    rowsFailed: result.rowsFailed,
-    logs: result.logs,
-  });
 }
 
-function exportData(req, res) {
+async function exportData(req, res) {
   const type = req.query.type || '';
   if (!type) return res.render('admin/export.html');
 
   try {
     let csvText, filename;
     if (type === 'products') {
-      const rows = db.prepare(`
-        SELECT p.*, c.slug AS category_slug
-        FROM products p LEFT JOIN categories c ON p.category_id = c.id
-      `).all();
-      csvText  = csv.exportProducts(rows);
+      csvText  = await csv.exportProducts();
       filename = 'products.csv';
     } else if (type === 'categories') {
-      const rows = db.prepare('SELECT * FROM categories ORDER BY sort_order, name').all();
-      csvText  = csv.exportCategories(rows);
+      csvText  = await csv.exportCategories();
       filename = 'categories.csv';
     } else if (type === 'landings') {
-      const rows = db.prepare('SELECT * FROM landing_pages ORDER BY category_id, slug').all();
-      csvText  = csv.exportLandings(rows);
+      csvText  = await csv.exportLandings();
       filename = 'landings.csv';
     } else {
       return res.render('admin/export.html');
@@ -466,66 +471,69 @@ function exportData(req, res) {
 
 // ─── Main page settings ───────────────────────────────────────────────────────
 
-function mainPageForm(req, res) {
-  res.render('admin/main-page.html', {
-    home_title:            getSetting('home_title'),
-    home_h1:               getSetting('home_h1'),
-    home_meta_description: getSetting('home_meta_description'),
-    home_html:             getSetting('home_html'),
-    saved: req.query.saved === '1',
-  });
+async function mainPageForm(req, res) {
+  try {
+    res.render('admin/main-page.html', {
+      home_title:            await getSetting('home_title'),
+      home_h1:               await getSetting('home_h1'),
+      home_meta_description: await getSetting('home_meta_description'),
+      home_html:             await getSetting('home_html'),
+      saved: req.query.saved === '1',
+    });
+  } catch (err) {
+    res.status(500).send('DB error: ' + err.message);
+  }
 }
 
-function saveMainPage(req, res) {
-  const body = req.body || {};
-  setSetting('home_title',            body.home_title);
-  setSetting('home_h1',               body.home_h1);
-  setSetting('home_meta_description', body.home_meta_description);
-  setSetting('home_html',             body.home_html);
-  res.redirect('/admin/main-page?saved=1');
+async function saveMainPage(req, res) {
+  try {
+    const body = req.body || {};
+    await setSetting('home_title',            body.home_title);
+    await setSetting('home_h1',               body.home_h1);
+    await setSetting('home_meta_description', body.home_meta_description);
+    await setSetting('home_html',             body.home_html);
+    res.redirect('/admin/main-page?saved=1');
+  } catch (err) {
+    res.status(500).send('DB error: ' + err.message);
+  }
 }
 
 // ─── Bonus page settings ──────────────────────────────────────────────────────
 
-function bonusPageForm(req, res) {
-  res.render('admin/bonus-page.html', {
-    bonus_h1:   getSetting('bonus_h1'),
-    bonus_html: getSetting('bonus_html'),
-    saved: req.query.saved === '1',
-  });
+async function bonusPageForm(req, res) {
+  try {
+    res.render('admin/bonus-page.html', {
+      bonus_h1:   await getSetting('bonus_h1'),
+      bonus_html: await getSetting('bonus_html'),
+      saved: req.query.saved === '1',
+    });
+  } catch (err) {
+    res.status(500).send('DB error: ' + err.message);
+  }
 }
 
-function saveBonusPage(req, res) {
-  const body = req.body || {};
-  setSetting('bonus_h1',   body.bonus_h1);
-  setSetting('bonus_html', body.bonus_html);
-  res.redirect('/admin/bonus-page?saved=1');
+async function saveBonusPage(req, res) {
+  try {
+    const body = req.body || {};
+    await setSetting('bonus_h1',   body.bonus_h1);
+    await setSetting('bonus_html', body.bonus_html);
+    res.redirect('/admin/bonus-page?saved=1');
+  } catch (err) {
+    res.status(500).send('DB error: ' + err.message);
+  }
 }
 
-// ─── Database restore ─────────────────────────────────────────────────────────
+// ─── Database restore (не применимо при MySQL) ───────────────────────────────
 
 function dbRestoreForm(req, res) {
   res.render('admin/db-restore.html', { message: null, error: null });
 }
 
 function dbRestore(req, res) {
-  if (!req.file || !req.file.buffer) {
-    return res.render('admin/db-restore.html', { message: null, error: 'Выберите файл database.sqlite' });
-  }
-  try {
-    const dbPath = path.isAbsolute(config.dbPath)
-      ? config.dbPath
-      : path.join(process.cwd(), config.dbPath);
-    const backupPath = dbPath.replace(/\.sqlite$/, '') + '.backup.' + Date.now() + '.sqlite';
-    if (fs.existsSync(dbPath)) fs.copyFileSync(dbPath, backupPath);
-    fs.writeFileSync(dbPath, req.file.buffer);
-    res.render('admin/db-restore.html', {
-      message: 'База данных успешно заменена. Резервная копия сохранена. Перезапустите сервер для применения изменений.',
-      error: null,
-    });
-  } catch (err) {
-    res.render('admin/db-restore.html', { message: null, error: 'Ошибка: ' + err.message });
-  }
+  res.render('admin/db-restore.html', {
+    message: null,
+    error: 'Функция восстановления базы данных не поддерживается в режиме MySQL.',
+  });
 }
 
 module.exports = {

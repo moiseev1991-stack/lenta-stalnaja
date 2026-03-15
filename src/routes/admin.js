@@ -37,7 +37,7 @@ const imgUpload = multer({
 
 // ─── Public auth routes ───────────────────────────────────────────────────────
 router.get('/login', controller.loginForm);
-router.post('/login', controller.login);
+router.post('/login', a(controller.login));
 router.get('/logout', controller.logout);
 
 router.use(requireAdmin);
@@ -69,22 +69,22 @@ router.post('/products', imgUpload.single('image'), a(controller.saveProduct));
 router.post('/products/:id', imgUpload.single('image'), a(controller.saveProduct));
 router.post('/products/:id/delete', a(controller.deleteProduct));
 
-// ─── Leads (SQLite) ───────────────────────────────────────────────────────────
-router.get('/leads', controller.listLeads);
-router.post('/leads/:id/done', controller.markLeadDone);
+// ─── Leads (MySQL) ────────────────────────────────────────────────────────────
+router.get('/leads', a(controller.listLeads));
+router.post('/leads/:id/done', a(controller.markLeadDone));
 
 // ─── CSV Import / Export ──────────────────────────────────────────────────────
 const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 router.get('/import', controller.importForm);
-router.post('/import', csvUpload.single('file'), controller.handleImport);
-router.get('/export', controller.exportData);
+router.post('/import', csvUpload.single('file'), a(controller.handleImport));
+router.get('/export', a(controller.exportData));
 
 // ─── Settings pages ───────────────────────────────────────────────────────────
-router.get('/main-page', controller.mainPageForm);
-router.post('/main-page', controller.saveMainPage);
+router.get('/main-page', a(controller.mainPageForm));
+router.post('/main-page', a(controller.saveMainPage));
 
-router.get('/bonus-page', controller.bonusPageForm);
-router.post('/bonus-page', controller.saveBonusPage);
+router.get('/bonus-page', a(controller.bonusPageForm));
+router.post('/bonus-page', a(controller.saveBonusPage));
 
 // ─── Database restore ─────────────────────────────────────────────────────────
 router.get('/db-restore', controller.dbRestoreForm);

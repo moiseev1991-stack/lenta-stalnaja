@@ -2,13 +2,13 @@ const config          = require('../config');
 const catalog         = require('../services/catalog');
 const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
+const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText } = require('../helpers/seoTemplates');
-const db              = require('../db/db');
 
-function getSetting(key, fallback = '') {
+async function getSetting(key, fallback = '') {
   try {
-    const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+    const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', [key]);
     return (row && row.value) ? row.value : fallback;
   } catch (_) { return fallback; }
 }
@@ -60,10 +60,13 @@ async function home(req, res, next) {
         : `${k}=${encodeURIComponent(v)}`)
       .join('&');
 
-    const homeTitle       = getSetting('home_title', config.siteName);
-    const homeH1          = getSetting('home_h1', 'Каталог металлопроката');
-    const homeMetaDesc    = getSetting('home_meta_description', 'Каталог металлопроката: лента и другие позиции. Сортамент, цены.');
-    const homeHtml        = getSetting('home_html', '');
+    const [homeTitle, homeH1, homeMetaDesc, homeHtml, categories] = await Promise.all([
+      getSetting('home_title', config.siteName),
+      getSetting('home_h1', 'Каталог металлопроката'),
+      getSetting('home_meta_description', 'Каталог металлопроката: лента и другие позиции. Сортамент, цены.'),
+      getSetting('home_html', ''),
+      catalog.getRootCategories(),
+    ]);
 
     renderPage(res, 'home.html', {
       title: homeTitle,
@@ -72,7 +75,7 @@ async function home(req, res, next) {
       canonical: config.siteUrl + '/',
       homeHtml,
       breadcrumbs: [],
-      categories: catalog.getRootCategories(),
+      categories,
       products, total, page, totalPages,
       filters, filterValues, queryString: qs,
       hasActiveFilters: hasFilters(filters),
@@ -111,7 +114,7 @@ async function catalogRoot(req, res, next) {
       metaDescription: 'Каталог категорий металлопроката.',
       canonical: config.siteUrl + '/catalog/',
       breadcrumbs: [],
-      categories: catalog.getRootCategories(),
+      categories: await catalog.getRootCategories(),
       products, total, page, totalPages,
       filters, filterValues, queryString: qs,
       hasActiveFilters: hasFilters(filters),
@@ -204,37 +207,42 @@ async function productBySlugPage(req, res, next) {
   } catch (err) { next(err); }
 }
 
-// ── Generic catalog fallback (SQLite categories / landings) ──────────────────
+// ── Generic catalog fallback (MySQL categories / landings) ───────────────────
 // Used as a middleware chain fallback after grade/product handlers call next().
 
-function genericCatalogPage(req, res, next) {
-  const fullPath = req.path.replace(/^\/|\/$/g, '');
-  const parts = fullPath.split('/').filter(Boolean);
-  if (parts.length === 0) return next();
+async function genericCatalogPage(req, res, next) {
+  try {
+    const fullPath = req.path.replace(/^\/|\/$/g, '');
+    const parts = fullPath.split('/').filter(Boolean);
+    if (parts.length === 0) return next();
 
-  const lastPart = parts[parts.length - 1];
-  const categoryPathParts = parts.slice(0, -1);
-  let categoryFromPath = null;
-  let parentId = null;
-  for (const part of categoryPathParts) {
-    categoryFromPath = parentId
-      ? catalog.getSubcategories(parentId).find(c => c.slug === part)
-      : catalog.getCategoryBySlug(part);
-    if (!categoryFromPath) break;
-    parentId = categoryFromPath.id;
-  }
-  const categoryForLanding = categoryPathParts.length > 0 ? categoryFromPath : null;
-  if (categoryForLanding) {
-    const landing = catalog.getLandingByCategoryAndSlug(categoryForLanding.id, lastPart);
-    if (landing) {
-      req.params.categorySlug = categoryPathParts.join('/');
-      req.params.landingSlug = lastPart;
-      return landingPage(req, res, next);
+    const lastPart = parts[parts.length - 1];
+    const categoryPathParts = parts.slice(0, -1);
+    let categoryFromPath = null;
+    let parentId = null;
+    for (const part of categoryPathParts) {
+      if (parentId) {
+        const subs = await catalog.getSubcategories(parentId);
+        categoryFromPath = subs.find(c => c.slug === part) || null;
+      } else {
+        categoryFromPath = await catalog.getCategoryBySlug(part);
+      }
+      if (!categoryFromPath) break;
+      parentId = categoryFromPath.id;
     }
-  }
+    const categoryForLanding = categoryPathParts.length > 0 ? categoryFromPath : null;
+    if (categoryForLanding) {
+      const landing = await catalog.getLandingByCategoryAndSlug(categoryForLanding.id, lastPart);
+      if (landing) {
+        req.params.categorySlug = categoryPathParts.join('/');
+        req.params.landingSlug = lastPart;
+        return await landingPage(req, res, next);
+      }
+    }
 
-  req.params.categorySlug = fullPath;
-  return categoryPage(req, res, next);
+    req.params.categorySlug = fullPath;
+    return await categoryPage(req, res, next);
+  } catch (err) { next(err); }
 }
 
 // ── Search ────────────────────────────────────────────────────────────────────
@@ -257,67 +265,80 @@ async function search(req, res, next) {
   } catch (err) { next(err); }
 }
 
-// ── Category / landing pages (SQLite-based, may be empty) ─────────────────────
+// ── Category / landing pages (MySQL-based, may be empty) ──────────────────────
 
-function categoryPage(req, res, next) {
-  const slug = req.params.categorySlug;
-  if (slug === 'list' || slug.startsWith('list/')) {
-    return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
-  }
-  const pathParts = slug.split('/').filter(Boolean);
-  let category = null, parentId = null;
-  for (const part of pathParts) {
-    if (part === 'list') return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
-    category = parentId
-      ? catalog.getSubcategories(parentId).find(c => c.slug === part)
-      : catalog.getCategoryBySlug(part);
+async function categoryPage(req, res, next) {
+  try {
+    const slug = req.params.categorySlug;
+    if (slug === 'list' || slug.startsWith('list/')) {
+      return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
+    }
+    const pathParts = slug.split('/').filter(Boolean);
+    let category = null, parentId = null;
+    for (const part of pathParts) {
+      if (part === 'list') return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
+      if (parentId) {
+        const subs = await catalog.getSubcategories(parentId);
+        category = subs.find(c => c.slug === part) || null;
+      } else {
+        category = await catalog.getCategoryBySlug(part);
+      }
+      if (!category) return next();
+      parentId = category.id;
+    }
     if (!category) return next();
-    parentId = category.id;
-  }
-  if (!category) return next();
 
-  const filters    = parseFilters(req.query);
-  const breadcrumbs = catalog.getCategoryBreadcrumbs(category);
-  renderPage(res, 'catalog/category.html', {
-    title: category.seo_title || category.name + ' | ' + config.siteName,
-    h1:    category.seo_h1   || category.name,
-    metaDescription: category.seo_description || undefined,
-    breadcrumbs, category,
-    categoryPath: pathParts.join('/'),
-    subcategories: catalog.getSubcategories(category.id),
-    products: [], total: 0, page: 1, totalPages: 1, perPage: 24,
-    filters, filterValues: { marks: [], thickness: [], width: [], surface: [], state: [], standard: [] },
-    queryString: '',
-  });
+    const filters     = parseFilters(req.query);
+    const [breadcrumbs, subcategories] = await Promise.all([
+      catalog.getCategoryBreadcrumbs(category),
+      catalog.getSubcategories(category.id),
+    ]);
+    renderPage(res, 'catalog/category.html', {
+      title: category.seo_title || category.name + ' | ' + config.siteName,
+      h1:    category.seo_h1   || category.name,
+      metaDescription: category.seo_description || undefined,
+      breadcrumbs, category,
+      categoryPath: pathParts.join('/'),
+      subcategories,
+      products: [], total: 0, page: 1, totalPages: 1, perPage: 24,
+      filters, filterValues: { marks: [], thickness: [], width: [], surface: [], state: [], standard: [] },
+      queryString: '',
+    });
+  } catch (err) { next(err); }
 }
 
-function landingPage(req, res, next) {
-  const categorySlug = req.params.categorySlug;
-  const landingSlug  = req.params.landingSlug;
-  const pathParts    = categorySlug.split('/').filter(Boolean);
-  let category = null, parentId = null;
-  for (const part of pathParts) {
-    category = parentId
-      ? catalog.getSubcategories(parentId).find(c => c.slug === part)
-      : catalog.getCategoryBySlug(part);
+async function landingPage(req, res, next) {
+  try {
+    const categorySlug = req.params.categorySlug;
+    const landingSlug  = req.params.landingSlug;
+    const pathParts    = categorySlug.split('/').filter(Boolean);
+    let category = null, parentId = null;
+    for (const part of pathParts) {
+      if (parentId) {
+        const subs = await catalog.getSubcategories(parentId);
+        category = subs.find(c => c.slug === part) || null;
+      } else {
+        category = await catalog.getCategoryBySlug(part);
+      }
+      if (!category) return next();
+      parentId = category.id;
+    }
     if (!category) return next();
-    parentId = category.id;
-  }
-  if (!category) return next();
-  const landing = catalog.getLandingByCategoryAndSlug(category.id, landingSlug);
-  if (!landing) return next();
+    const landing = await catalog.getLandingByCategoryAndSlug(category.id, landingSlug);
+    if (!landing) return next();
 
-  const breadcrumbs = catalog.getCategoryBreadcrumbs(category);
-  breadcrumbs.push({ name: landing.seo_h1 || landing.slug, url: req.originalUrl });
-  renderPage(res, 'catalog/landing.html', {
-    title: landing.seo_title || landing.seo_h1 || landing.slug + ' | ' + config.siteName,
-    h1:    landing.seo_h1 || landing.slug,
-    metaDescription: landing.seo_description || undefined,
-    robots: landing.robots || 'index,follow',
-    canonical: landing.canonical_url || config.siteUrl + req.path,
-    breadcrumbs, category, landing,
-    products: [], total: 0, page: 1, totalPages: 1, perPage: 24,
-  });
+    const breadcrumbs = await catalog.getCategoryBreadcrumbs(category);
+    breadcrumbs.push({ name: landing.seo_h1 || landing.slug, url: req.originalUrl });
+    renderPage(res, 'catalog/landing.html', {
+      title: landing.seo_title || landing.seo_h1 || landing.slug + ' | ' + config.siteName,
+      h1:    landing.seo_h1 || landing.slug,
+      metaDescription: landing.seo_description || undefined,
+      robots: landing.robots || 'index,follow',
+      canonical: landing.canonical_url || config.siteUrl + req.path,
+      breadcrumbs, category, landing,
+      products: [], total: 0, page: 1, totalPages: 1, perPage: 24,
+    });
+  } catch (err) { next(err); }
 }
 
 // ── Static pages ──────────────────────────────────────────────────────────────
@@ -408,16 +429,22 @@ function robotsTxt(req, res) {
   );
 }
 
-// ── Lead (SQLite) ─────────────────────────────────────────────────────────────
+// ── Lead (MySQL) ─────────────────────────────────────────────────────────────
 
-function submitLead(req, res) {
-  const db      = require('../db/db');
+async function submitLead(req, res) {
   const name    = (req.body.name    || '').trim();
   const phone   = (req.body.phone   || '').trim();
   const message = (req.body.message || '').trim();
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
   if (!name || !phone) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
-  db.prepare('INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)').run(name, phone, message || null, product_id);
+  try {
+    await pool.query(
+      'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
+      [name, phone, message || null, product_id]
+    );
+  } catch (err) {
+    console.error('submitLead error:', err.message);
+  }
   const redirect = (req.body.redirect || '/contacts/').trim();
   res.redirect(redirect + (redirect.includes('?') ? '&' : '?') + 'lead=ok');
 }

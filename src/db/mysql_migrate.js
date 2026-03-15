@@ -1,7 +1,8 @@
 const pool = require('./mysql');
+const bcrypt = require('bcrypt');
+const config = require('../config');
 
 async function runMysqlMigrations() {
-  // Create tables if they don't exist (safe on repeated runs)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS \`groups\` (
       id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,14 +51,82 @@ async function runMysqlMigrations() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      username      VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS settings (
+      \`key\`      VARCHAR(255) NOT NULL,
+      value        TEXT,
+      updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_key (\`key\`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS leads (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      name       VARCHAR(255) NOT NULL,
+      phone      VARCHAR(255) NOT NULL,
+      message    TEXT,
+      product_id INT NULL,
+      is_done    TINYINT(1) NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      parent_id        INT NULL,
+      name             VARCHAR(255) NOT NULL,
+      slug             VARCHAR(255) NOT NULL UNIQUE,
+      description_html TEXT,
+      seo_title        VARCHAR(512),
+      seo_h1           VARCHAR(512),
+      seo_description  TEXT,
+      is_published     TINYINT(1) DEFAULT 1,
+      sort_order       INT DEFAULT 0,
+      intro            TEXT,
+      article_title    VARCHAR(512),
+      article_text     LONGTEXT,
+      article_format   VARCHAR(16) DEFAULT 'html',
+      created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS landing_pages (
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      category_id   INT NOT NULL,
+      slug          VARCHAR(255) NOT NULL,
+      filter_json   TEXT,
+      seo_title     VARCHAR(512),
+      seo_h1        VARCHAR(512),
+      seo_description TEXT,
+      text_html     LONGTEXT,
+      robots        VARCHAR(64) DEFAULT 'index,follow',
+      canonical_url VARCHAR(512),
+      is_published  TINYINT(1) DEFAULT 1,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_cat_slug (category_id, slug)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
   console.log('MySQL CREATE TABLE OK');
 
   const alterCols = [
-    // products
     `ALTER TABLE products ADD COLUMN full_gost_name TEXT NULL AFTER seo_description`,
     `ALTER TABLE products ADD COLUMN spring_props TINYINT(1) NOT NULL DEFAULT 0`,
     `ALTER TABLE products ADD COLUMN short_text_html TEXT NULL`,
-    // grades — SEO + content fields
     `ALTER TABLE grades ADD COLUMN seo_h1 VARCHAR(512) NULL`,
     `ALTER TABLE grades ADD COLUMN seo_title VARCHAR(512) NULL`,
     `ALTER TABLE grades ADD COLUMN seo_description TEXT NULL`,
@@ -66,7 +135,6 @@ async function runMysqlMigrations() {
     `ALTER TABLE grades ADD COLUMN article_text LONGTEXT NULL`,
     `ALTER TABLE grades ADD COLUMN article_format VARCHAR(16) DEFAULT 'html'`,
     `ALTER TABLE grades ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1`,
-    // groups — SEO + content fields
     `ALTER TABLE \`groups\` ADD COLUMN seo_h1 VARCHAR(512) NULL`,
     `ALTER TABLE \`groups\` ADD COLUMN seo_title VARCHAR(512) NULL`,
     `ALTER TABLE \`groups\` ADD COLUMN seo_description TEXT NULL`,
@@ -78,13 +146,26 @@ async function runMysqlMigrations() {
   ];
 
   for (const sql of alterCols) {
-    try {
-      await pool.query(sql);
-    } catch (_) {
-      // Column already exists — ignore
-    }
+    try { await pool.query(sql); } catch (_) {}
   }
   console.log('MySQL migrations OK');
+
+  // Seed admin user if table is empty
+  try {
+    const [[{ cnt }]] = await pool.query('SELECT COUNT(*) AS cnt FROM admin_users');
+    if (cnt === 0) {
+      const username = config.adminUsername || 'admin';
+      const password = config.adminPassword || 'admin123';
+      const hash = await bcrypt.hash(password, 10);
+      await pool.query(
+        'INSERT INTO admin_users (username, password_hash) VALUES (?, ?)',
+        [username, hash]
+      );
+      console.log('Admin user created:', username);
+    }
+  } catch (err) {
+    console.error('Admin seed error:', err.message);
+  }
 }
 
 module.exports = { runMysqlMigrations };
