@@ -1,11 +1,7 @@
 RewriteEngine On
+Options +FollowSymLinks
 
-# Proxy ALL requests to Node.js for lenta-stalnaja.ru
-RewriteCond %{HTTP_HOST} ^(www\.)?lenta-stalnaja\.ru$ [NC]
-RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
-
-# PHP routing for lenta-nerzhavejushhaja-aisi.ru and other domains
-# Route to index.php if real file/directory doesn't exist
+# Route all requests through PHP proxy (index.php → Node.js)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L]
