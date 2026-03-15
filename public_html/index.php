@@ -5,9 +5,10 @@
  */
 
 define('NODE_URL',  'http://127.0.0.1:3000');
-define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
+define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja/public_html');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
+define('HOME_DIR',  '/home/i/infogkmeta');
 
 // ── 1. Check if Node.js is running ───────────────────────────────────────────
 function isNodeRunning(): bool {
@@ -23,14 +24,15 @@ function isNodeRunning(): bool {
 function startNode(): void {
     // Install deps if missing
     if (!is_dir(APP_DIR . '/node_modules')) {
-        exec('cd ' . APP_DIR . ' && npm ci --omit=dev >> ' . LOG_FILE . ' 2>&1');
+        // Set HOME so npm uses writable cache, not /root/.npm
+        exec('cd ' . APP_DIR . ' && HOME=' . HOME_DIR . ' npm ci --omit=dev --cache ' . HOME_DIR . '/.npm-cache >> ' . LOG_FILE . ' 2>&1');
     }
     // Init DB if missing
     if (!file_exists(APP_DIR . '/data/app.db')) {
-        exec('cd ' . APP_DIR . ' && node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
+        exec('cd ' . APP_DIR . ' && HOME=' . HOME_DIR . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
     }
     // Launch
-    $cmd = 'cd ' . APP_DIR . ' && nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
+    $cmd = 'cd ' . APP_DIR . ' && HOME=' . HOME_DIR . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
     $pid = trim((string) shell_exec($cmd));
     if ($pid) file_put_contents(PID_FILE, $pid);
     sleep(4);
