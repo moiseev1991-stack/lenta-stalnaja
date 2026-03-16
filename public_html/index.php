@@ -157,6 +157,18 @@ function startNode(): void {
     $pid = trim((string) shell_exec($cmd));
     if ($pid) file_put_contents(PID_FILE, $pid);
     sleep(6);
+
+    // #region agent log — post-launch diagnostics
+    $ts2 = date('Y-m-d H:i:s');
+    $pidAlive   = ($pid && file_exists("/proc/$pid")) ? 'YES' : 'NO';
+    $port3000   = false;
+    $sock = @fsockopen('127.0.0.1', 3000, $sockErrno, $sockErrstr, 3);
+    if ($sock) { $port3000 = true; fclose($sock); }
+    $anyNode = shell_exec('pgrep -f "node" 2>/dev/null') ?: '';
+    file_put_contents(LOG_FILE,
+        "[$ts2][POST-LAUNCH] pid=$pid pidAlive=$pidAlive port3000=" . ($port3000 ? 'OPEN' : 'CLOSED') . " anyNodePids=" . trim(str_replace("\n", ',', $anyNode)) . "\n",
+        FILE_APPEND);
+    // #endregion
 }
 
 // ── 6. Try to ensure Node.js is running ──────────────────────────────────────
