@@ -17,6 +17,49 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
+// ── Admin password reset endpoint ─────────────────────────────────────────────
+if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__reset-admin__') {
+    $envFile = APP_DIR . '/.env';
+    $envVars = [];
+    if (file_exists($envFile)) {
+        foreach (file($envFile) as $line) {
+            $line = trim($line);
+            if ($line && strpos($line, '=') !== false) {
+                [$k, $v] = explode('=', $line, 2);
+                $envVars[trim($k)] = trim($v);
+            }
+        }
+    }
+    $dbSocket = $envVars['MYSQL_SOCKET'] ?? '';
+    $dbUser   = $envVars['MYSQL_USER']   ?? '';
+    $dbPass   = $envVars['MYSQL_PASSWORD'] ?? '';
+    $dbName   = $envVars['MYSQL_DATABASE'] ?? '';
+    if ($dbUser && $dbName) {
+        $newPass  = $_POST['pass'] ?? '';
+        if ($newPass) {
+            $hash = password_hash($newPass, PASSWORD_BCRYPT);
+            $mysqli = new mysqli(null, $dbUser, $dbPass, $dbName, 0, $dbSocket ?: null);
+            if ($mysqli->connect_errno === 0) {
+                $stmt = $mysqli->prepare('UPDATE admin_users SET password_hash=? WHERE username=?');
+                $adminUser = $_POST['user'] ?? 'admin';
+                $stmt->bind_param('ss', $hash, $adminUser);
+                $stmt->execute();
+                $rows = $stmt->affected_rows;
+                $stmt->close();
+                $mysqli->close();
+                echo "OK: updated $rows row(s). New password set.";
+            } else {
+                echo "DB error: " . $mysqli->connect_error;
+            }
+        } else {
+            echo '<form method="post"><input name="pass" placeholder="New password" style="font-size:20px;padding:8px"> <input name="user" value="admin" placeholder="username" style="font-size:20px;padding:8px"> <button type="submit" style="font-size:20px;padding:8px">Set password</button></form>';
+        }
+    } else {
+        echo 'No .env found';
+    }
+    exit;
+}
+
 // ── Setup endpoint: write .env with MySQL credentials ─────────────────────────
 if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
     $envFile = APP_DIR . '/.env';
