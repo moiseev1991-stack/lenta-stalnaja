@@ -1,12 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <defs>
-    <linearGradient id="steel" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#c8d0d8"/>
-      <stop offset="100%" style="stop-color:#889098"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <rect width="200" height="200" fill="#f8f8f8"/>
-  <ellipse cx="100" cy="95" rx="55" ry="18" fill="none" stroke="url(#steel)" stroke-width="14"/>
-  <ellipse cx="100" cy="95" rx="42" ry="10" fill="none" stroke="#a0a8b0" stroke-width="8"/>
-  <text x="100" y="175" text-anchor="middle" fill="#666" font-size="11" font-family="sans-serif">5=B0 2 1CEB5</text>
+  <ellipse cx="100" cy="95" rx="55" ry="18" fill="none" stroke="#a0a8b0" stroke-width="14"/>
+  <ellipse cx="100" cy="95" rx="42" ry="10" fill="none" stroke="#b8c0c8" stroke-width="8"/>
+  <ellipse cx="100" cy="95" rx="28" ry="5" fill="#d0d8e0"/>
 </svg>
