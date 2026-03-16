@@ -13,6 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create restart trigger (Passenger/SpaceWeb restart mechanism)
+        run: |
+          mkdir -p tmp
+          date -u > tmp/restart.txt
+
       - name: Normalize FTP path (ensure trailing slash)
         run: |
           RAW="${{ secrets.FTP_PATH }}"
