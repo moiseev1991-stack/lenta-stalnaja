@@ -44,5 +44,4 @@ jobs:
             *.log
             server.err
             public/uploads/**
-            public/img/**
             public_html/uploads/**

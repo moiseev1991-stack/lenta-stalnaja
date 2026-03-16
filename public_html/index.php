@@ -17,6 +17,36 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
+// ── Fix image paths: update image_filename to full /img/products/ path ─────────
+if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__fix-images__') {
+    $envFile = APP_DIR . '/.env';
+    $envVars = [];
+    if (file_exists($envFile)) {
+        foreach (file($envFile) as $line) {
+            $line = trim($line);
+            if ($line && strpos($line, '=') !== false) {
+                [$k, $v] = explode('=', $line, 2);
+                $envVars[trim($k)] = trim($v);
+            }
+        }
+    }
+    $dbSocket = $envVars['MYSQL_SOCKET'] ?? '';
+    $dbUser   = $envVars['MYSQL_USER']   ?? '';
+    $dbPass   = $envVars['MYSQL_PASSWORD'] ?? '';
+    $dbName   = $envVars['MYSQL_DATABASE'] ?? '';
+    $mysqli = new mysqli(null, $dbUser, $dbPass, $dbName, 0, $dbSocket ?: null);
+    if ($mysqli->connect_errno === 0) {
+        // Update lenta-N.svg → /img/products/lenta-N.svg (if not already a full path)
+        $res = $mysqli->query("UPDATE products SET image_filename = CONCAT('/img/products/', image_filename) WHERE image_filename IS NOT NULL AND image_filename != '' AND image_filename NOT LIKE '/%'");
+        $rows = $mysqli->affected_rows;
+        $mysqli->close();
+        echo "OK: updated $rows product image paths to /img/products/";
+    } else {
+        echo "DB error: " . $mysqli->connect_error;
+    }
+    exit;
+}
+
 // ── Admin password reset endpoint ─────────────────────────────────────────────
 if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__reset-admin__') {
     $envFile = APP_DIR . '/.env';
