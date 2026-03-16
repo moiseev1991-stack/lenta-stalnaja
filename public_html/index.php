@@ -17,6 +17,55 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
+// ── Setup endpoint: write .env with MySQL credentials ─────────────────────────
+if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
+    $envFile = APP_DIR . '/.env';
+    $saved   = false;
+    $msg     = '';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $host = trim($_POST['mysql_host'] ?? 'localhost');
+        $port = trim($_POST['mysql_port'] ?? '3306');
+        $user = trim($_POST['mysql_user'] ?? '');
+        $pass = $_POST['mysql_password'] ?? '';
+        $db   = trim($_POST['mysql_database'] ?? '');
+        if ($user && $db) {
+            $env = "MYSQL_HOST=$host\nMYSQL_PORT=$port\nMYSQL_USER=$user\nMYSQL_PASSWORD=$pass\nMYSQL_DATABASE=$db\n"
+                 . "SOCKET_PATH=/home/i/infogkmeta/node.sock\nNODE_ENV=production\n";
+            file_put_contents($envFile, $env);
+            // Restart node
+            exec('pkill -f "node.*app.js" 2>/dev/null');
+            if (file_exists(NODE_SOCKET)) @unlink(NODE_SOCKET);
+            sleep(1);
+            startNode();
+            $saved = true;
+            $msg   = '✅ .env сохранён. Нода перезапущена. <a href="/">Открыть сайт</a>';
+        } else {
+            $msg = '❌ Заполните user и database.';
+        }
+    }
+    $existing = file_exists($envFile) ? htmlspecialchars(file_get_contents($envFile)) : '';
+    header('Content-Type: text/html; charset=UTF-8');
+    echo <<<HTML
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Setup</title>
+<style>body{font-family:sans-serif;max-width:600px;margin:40px auto}input{width:100%;padding:6px;margin:4px 0}label{font-weight:bold}</style>
+</head><body>
+<h2>MySQL Setup — lenta-stalnaja</h2>
+<p>Введите MySQL credentials из панели SpaceWeb (раздел "Базы данных").</p>
+<p style="color:green">$msg</p>
+<form method="POST">
+  <label>MySQL Host:</label><input name="mysql_host" value="localhost"><br>
+  <label>MySQL Port:</label><input name="mysql_port" value="3306"><br>
+  <label>MySQL User:</label><input name="mysql_user" required><br>
+  <label>MySQL Password:</label><input name="mysql_password" type="password"><br>
+  <label>MySQL Database:</label><input name="mysql_database" required><br><br>
+  <button type="submit" style="padding:8px 20px;background:#007bff;color:#fff;border:none;cursor:pointer">Сохранить и перезапустить</button>
+</form>
+<h3>Текущий .env:</h3><pre style="background:#f4f4f4;padding:10px">$existing</pre>
+</body></html>
+HTML;
+    exit;
+}
+
 // #region agent log — debug endpoint (returns JSON state + node crash test)
 if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';

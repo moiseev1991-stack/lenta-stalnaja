@@ -42,12 +42,19 @@ async function home(req, res, next) {
     const filters = parseFilters(req.query);
     const page    = Math.max(1, parseInt(req.query.page, 10) || 1);
 
-    const [filterValues, pageResult] = await Promise.all([
-      lenta.getLentaFilterValues(),
-      hasFilters(filters)
-        ? lenta.getLentaProducts(filters, page)
-        : lenta.getLentaProducts({}, 1),
-    ]);
+    let filterValues, pageResult;
+    try {
+      [filterValues, pageResult] = await Promise.all([
+        lenta.getLentaFilterValues(),
+        hasFilters(filters)
+          ? lenta.getLentaProducts(filters, page)
+          : lenta.getLentaProducts({}, 1),
+      ]);
+    } catch (dbErr) {
+      console.error('[DB] home query error:', dbErr.message);
+      filterValues = { marks: [], thicknesses: [], widths: [], surfaces: [], states: [], standards: [] };
+      pageResult   = { products: [], total: 0, totalPages: 0 };
+    }
 
     const products   = hasFilters(filters) ? pageResult.products : pageResult.products.slice(0, 12);
     const total      = hasFilters(filters) ? pageResult.total      : products.length;
