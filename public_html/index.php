@@ -34,7 +34,7 @@ function installDeps(): void {
     }
 
     // Double-check: maybe the other process just finished
-    if (file_exists(APP_DIR . '/node_modules/express/index.js')) {
+    if (file_exists(APP_DIR . '/node_modules/mysql2/index.js')) {
         flock($lockFh, LOCK_UN);
         fclose($lockFh);
         return;
@@ -63,16 +63,16 @@ function installDeps(): void {
 
 // ── 3. Start Node.js ─────────────────────────────────────────────────────────
 function startNode(): void {
-    // Install deps if node_modules is missing or incomplete
-    if (!file_exists(APP_DIR . '/node_modules/express/index.js')) {
+    // Install deps if node_modules is missing OR mysql2 is missing
+    // (mysql2 was added after initial broken install — must force reinstall if absent)
+    if (!file_exists(APP_DIR . '/node_modules/express/index.js')
+        || !file_exists(APP_DIR . '/node_modules/mysql2/index.js')) {
         installDeps();
     }
 
-    // Init DB if missing
-    if (!file_exists(APP_DIR . '/data/app.db')) {
-        $env = 'HOME=' . HOME_DIR . ' npm_config_cache=' . NPM_CACHE;
-        exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
-    }
+    // Run MySQL migrations (idempotent — safe every time)
+    $env = 'HOME=' . HOME_DIR . ' npm_config_cache=' . NPM_CACHE;
+    exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
 
     // Launch
     $cmd = 'cd ' . APP_DIR
