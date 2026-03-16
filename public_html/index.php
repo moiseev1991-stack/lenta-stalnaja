@@ -26,7 +26,43 @@ function isNodeRunning(): bool {
     return !empty($out);
 }
 
-// ── 2. Install npm deps (with file lock to prevent concurrent installs) ───────
+// ── 2. Write correct package.json (no native modules) ────────────────────────
+// This runs every time to ensure the correct package.json is always in place,
+// bypassing any FTP deploy inconsistencies with this critical file.
+function writePackageJson(): void {
+    $pkg = [
+        'name'         => 'lebta-catalog',
+        'version'      => '1.0.0',
+        'description'  => 'SSR catalog site + admin for metal products',
+        'main'         => 'src/app.js',
+        'scripts'      => ['start' => 'node src/app.js'],
+        'engines'      => ['node' => '>=18'],
+        'dependencies' => [
+            'bcryptjs'        => '^2.4.3',
+            'cookie-parser'   => '^1.4.6',
+            'dotenv'          => '^16.4.5',
+            'express'         => '^4.21.1',
+            'express-session' => '^1.18.0',
+            'multer'          => '^1.4.5-lts.1',
+            'mysql2'          => '^3.18.2',
+            'nunjucks'        => '^3.2.4',
+        ],
+    ];
+    file_put_contents(APP_DIR . '/package.json',
+        json_encode($pkg, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+}
+
+// ── 3. Write stub migrations.js (real migrations run inside app.js) ───────────
+function writeMigrationsStub(): void {
+    $stub = "// Legacy stub — migrations run automatically in app.js on startup\n" .
+            "console.log('Migrations handled by app.js startup.');\n" .
+            "process.exit(0);\n";
+    $dir = APP_DIR . '/src/db';
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
+    file_put_contents($dir . '/migrations.js', $stub);
+}
+
+// ── 4. Install npm deps ───────────────────────────────────────────────────────
 function installDeps(): void {
     $lockFh = fopen(LOCK_FILE, 'c');
     if (!$lockFh) return;
@@ -38,14 +74,25 @@ function installDeps(): void {
     }
 
     // Double-check: maybe the other process just finished
-    if (file_exists(APP_DIR . '/node_modules/mysql2/index.js')) {
+    if (file_exists(APP_DIR . '/node_modules/mysql2/index.js')
+        && file_exists(APP_DIR . '/node_modules/bcryptjs/bCrypt.js')) {
         flock($lockFh, LOCK_UN);
         fclose($lockFh);
         return;
     }
 
+    $ts = date('Y-m-d H:i:s');
+    file_put_contents(LOG_FILE, "[$ts] Installing npm deps...\n", FILE_APPEND);
+
     // Write .npmrc to override root-owned cache (/root/.npm) with a writable path
     file_put_contents(APP_DIR . '/.npmrc', 'cache=' . NPM_CACHE . "\n");
+
+    // ALWAYS write the correct package.json before installing
+    // (ensures no native modules even if FTP deploy didn't update it)
+    writePackageJson();
+
+    // Write stub migrations.js to prevent old SQLite code from crashing
+    writeMigrationsStub();
 
     // Remove corrupted/partial node_modules before clean install
     if (is_dir(APP_DIR . '/node_modules')) {
@@ -65,23 +112,21 @@ function installDeps(): void {
     fclose($lockFh);
 }
 
-// ── 3. Start Node.js ─────────────────────────────────────────────────────────
+// ── 5. Start Node.js ─────────────────────────────────────────────────────────
 function startNode(): void {
     $ts = date('Y-m-d H:i:s');
     file_put_contents(LOG_FILE, "\n[$ts] === NODE START ===\n", FILE_APPEND);
 
     // Install deps if node_modules is missing OR mysql2/bcryptjs is missing
-    // (after replacing bcrypt→bcryptjs: force reinstall to get pure-JS bcryptjs)
     if (!file_exists(APP_DIR . '/node_modules/express/index.js')
         || !file_exists(APP_DIR . '/node_modules/mysql2/index.js')
         || !file_exists(APP_DIR . '/node_modules/bcryptjs/bCrypt.js')) {
-        file_put_contents(LOG_FILE, "[$ts] Running npm install...\n", FILE_APPEND);
         installDeps();
     }
 
-    // Run MySQL migrations (idempotent — safe every time)
+    // Run migrations (stub just exits 0; real migrations happen inside app.js)
     $env = 'HOME=' . HOME_DIR . ' npm_config_cache=' . NPM_CACHE;
-    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Running migrations...\n", FILE_APPEND);
+    writeMigrationsStub();
     exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
 
     // Launch
@@ -94,7 +139,7 @@ function startNode(): void {
     sleep(6);
 }
 
-// ── 4. Try to ensure Node.js is running ──────────────────────────────────────
+// ── 6. Try to ensure Node.js is running ──────────────────────────────────────
 $canExec = function_exists('shell_exec') && function_exists('exec')
            && !in_array('shell_exec', array_map('trim', explode(',', ini_get('disable_functions'))));
 
@@ -102,7 +147,7 @@ if ($canExec && !isNodeRunning()) {
     startNode();
 }
 
-// ── 5. Proxy request via cURL ─────────────────────────────────────────────────
+// ── 7. Proxy request via cURL ─────────────────────────────────────────────────
 $uri    = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 $target = NODE_URL . $uri;
@@ -139,12 +184,14 @@ $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $hdrSize   = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 curl_close($ch);
 
-// ── 6. Handle connection error ────────────────────────────────────────────────
+// ── 8. Handle connection error ────────────────────────────────────────────────
 if ($response === false || $errno || $httpCode === 0) {
     http_response_code(503);
     header('Content-Type: text/html; charset=UTF-8');
-    $log = file_exists(LOG_FILE) ? nl2br(htmlspecialchars(file_get_contents(LOG_FILE))) : '(лог пуст)';
-    $exec_status = $canExec ? 'exec/shell_exec <b>доступны</b>' : 'exec/shell_exec <b>ОТКЛЮЧЕНЫ</b> — запустите Node.js вручную через SSH';
+    // Show only last 200 lines of log to avoid huge page
+    $logLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
+    $log = nl2br(htmlspecialchars(implode('', array_slice($logLines, -200))));
+    $exec_status = $canExec ? 'exec/shell_exec <b>доступны</b>' : 'exec/shell_exec <b>ОТКЛЮЧЕНЫ</b>';
     echo <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>503</title></head><body>
 <h2>503 — Node.js недоступен</h2>
@@ -156,7 +203,7 @@ HTML;
     exit;
 }
 
-// ── 7. Send response to browser ───────────────────────────────────────────────
+// ── 9. Send response to browser ───────────────────────────────────────────────
 $respHeaders = substr($response, 0, $hdrSize);
 $respBody    = substr($response, $hdrSize);
 
