@@ -21,8 +21,9 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
     $dbgPid      = (int) $dbgPidRaw;
     $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
-    $dbgSock     = @fsockopen('127.0.0.1', 3000, $dbgSockErr, $dbgSockMsg, 2);
-    $dbgPort     = (bool) $dbgSock;
+    $dbgSock = @fsockopen('127.0.0.1', 3000, $dbgSockErr, $dbgSockMsg, 2);
+    if (!$dbgSock) $dbgSock = @fsockopen('::1', 3000, $dbgSockErr, $dbgSockMsg, 2);
+    $dbgPort = (bool) $dbgSock;
     if ($dbgSock) fclose($dbgSock);
     $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
     // Filter out [DIAG] lines, get last 30 real log lines
@@ -57,14 +58,15 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
 }
 // #endregion
 
-// ── 1. Check if Node.js is running ───────────────────────────────────────────
-function isNodeRunning(): bool {
-    if (file_exists(PID_FILE)) {
-        $pid = (int) trim(file_get_contents(PID_FILE));
-        if ($pid > 0 && file_exists("/proc/$pid")) return true;
-    }
-    exec('pgrep -f "node.*app.js"', $out);
-    return !empty($out);
+// ── 1. Check if port 3000 is actually accepting connections ───────────────────
+// Replaces PID-based check: node may be bound to IPv6 (:::3000) which is
+// invisible to fsockopen('127.0.0.1'). We try both IPv4 and IPv6.
+function isPort3000Open(): bool {
+    $s = @fsockopen('127.0.0.1', 3000, $e, $m, 2);
+    if ($s) { fclose($s); return true; }
+    $s = @fsockopen('::1', 3000, $e, $m, 2);
+    if ($s) { fclose($s); return true; }
+    return false;
 }
 
 // ── 2. Write correct package.json (no native modules) ────────────────────────
@@ -196,7 +198,10 @@ function startNode(): void {
 $canExec = function_exists('shell_exec') && function_exists('exec')
            && !in_array('shell_exec', array_map('trim', explode(',', ini_get('disable_functions'))));
 
-if ($canExec && !isNodeRunning()) {
+if ($canExec && !isPort3000Open()) {
+    // Kill any stale node processes (may be bound to wrong interface)
+    exec('pkill -f "node.*app.js" 2>/dev/null');
+    sleep(1);
     startNode();
 }
 
@@ -258,6 +263,7 @@ if ($response === false || $errno || $httpCode === 0) {
 
     // Live port check
     $diagSock = @fsockopen('127.0.0.1', 3000, $diagSockErr, $diagSockMsg, 2);
+    if (!$diagSock) $diagSock = @fsockopen('::1', 3000, $diagSockErr, $diagSockMsg, 2);
     $diagPort = $diagSock ? '✅ OPEN' : "❌ CLOSED ($diagSockErr: $diagSockMsg)";
     if ($diagSock) fclose($diagSock);
 

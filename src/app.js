@@ -107,6 +107,6 @@ app.use((err, req, res, next) => {
   res.status(500).send('Server error');
 });
 
-app.listen(config.port, () => {
+app.listen(config.port, '0.0.0.0', () => {
   console.log('Server at http://localhost:' + config.port);
 });
