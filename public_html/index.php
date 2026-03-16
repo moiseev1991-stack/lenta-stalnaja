@@ -359,16 +359,32 @@ curl_setopt_array($ch, [
 ]);
 
 // Forward request body (POST / PUT / PATCH)
+$isMultipart = false;
 if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-    curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents('php://input'));
+    $ct = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+    if (stripos($ct, 'multipart/form-data') !== false) {
+        // php://input is empty for multipart — rebuild from $_POST + $_FILES
+        $isMultipart = true;
+        $fields = [];
+        foreach ($_POST as $k => $v) { $fields[$k] = $v; }
+        foreach ($_FILES as $k => $f) {
+            if ($f['error'] === UPLOAD_ERR_OK) {
+                $fields[$k] = new \CURLFile($f['tmp_name'], $f['type'], $f['name']);
+            }
+        }
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+    } else {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents('php://input'));
+    }
 }
 
-// Forward request headers
+// Forward request headers (skip Content-Type for multipart — cURL sets it with boundary)
 $reqHeaders = [];
 if (function_exists('getallheaders')) {
     foreach (getallheaders() as $k => $v) {
         $l = strtolower($k);
         if (in_array($l, ['host', 'connection', 'content-length'])) continue;
+        if ($isMultipart && $l === 'content-type') continue;
         $reqHeaders[] = "$k: $v";
     }
 }
