@@ -30,8 +30,16 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
         $db   = trim($_POST['mysql_database'] ?? '');
         $siteUrl  = rtrim(trim($_POST['site_url']  ?? 'https://lenta-stalnaja.ru'), '/');
         $siteName = trim($_POST['site_name'] ?? 'Каталог металлопроката');
+    // Auto-detect MySQL Unix socket path
+        $mysqlSockCandidates = ['/var/run/mysqld/mysqld.sock','/tmp/mysql.sock','/var/lib/mysql/mysql.sock'];
+        $mysqlSockPath = '';
+        foreach ($mysqlSockCandidates as $sc) { if (file_exists($sc)) { $mysqlSockPath = $sc; break; } }
     if ($user && $db) {
-            $env = "MYSQL_HOST=$host\nMYSQL_PORT=$port\nMYSQL_USER=$user\nMYSQL_PASSWORD=$pass\nMYSQL_DATABASE=$db\n"
+            $mysqlLine = $mysqlSockPath
+                ? "MYSQL_SOCKET=$mysqlSockPath\n"
+                : "MYSQL_HOST=$host\nMYSQL_PORT=$port\n";
+            $env = $mysqlLine
+                 . "MYSQL_USER=$user\nMYSQL_PASSWORD=$pass\nMYSQL_DATABASE=$db\n"
                  . "SITE_URL=$siteUrl\nSITE_NAME=$siteName\n"
                  . "SOCKET_PATH=/home/i/infogkmeta/node.sock\nNODE_ENV=production\n";
             file_put_contents($envFile, $env);
