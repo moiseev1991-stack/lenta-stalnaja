@@ -182,15 +182,20 @@ function startNode(): void {
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Launching node src/app.js...\n", FILE_APPEND);
     // Try setsid first (creates new session, detaches from PHP cgroup); fall back to nohup only
     $hasSetsid = (trim((string) shell_exec('which setsid 2>/dev/null')) !== '');
+    // Write a startup shell script so we can capture exit code without quoting hell
+    $startScript = APP_DIR . '/start_node.sh';
+    file_put_contents($startScript,
+        "#!/bin/sh\n" .
+        "cd " . APP_DIR . "\n" .
+        "export HOME=" . HOME_DIR . "\n" .
+        "node src/app.js >> " . LOG_FILE . " 2>&1\n" .
+        "echo \"[EXIT] node exited: \$?\" >> " . LOG_FILE . "\n"
+    );
+    shell_exec('chmod +x ' . escapeshellarg($startScript));
     if ($hasSetsid) {
-        // setsid creates new session; wrap in subshell to capture exit code in log
-        $cmd = 'cd ' . APP_DIR
-             . ' && HOME=' . HOME_DIR
-             . ' (setsid sh -c "node src/app.js >> ' . LOG_FILE . ' 2>&1; echo [EXIT] node exited: \\$? >> ' . LOG_FILE . '") & echo $!';
+        $cmd = 'setsid nohup ' . escapeshellarg($startScript) . ' >> /dev/null 2>&1 & echo $!';
     } else {
-        $cmd = 'cd ' . APP_DIR
-             . ' && HOME=' . HOME_DIR
-             . ' (nohup sh -c "node src/app.js >> ' . LOG_FILE . ' 2>&1; echo [EXIT] node exited: \\$? >> ' . LOG_FILE . '") & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
+        $cmd = 'nohup ' . escapeshellarg($startScript) . ' >> /dev/null 2>&1 & echo $!';
     }
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
     $pid = trim((string) shell_exec($cmd));
