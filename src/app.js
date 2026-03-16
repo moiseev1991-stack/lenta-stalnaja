@@ -81,16 +81,27 @@ app.use(express.urlencoded({ extended: true }));
 
 // Menu data middleware - adds grades and groups to all pages (async, MySQL)
 const lentaService = require('./services/lenta');
+const pool = require('./db/mysql');
+
+async function getDbSiteName() {
+  try {
+    const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', ['site_name']);
+    return (row && row.value) ? row.value : null;
+  } catch (_) { return null; }
+}
+
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
   try {
-    const [menuGrades, menuGroups] = await Promise.all([
+    const [menuGrades, menuGroups, dbSiteName] = await Promise.all([
       lentaService.getAllGrades(),
       lentaService.getAllGroups(),
+      getDbSiteName(),
     ]);
     res.locals.menuGrades = menuGrades;
     res.locals.menuGroups = menuGroups;
-    res.locals.siteName   = config.siteName;
+    res.locals.siteName   = dbSiteName || config.siteName;
+    res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
   } catch (err) {
@@ -98,6 +109,7 @@ app.use(async (req, res, next) => {
     res.locals.menuGrades = [];
     res.locals.menuGroups = [];
     res.locals.siteName   = config.siteName;
+    res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
   }

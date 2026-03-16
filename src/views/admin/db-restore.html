@@ -6,7 +6,7 @@
 </div>
 
 <div class="adm-card">
-  <p class="adm-text">Загрузите файл <strong>database.sqlite</strong> с вашего компьютера (из папки <code>data/</code> проекта). Текущая база на сервере будет сохранена с резервной копией.</p>
+  <p class="adm-text">Загрузите файл <strong>sync_to_server_full.sql</strong> (или <code>database.sqlite</code>) с вашего компьютера — из папки <code>data/</code> проекта.</p>
 
   {% if message %}
   <div class="adm-alert adm-alert-success">{{ message }}</div>
@@ -17,8 +17,8 @@
 
   <form method="post" action="/admin/db-restore" enctype="multipart/form-data">
     <div class="adm-form-group">
-      <label class="adm-label">Файл database.sqlite</label>
-      <input type="file" name="db_file" accept=".sqlite,.db" class="adm-file" required>
+      <label class="adm-label">Файл SQL или SQLite (.sql / .sqlite / .db)</label>
+      <input type="file" name="db_file" accept=".sql,.sqlite,.db" class="adm-file" required>
     </div>
 
     <div class="adm-form-actions">
