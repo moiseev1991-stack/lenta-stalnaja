@@ -8,7 +8,7 @@
 ignore_user_abort(true);
 set_time_limit(300);
 
-define('NODE_URL',  'http://127.0.0.1:3000');
+define('NODE_URL',  'http://[::1]:3000');
 define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
