@@ -9,7 +9,7 @@ ignore_user_abort(true);
 set_time_limit(300);
 
 define('NODE_URL',  'http://127.0.0.1:3000');
-define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja/public_html');
+define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
 define('HOME_DIR',  '/home/i/infogkmeta');
@@ -31,7 +31,7 @@ define('NPM_CACHE', HOME_DIR . '/.npm-cache');
         'nm_in_pub'     => is_dir($__pub  . '/node_modules') ? 'YES' : 'NO',
         'nm_in_par'     => is_dir($__par  . '/node_modules') ? 'YES' : 'NO',
     ];
-    $__line = json_encode(['ts' => $__ts, 'runId' => 'diag-v1', 'hypothesisId' => 'H-A', 'checks' => $__checks]);
+    $__line = json_encode(['ts' => $__ts, 'runId' => 'post-fix', 'hypothesisId' => 'H-A', 'checks' => $__checks]);
     file_put_contents(LOG_FILE, "[$__ts][DIAG] " . $__line . "\n", FILE_APPEND);
 }
 // #endregion
