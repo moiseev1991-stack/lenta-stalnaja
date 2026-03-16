@@ -8,7 +8,7 @@
 ignore_user_abort(true);
 set_time_limit(300);
 
-define('NODE_URL',  'http://[::1]:3000');
+define('NODE_URL',  'http://127.0.0.1:3000');
 define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
@@ -22,7 +22,6 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPid      = (int) $dbgPidRaw;
     $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
     $dbgSock = @fsockopen('127.0.0.1', 3000, $dbgSockErr, $dbgSockMsg, 2);
-    if (!$dbgSock) $dbgSock = @fsockopen('::1', 3000, $dbgSockErr, $dbgSockMsg, 2);
     $dbgPort = (bool) $dbgSock;
     if ($dbgSock) fclose($dbgSock);
     $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
@@ -63,8 +62,6 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
 // invisible to fsockopen('127.0.0.1'). We try both IPv4 and IPv6.
 function isPort3000Open(): bool {
     $s = @fsockopen('127.0.0.1', 3000, $e, $m, 2);
-    if ($s) { fclose($s); return true; }
-    $s = @fsockopen('::1', 3000, $e, $m, 2);
     if ($s) { fclose($s); return true; }
     return false;
 }
@@ -263,7 +260,6 @@ if ($response === false || $errno || $httpCode === 0) {
 
     // Live port check
     $diagSock = @fsockopen('127.0.0.1', 3000, $diagSockErr, $diagSockMsg, 2);
-    if (!$diagSock) $diagSock = @fsockopen('::1', 3000, $diagSockErr, $diagSockMsg, 2);
     $diagPort = $diagSock ? '✅ OPEN' : "❌ CLOSED ($diagSockErr: $diagSockMsg)";
     if ($diagSock) fclose($diagSock);
 
