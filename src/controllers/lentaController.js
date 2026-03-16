@@ -26,8 +26,7 @@ function hasFilters(f) {
 
 function base(res, data) {
   res.render(data._template, {
-    siteName: config.siteName,
-    siteUrl:  config.siteUrl,
+    siteUrl: config.siteUrl,
     ...data,
   });
 }

@@ -32,7 +32,7 @@ function hasFilters(f) {
 }
 
 function renderPage(res, template, data = {}) {
-  res.render(template, { siteName: config.siteName, siteUrl: config.siteUrl, ...data });
+  res.render(template, { siteUrl: config.siteUrl, ...data });
 }
 
 // ── Home ──────────────────────────────────────────────────────────────────────
@@ -278,12 +278,12 @@ async function categoryPage(req, res, next) {
   try {
     const slug = req.params.categorySlug;
     if (slug === 'list' || slug.startsWith('list/')) {
-      return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
+      return res.status(404).render('404.html', { siteUrl: config.siteUrl, title: 'Страница не найдена' });
     }
     const pathParts = slug.split('/').filter(Boolean);
     let category = null, parentId = null;
     for (const part of pathParts) {
-      if (part === 'list') return res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl, title: 'Страница не найдена' });
+      if (part === 'list') return res.status(404).render('404.html', { siteUrl: config.siteUrl, title: 'Страница не найдена' });
       if (parentId) {
         const subs = await catalog.getSubcategories(parentId);
         category = subs.find(c => c.slug === part) || null;

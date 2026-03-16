@@ -119,7 +119,7 @@ app.use('/', require('./routes/public'));
 app.use('/admin', require('./routes/admin'));
 
 app.use((req, res) => {
-  res.status(404).render('404.html', { siteName: config.siteName, siteUrl: config.siteUrl });
+  res.status(404).render('404.html', { siteUrl: config.siteUrl });
 });
 
 app.use((err, req, res, next) => {
