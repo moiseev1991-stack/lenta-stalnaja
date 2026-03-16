@@ -16,6 +16,42 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
+// #region agent log — debug endpoint (returns JSON state, no proxy)
+if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
+    $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
+    $dbgPid      = (int) $dbgPidRaw;
+    $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
+    $dbgSock     = @fsockopen('127.0.0.1', 3000, $dbgSockErr, $dbgSockMsg, 2);
+    $dbgPort     = (bool) $dbgSock;
+    if ($dbgSock) fclose($dbgSock);
+    $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
+    $dbgLogLines = file_exists(LOG_FILE) ? array_slice(file(LOG_FILE), -30) : [];
+    $dbgNmExpr   = file_exists(APP_DIR.'/node_modules/express/index.js');
+    $dbgNmMysql  = file_exists(APP_DIR.'/node_modules/mysql2/index.js');
+    $dbgNmBcrypt = file_exists(APP_DIR.'/node_modules/bcryptjs/package.json');
+    $dbgAppJs    = file_exists(APP_DIR.'/src/app.js');
+    $dbgEnv      = file_exists(APP_DIR.'/.env');
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    echo json_encode([
+        'ts'           => date('Y-m-d H:i:s'),
+        'app_dir'      => APP_DIR,
+        'appjs'        => $dbgAppJs,
+        'env'          => $dbgEnv,
+        'nm_express'   => $dbgNmExpr,
+        'nm_mysql2'    => $dbgNmMysql,
+        'nm_bcryptjs'  => $dbgNmBcrypt,
+        'pid'          => $dbgPidRaw,
+        'pid_alive'    => $dbgPidAlive,
+        'port_3000'    => $dbgPort,
+        'port_err'     => $dbgSockErr . ': ' . $dbgSockMsg,
+        'node_pids'    => $dbgPgrep,
+        'last_log'     => $dbgLogLines,
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+// #endregion
+
 // #region agent log — diagnostics
 {
     $__ts  = date('Y-m-d H:i:s');
@@ -95,7 +131,7 @@ function installDeps(): void {
 
     // Double-check: maybe the other process just finished
     if (file_exists(APP_DIR . '/node_modules/mysql2/index.js')
-        && file_exists(APP_DIR . '/node_modules/bcryptjs/bCrypt.js')) {
+        && file_exists(APP_DIR . '/node_modules/bcryptjs/package.json')) {
         flock($lockFh, LOCK_UN);
         fclose($lockFh);
         return;
@@ -140,7 +176,7 @@ function startNode(): void {
     // Install deps if node_modules is missing OR mysql2/bcryptjs is missing
     if (!file_exists(APP_DIR . '/node_modules/express/index.js')
         || !file_exists(APP_DIR . '/node_modules/mysql2/index.js')
-        || !file_exists(APP_DIR . '/node_modules/bcryptjs/bCrypt.js')) {
+        || !file_exists(APP_DIR . '/node_modules/bcryptjs/package.json')) {
         installDeps();
     }
 
