@@ -1,7 +1,7 @@
 try { require('dotenv').config(); } catch (e) { if (e && e.code !== 'MODULE_NOT_FOUND') throw e; }
 
 module.exports = {
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: parseInt(process.env.PORT || '8765', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   siteName: process.env.SITE_NAME || 'Каталог металлопроката',
   siteUrl: (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),

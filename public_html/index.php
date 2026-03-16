@@ -8,7 +8,7 @@
 ignore_user_abort(true);
 set_time_limit(300);
 
-define('NODE_URL',  'http://127.0.0.1:3000');
+define('NODE_URL',  'http://127.0.0.1:8765');
 define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
@@ -21,20 +21,19 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
     $dbgPid      = (int) $dbgPidRaw;
     $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
-    $dbgSock = @fsockopen('127.0.0.1', 3000, $dbgSockErr, $dbgSockMsg, 2);
+    $dbgSock = @fsockopen('127.0.0.1', 8765, $dbgSockErr, $dbgSockMsg, 2);
     $dbgPort = (bool) $dbgSock;
     if ($dbgSock) fclose($dbgSock);
+    $dbgSock3000 = @fsockopen('127.0.0.1', 3000, $e3, $m3, 2);
+    $dbgPort3000 = (bool) $dbgSock3000;
+    if ($dbgSock3000) fclose($dbgSock3000);
     $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
     // Filter out [DIAG] lines, get last 30 real log lines
     $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
     $dbgRealLines = array_values(array_filter($dbgAllLines, function($l) { return strpos($l, '[DIAG]') === false; }));
     $dbgLogLines  = array_slice($dbgRealLines, -30);
-    // Run node synchronously to capture crash output (timeout 8s)
-    $dbgNodeTest = shell_exec(
-        'cd ' . escapeshellarg(APP_DIR)
-        . ' && HOME=' . escapeshellarg(HOME_DIR)
-        . ' timeout 8 node src/app.js 2>&1'
-    );
+    // Run quick node sanity check (not full app — just version)
+    $dbgNodeTest = shell_exec('node --version 2>&1');
     header('Content-Type: application/json');
     header('Cache-Control: no-store');
     echo json_encode([
@@ -47,8 +46,9 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
         'nm_bcryptjs'  => file_exists(APP_DIR.'/node_modules/bcryptjs/package.json'),
         'pid'          => $dbgPidRaw,
         'pid_alive'    => $dbgPidAlive,
-        'port_3000'    => $dbgPort,
-        'port_err'     => $dbgSockErr . ': ' . $dbgSockMsg,
+        'port_8765'    => $dbgPort,
+        'port_8765_err'=> $dbgSockErr . ': ' . $dbgSockMsg,
+        'port_3000'    => $dbgPort3000,
         'node_pids'    => $dbgPgrep,
         'node_test'    => $dbgNodeTest,
         'last_log'     => $dbgLogLines,
@@ -60,8 +60,8 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
 // ── 1. Check if port 3000 is actually accepting connections ───────────────────
 // Replaces PID-based check: node may be bound to IPv6 (:::3000) which is
 // invisible to fsockopen('127.0.0.1'). We try both IPv4 and IPv6.
-function isPort3000Open(): bool {
-    $s = @fsockopen('127.0.0.1', 3000, $e, $m, 2);
+function isNodePortOpen(): bool {
+    $s = @fsockopen('127.0.0.1', 8765, $e, $m, 2);
     if ($s) { fclose($s); return true; }
     return false;
 }
@@ -195,13 +195,13 @@ function startNode(): void {
 $canExec = function_exists('shell_exec') && function_exists('exec')
            && !in_array('shell_exec', array_map('trim', explode(',', ini_get('disable_functions'))));
 
-if ($canExec && !isPort3000Open()) {
+if ($canExec && !isNodePortOpen()) {
     $startLock = HOME_DIR . '/node_start.lock';
     $startFh   = fopen($startLock, 'c');
     if ($startFh) {
         if (flock($startFh, LOCK_EX | LOCK_NB)) {
             // Got the lock: we are the only request starting node
-            if (!isPort3000Open()) {          // double-check under lock
+            if (!isNodePortOpen()) {          // double-check under lock
                 exec('pkill -f "node.*app.js" 2>/dev/null');
                 sleep(1);
                 startNode();
@@ -273,9 +273,12 @@ if ($response === false || $errno || $httpCode === 0) {
     $diagPgrepFmt = $diagPgrep ? "✅ $diagPgrep" : '❌ none';
 
     // Live port check
-    $diagSock = @fsockopen('127.0.0.1', 3000, $diagSockErr, $diagSockMsg, 2);
+    $diagSock = @fsockopen('127.0.0.1', 8765, $diagSockErr, $diagSockMsg, 2);
     $diagPort = $diagSock ? '✅ OPEN' : "❌ CLOSED ($diagSockErr: $diagSockMsg)";
     if ($diagSock) fclose($diagSock);
+    $diagSock3k = @fsockopen('127.0.0.1', 3000, $e3k, $m3k, 2);
+    $diagPort3k = $diagSock3k ? '⚠️ OCCUPIED (other user)' : '✅ free';
+    if ($diagSock3k) fclose($diagSock3k);
 
     // Last 10 log lines (most recent crash reason)
     $diagLastLines = file_exists(LOG_FILE) ? implode('', array_slice(file(LOG_FILE), -10)) : '(empty)';
@@ -289,7 +292,8 @@ if ($response === false || $errno || $httpCode === 0) {
         ['─── LIVE STATE ───',              ''],
         ['Node PID (from file)',             $diagPidAlive],
         ['Node processes (pgrep)',           $diagPgrepFmt],
-        ['Port 3000',                        $diagPort],
+        ['Port 8765 (our node)',              $diagPort],
+        ['Port 3000 (conflict check)',        $diagPort3k],
     ];
     $diag_html  = '<table border="1" cellpadding="4" style="border-collapse:collapse;font-size:13px;margin-bottom:10px">';
     foreach ($diag_rows as [$k, $v]) {
