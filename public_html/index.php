@@ -16,6 +16,26 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
+// #region agent log — diagnostics
+{
+    $__ts  = date('Y-m-d H:i:s');
+    $__par = '/home/i/infogkmeta/lenta-stalnaja';
+    $__pub = '/home/i/infogkmeta/lenta-stalnaja/public_html';
+    $__checks = [
+        'appJs_in_pub'  => file_exists($__pub  . '/src/app.js') ? 'YES' : 'NO',
+        'appJs_in_par'  => file_exists($__par  . '/src/app.js') ? 'YES' : 'NO',
+        'migJs_in_pub'  => file_exists($__pub  . '/src/db/migrations.js') ? 'YES' : 'NO',
+        'migJs_in_par'  => file_exists($__par  . '/src/db/migrations.js') ? 'YES' : 'NO',
+        'pkgJson_in_pub'=> file_exists($__pub  . '/package.json') ? 'YES' : 'NO',
+        'pkgJson_in_par'=> file_exists($__par  . '/package.json') ? 'YES' : 'NO',
+        'nm_in_pub'     => is_dir($__pub  . '/node_modules') ? 'YES' : 'NO',
+        'nm_in_par'     => is_dir($__par  . '/node_modules') ? 'YES' : 'NO',
+    ];
+    $__line = json_encode(['ts' => $__ts, 'runId' => 'diag-v1', 'hypothesisId' => 'H-A', 'checks' => $__checks]);
+    file_put_contents(LOG_FILE, "[$__ts][DIAG] " . $__line . "\n", FILE_APPEND);
+}
+// #endregion
+
 // ── 1. Check if Node.js is running ───────────────────────────────────────────
 function isNodeRunning(): bool {
     if (file_exists(PID_FILE)) {
