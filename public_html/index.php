@@ -212,11 +212,35 @@ if ($response === false || $errno || $httpCode === 0) {
     $logLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
     $log = nl2br(htmlspecialchars(implode('', array_slice($logLines, -200))));
     $exec_status = $canExec ? 'exec/shell_exec <b>доступны</b>' : 'exec/shell_exec <b>ОТКЛЮЧЕНЫ</b>';
+    // #region agent log — inline diagnostics for 503 page
+    $PAR = '/home/i/infogkmeta/lenta-stalnaja';
+    $PUB = '/home/i/infogkmeta/lenta-stalnaja/public_html';
+    $diag_rows = [
+        ['APP_DIR (current)',               APP_DIR],
+        ['src/app.js @ APP_DIR',            file_exists(APP_DIR.'/src/app.js')          ? '✅ YES' : '❌ NO'],
+        ['src/app.js @ public_html',        file_exists($PUB.'/src/app.js')             ? '✅ YES' : '❌ NO'],
+        ['src/app.js @ parent',             file_exists($PAR.'/src/app.js')             ? '✅ YES' : '❌ NO'],
+        ['migrations.js @ APP_DIR',         file_exists(APP_DIR.'/src/db/migrations.js')? '✅ YES' : '❌ NO'],
+        ['node_modules @ APP_DIR',          is_dir(APP_DIR.'/node_modules')             ? '✅ YES' : '❌ NO'],
+        ['node_modules/express @ APP_DIR',  file_exists(APP_DIR.'/node_modules/express/index.js') ? '✅ YES' : '❌ NO'],
+        ['node_modules/mysql2 @ APP_DIR',   file_exists(APP_DIR.'/node_modules/mysql2/index.js')  ? '✅ YES' : '❌ NO'],
+        ['.env @ APP_DIR',                  file_exists(APP_DIR.'/.env')                ? '✅ YES' : '❌ NO'],
+        ['package.json @ APP_DIR',          file_exists(APP_DIR.'/package.json')        ? '✅ YES' : '❌ NO'],
+    ];
+    $diag_html = '<table border="1" cellpadding="4" style="border-collapse:collapse;font-size:13px;margin-bottom:10px">';
+    foreach ($diag_rows as [$k, $v]) {
+        $diag_html .= "<tr><td><b>$k</b></td><td>$v</td></tr>";
+    }
+    $diag_html .= '</table>';
+    // #endregion
     echo <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>503</title></head><body>
 <h2>503 — Node.js недоступен</h2>
 <p>Статус: $exec_status</p>
 <p>Обновите страницу через 10 секунд. Если не помогает — проверьте лог ниже.</p>
+<h3>🔍 Диагностика путей</h3>
+$diag_html
+<h3>📋 Лог</h3>
 <pre style="background:#f4f4f4;padding:10px;font-size:12px">$log</pre>
 </body></html>
 HTML;
