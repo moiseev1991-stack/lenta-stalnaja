@@ -227,23 +227,40 @@ if ($response === false || $errno || $httpCode === 0) {
     // #region agent log — inline diagnostics for 503 page
     $PAR = '/home/i/infogkmeta/lenta-stalnaja';
     $PUB = '/home/i/infogkmeta/lenta-stalnaja/public_html';
+
+    // Live node process check
+    $diagPidRaw = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
+    $diagPid    = (int) $diagPidRaw;
+    $diagPidAlive = ($diagPid > 0 && file_exists("/proc/$diagPid")) ? "✅ alive (pid=$diagPid)" : "❌ dead (pid=$diagPidRaw)";
+    $diagPgrep  = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
+    $diagPgrepFmt = $diagPgrep ? "✅ $diagPgrep" : '❌ none';
+
+    // Live port check
+    $diagSock = @fsockopen('127.0.0.1', 3000, $diagSockErr, $diagSockMsg, 2);
+    $diagPort = $diagSock ? '✅ OPEN' : "❌ CLOSED ($diagSockErr: $diagSockMsg)";
+    if ($diagSock) fclose($diagSock);
+
+    // Last 10 log lines (most recent crash reason)
+    $diagLastLines = file_exists(LOG_FILE) ? implode('', array_slice(file(LOG_FILE), -10)) : '(empty)';
+
     $diag_rows = [
         ['APP_DIR (current)',               APP_DIR],
         ['src/app.js @ APP_DIR',            file_exists(APP_DIR.'/src/app.js')          ? '✅ YES' : '❌ NO'],
-        ['src/app.js @ public_html',        file_exists($PUB.'/src/app.js')             ? '✅ YES' : '❌ NO'],
-        ['src/app.js @ parent',             file_exists($PAR.'/src/app.js')             ? '✅ YES' : '❌ NO'],
-        ['migrations.js @ APP_DIR',         file_exists(APP_DIR.'/src/db/migrations.js')? '✅ YES' : '❌ NO'],
-        ['node_modules @ APP_DIR',          is_dir(APP_DIR.'/node_modules')             ? '✅ YES' : '❌ NO'],
         ['node_modules/express @ APP_DIR',  file_exists(APP_DIR.'/node_modules/express/index.js') ? '✅ YES' : '❌ NO'],
         ['node_modules/mysql2 @ APP_DIR',   file_exists(APP_DIR.'/node_modules/mysql2/index.js')  ? '✅ YES' : '❌ NO'],
         ['.env @ APP_DIR',                  file_exists(APP_DIR.'/.env')                ? '✅ YES' : '❌ NO'],
-        ['package.json @ APP_DIR',          file_exists(APP_DIR.'/package.json')        ? '✅ YES' : '❌ NO'],
+        ['─── LIVE STATE ───',              ''],
+        ['Node PID (from file)',             $diagPidAlive],
+        ['Node processes (pgrep)',           $diagPgrepFmt],
+        ['Port 3000',                        $diagPort],
     ];
-    $diag_html = '<table border="1" cellpadding="4" style="border-collapse:collapse;font-size:13px;margin-bottom:10px">';
+    $diag_html  = '<table border="1" cellpadding="4" style="border-collapse:collapse;font-size:13px;margin-bottom:10px">';
     foreach ($diag_rows as [$k, $v]) {
-        $diag_html .= "<tr><td><b>$k</b></td><td>$v</td></tr>";
+        $diag_html .= "<tr><td><b>" . htmlspecialchars($k) . "</b></td><td>" . htmlspecialchars($v) . "</td></tr>";
     }
     $diag_html .= '</table>';
+    $diag_html .= '<h3>🔚 Последние 10 строк лога</h3>';
+    $diag_html .= '<pre style="background:#fff3cd;padding:8px;font-size:12px">' . nl2br(htmlspecialchars($diagLastLines)) . '</pre>';
     // #endregion
     echo <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>503</title></head><body>
