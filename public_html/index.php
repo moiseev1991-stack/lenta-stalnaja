@@ -16,7 +16,7 @@ define('HOME_DIR',  '/home/i/infogkmeta');
 define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
-// #region agent log — debug endpoint (returns JSON state, no proxy)
+// #region agent log — debug endpoint (returns JSON state + node crash test)
 if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
     $dbgPid      = (int) $dbgPidRaw;
@@ -25,50 +25,35 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPort     = (bool) $dbgSock;
     if ($dbgSock) fclose($dbgSock);
     $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
-    $dbgLogLines = file_exists(LOG_FILE) ? array_slice(file(LOG_FILE), -30) : [];
-    $dbgNmExpr   = file_exists(APP_DIR.'/node_modules/express/index.js');
-    $dbgNmMysql  = file_exists(APP_DIR.'/node_modules/mysql2/index.js');
-    $dbgNmBcrypt = file_exists(APP_DIR.'/node_modules/bcryptjs/package.json');
-    $dbgAppJs    = file_exists(APP_DIR.'/src/app.js');
-    $dbgEnv      = file_exists(APP_DIR.'/.env');
+    // Filter out [DIAG] lines, get last 30 real log lines
+    $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
+    $dbgRealLines = array_filter($dbgAllLines, fn($l) => strpos($l, '[DIAG]') === false);
+    $dbgLogLines  = array_values(array_slice($dbgRealLines, -30));
+    // Run node synchronously to capture crash output (timeout 8s)
+    $dbgNodeTest = shell_exec(
+        'cd ' . escapeshellarg(APP_DIR)
+        . ' && HOME=' . escapeshellarg(HOME_DIR)
+        . ' timeout 8 node src/app.js 2>&1'
+    );
     header('Content-Type: application/json');
     header('Cache-Control: no-store');
     echo json_encode([
         'ts'           => date('Y-m-d H:i:s'),
         'app_dir'      => APP_DIR,
-        'appjs'        => $dbgAppJs,
-        'env'          => $dbgEnv,
-        'nm_express'   => $dbgNmExpr,
-        'nm_mysql2'    => $dbgNmMysql,
-        'nm_bcryptjs'  => $dbgNmBcrypt,
+        'appjs'        => file_exists(APP_DIR.'/src/app.js'),
+        'env'          => file_exists(APP_DIR.'/.env'),
+        'nm_express'   => file_exists(APP_DIR.'/node_modules/express/index.js'),
+        'nm_mysql2'    => file_exists(APP_DIR.'/node_modules/mysql2/index.js'),
+        'nm_bcryptjs'  => file_exists(APP_DIR.'/node_modules/bcryptjs/package.json'),
         'pid'          => $dbgPidRaw,
         'pid_alive'    => $dbgPidAlive,
         'port_3000'    => $dbgPort,
         'port_err'     => $dbgSockErr . ': ' . $dbgSockMsg,
         'node_pids'    => $dbgPgrep,
+        'node_test'    => $dbgNodeTest,
         'last_log'     => $dbgLogLines,
     ], JSON_PRETTY_PRINT);
     exit;
-}
-// #endregion
-
-// #region agent log — diagnostics
-{
-    $__ts  = date('Y-m-d H:i:s');
-    $__par = '/home/i/infogkmeta/lenta-stalnaja';
-    $__pub = '/home/i/infogkmeta/lenta-stalnaja/public_html';
-    $__checks = [
-        'appJs_in_pub'  => file_exists($__pub  . '/src/app.js') ? 'YES' : 'NO',
-        'appJs_in_par'  => file_exists($__par  . '/src/app.js') ? 'YES' : 'NO',
-        'migJs_in_pub'  => file_exists($__pub  . '/src/db/migrations.js') ? 'YES' : 'NO',
-        'migJs_in_par'  => file_exists($__par  . '/src/db/migrations.js') ? 'YES' : 'NO',
-        'pkgJson_in_pub'=> file_exists($__pub  . '/package.json') ? 'YES' : 'NO',
-        'pkgJson_in_par'=> file_exists($__par  . '/package.json') ? 'YES' : 'NO',
-        'nm_in_pub'     => is_dir($__pub  . '/node_modules') ? 'YES' : 'NO',
-        'nm_in_par'     => is_dir($__par  . '/node_modules') ? 'YES' : 'NO',
-    ];
-    $__line = json_encode(['ts' => $__ts, 'runId' => 'post-fix', 'hypothesisId' => 'H-A', 'checks' => $__checks]);
-    file_put_contents(LOG_FILE, "[$__ts][DIAG] " . $__line . "\n", FILE_APPEND);
 }
 // #endregion
 
