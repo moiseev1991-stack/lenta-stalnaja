@@ -4,7 +4,7 @@ module.exports = {
   port: parseInt(process.env.PORT || '8765', 10),
   socketPath: process.env.SOCKET_PATH || '',
   nodeEnv: process.env.NODE_ENV || 'development',
-  siteName: process.env.SITE_NAME || 'Каталог металлопроката',
+  siteName: process.env.SITE_NAME_OVERRIDE || 'Лента стальная — каталог металлопроката',
   siteUrl: (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   dbPath: process.env.DB_PATH || './data/app.db',
   adminUsername: process.env.ADMIN_USERNAME || 'admin',

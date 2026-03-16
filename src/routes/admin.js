@@ -90,4 +90,10 @@ router.post('/bonus-page', a(controller.saveBonusPage));
 router.get('/db-restore', controller.dbRestoreForm);
 router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
 
+// ─── Process restart (triggers PM2 / process manager restart) ────────────────
+router.post('/restart', (req, res) => {
+  res.send('Restarting server...');
+  setTimeout(() => process.exit(0), 300);
+});
+
 module.exports = router;
