@@ -27,8 +27,8 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgPgrep    = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
     // Filter out [DIAG] lines, get last 30 real log lines
     $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
-    $dbgRealLines = array_filter($dbgAllLines, fn($l) => strpos($l, '[DIAG]') === false);
-    $dbgLogLines  = array_values(array_slice($dbgRealLines, -30));
+    $dbgRealLines = array_values(array_filter($dbgAllLines, function($l) { return strpos($l, '[DIAG]') === false; }));
+    $dbgLogLines  = array_slice($dbgRealLines, -30);
     // Run node synchronously to capture crash output (timeout 8s)
     $dbgNodeTest = shell_exec(
         'cd ' . escapeshellarg(APP_DIR)
