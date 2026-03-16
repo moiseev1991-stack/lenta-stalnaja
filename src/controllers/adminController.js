@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const pool = require('../db/mysql');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const config = require('../config');
 const { buildGradeSEO, buildGroupSEO, buildProductSEO } = require('../helpers/seoTemplates');
 const csv = require('../services/csv');

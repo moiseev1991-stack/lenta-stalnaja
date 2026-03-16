@@ -1,5 +1,5 @@
 const pool = require('./mysql');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const config = require('../config');
 
 async function runMysqlMigrations() {

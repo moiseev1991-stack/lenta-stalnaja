@@ -63,18 +63,25 @@ function installDeps(): void {
 
 // ── 3. Start Node.js ─────────────────────────────────────────────────────────
 function startNode(): void {
-    // Install deps if node_modules is missing OR mysql2 is missing
-    // (mysql2 was added after initial broken install — must force reinstall if absent)
+    $ts = date('Y-m-d H:i:s');
+    file_put_contents(LOG_FILE, "\n[$ts] === NODE START ===\n", FILE_APPEND);
+
+    // Install deps if node_modules is missing OR mysql2/bcryptjs is missing
+    // (after replacing bcrypt→bcryptjs: force reinstall to get pure-JS bcryptjs)
     if (!file_exists(APP_DIR . '/node_modules/express/index.js')
-        || !file_exists(APP_DIR . '/node_modules/mysql2/index.js')) {
+        || !file_exists(APP_DIR . '/node_modules/mysql2/index.js')
+        || !file_exists(APP_DIR . '/node_modules/bcryptjs/bCrypt.js')) {
+        file_put_contents(LOG_FILE, "[$ts] Running npm install...\n", FILE_APPEND);
         installDeps();
     }
 
     // Run MySQL migrations (idempotent — safe every time)
     $env = 'HOME=' . HOME_DIR . ' npm_config_cache=' . NPM_CACHE;
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Running migrations...\n", FILE_APPEND);
     exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
 
     // Launch
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Launching node src/app.js...\n", FILE_APPEND);
     $cmd = 'cd ' . APP_DIR
          . ' && HOME=' . HOME_DIR
          . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
