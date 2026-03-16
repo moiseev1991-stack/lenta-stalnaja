@@ -32,6 +32,14 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
     $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
     $dbgRealLines = array_values(array_filter($dbgAllLines, function($l) { return strpos($l, '[DIAG]') === false; }));
     $dbgLogLines  = array_slice($dbgRealLines, -30);
+    // Optional: force a node start via ?start=1
+    $dbgStartLog = '';
+    if (isset($_GET['start'])) {
+        exec('pkill -f "node.*app.js" 2>/dev/null');
+        sleep(1);
+        startNode();
+        $dbgStartLog = 'startNode() triggered';
+    }
     // Run quick node sanity check (not full app — just version)
     $dbgNodeTest = shell_exec('node --version 2>&1');
     header('Content-Type: application/json');
@@ -50,6 +58,7 @@ if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
         'port_8765_err'=> $dbgSockErr . ': ' . $dbgSockMsg,
         'port_3000'    => $dbgPort3000,
         'node_pids'    => $dbgPgrep,
+        'start_result' => $dbgStartLog,
         'node_test'    => $dbgNodeTest,
         'last_log'     => $dbgLogLines,
     ], JSON_PRETTY_PRINT);
