@@ -28,8 +28,11 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
         $user = trim($_POST['mysql_user'] ?? '');
         $pass = $_POST['mysql_password'] ?? '';
         $db   = trim($_POST['mysql_database'] ?? '');
-        if ($user && $db) {
+        $siteUrl  = rtrim(trim($_POST['site_url']  ?? 'https://lenta-stalnaja.ru'), '/');
+        $siteName = trim($_POST['site_name'] ?? 'Каталог металлопроката');
+    if ($user && $db) {
             $env = "MYSQL_HOST=$host\nMYSQL_PORT=$port\nMYSQL_USER=$user\nMYSQL_PASSWORD=$pass\nMYSQL_DATABASE=$db\n"
+                 . "SITE_URL=$siteUrl\nSITE_NAME=$siteName\n"
                  . "SOCKET_PATH=/home/i/infogkmeta/node.sock\nNODE_ENV=production\n";
             file_put_contents($envFile, $env);
             // Restart node
@@ -57,7 +60,10 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
   <label>MySQL Port:</label><input name="mysql_port" value="3306"><br>
   <label>MySQL User:</label><input name="mysql_user" required><br>
   <label>MySQL Password:</label><input name="mysql_password" type="password"><br>
-  <label>MySQL Database:</label><input name="mysql_database" required><br><br>
+  <label>MySQL Database:</label><input name="mysql_database" required><br>
+  <hr>
+  <label>Site URL (без слэша):</label><input name="site_url" value="https://lenta-stalnaja.ru"><br>
+  <label>Site Name:</label><input name="site_name" value="Каталог металлопроката"><br><br>
   <button type="submit" style="padding:8px 20px;background:#007bff;color:#fff;border:none;cursor:pointer">Сохранить и перезапустить</button>
 </form>
 <h3>Текущий .env:</h3><pre style="background:#f4f4f4;padding:10px">$existing</pre>
