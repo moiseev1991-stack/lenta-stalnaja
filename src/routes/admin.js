@@ -91,6 +91,10 @@ router.get('/db-restore', controller.dbRestoreForm);
 router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
 
 // ─── Process restart (triggers PM2 / process manager restart) ────────────────
+router.get('/restart', (req, res) => {
+  res.send('<h2>Restarting server in 1 second...</h2><p>Refresh the main page in a few seconds.</p>');
+  setTimeout(() => process.exit(0), 1000);
+});
 router.post('/restart', (req, res) => {
   res.send('Restarting server...');
   setTimeout(() => process.exit(0), 300);
