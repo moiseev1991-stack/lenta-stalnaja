@@ -89,6 +89,10 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
     $dbgRealLines = array_values(array_filter($dbgAllLines, function($l) { return strpos($l, '[DIAG]') === false; }));
     $dbgLogLines  = array_slice($dbgRealLines, -30);
+    // Check MySQL socket paths
+    $mysqlSockets = ['/var/run/mysqld/mysqld.sock', '/tmp/mysql.sock', '/var/lib/mysql/mysql.sock', '/tmp/mysqld.sock'];
+    $dbgMysqlSock = '';
+    foreach ($mysqlSockets as $s) { if (file_exists($s)) { $dbgMysqlSock = $s; break; } }
     // Check alternative launchers
     $dbgAtAvail     = trim((string) shell_exec('which at 2>/dev/null'));
     $dbgScreenAvail = trim((string) shell_exec('which screen 2>/dev/null'));
@@ -140,6 +144,7 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
         'socket_ready'  => $dbgPort,
         'port_3000'    => $dbgPort3000,
         'node_pids'    => $dbgPgrep,
+        'mysql_socket' => $dbgMysqlSock,
         'at_avail'     => $dbgAtAvail,
         'screen_avail' => $dbgScreenAvail,
         'tmux_avail'   => $dbgTmuxAvail,

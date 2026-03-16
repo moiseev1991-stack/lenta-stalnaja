@@ -1,9 +1,7 @@
 const mysql = require('mysql2/promise');
 const config = require('../config');
 
-const pool = mysql.createPool({
-  host:            config.mysqlHost,
-  port:            config.mysqlPort,
+const poolConfig = {
   user:            config.mysqlUser,
   password:        config.mysqlPassword,
   database:        config.mysqlDatabase,
@@ -12,6 +10,16 @@ const pool = mysql.createPool({
   queueLimit:      0,
   charset:         'utf8mb4',
   timezone:        '+00:00',
-});
+};
+
+// Use Unix socket if MYSQL_SOCKET env var is set (avoids TCP auth issues on shared hosting)
+if (process.env.MYSQL_SOCKET) {
+  poolConfig.socketPath = process.env.MYSQL_SOCKET;
+} else {
+  poolConfig.host = config.mysqlHost;
+  poolConfig.port = config.mysqlPort;
+}
+
+const pool = mysql.createPool(poolConfig);
 
 module.exports = pool;
