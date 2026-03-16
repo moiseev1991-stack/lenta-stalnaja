@@ -183,13 +183,14 @@ function startNode(): void {
     // Try setsid first (creates new session, detaches from PHP cgroup); fall back to nohup only
     $hasSetsid = (trim((string) shell_exec('which setsid 2>/dev/null')) !== '');
     if ($hasSetsid) {
+        // setsid creates new session; wrap in subshell to capture exit code in log
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
-             . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
+             . ' (setsid sh -c "node src/app.js >> ' . LOG_FILE . ' 2>&1; echo [EXIT] node exited: \\$? >> ' . LOG_FILE . '") & echo $!';
     } else {
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
-             . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
+             . ' (nohup sh -c "node src/app.js >> ' . LOG_FILE . ' 2>&1; echo [EXIT] node exited: \\$? >> ' . LOG_FILE . '") & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
     }
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
     $pid = trim((string) shell_exec($cmd));
