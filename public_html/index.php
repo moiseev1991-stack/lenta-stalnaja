@@ -178,24 +178,33 @@ function startNode(): void {
     writeMigrationsStub();
     exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
 
-    // Launch
+    // Launch — setsid creates new session so hosting cgroup cleanup won't kill node
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Launching node src/app.js...\n", FILE_APPEND);
-    $cmd = 'cd ' . APP_DIR
-         . ' && HOME=' . HOME_DIR
-         . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
+    // Try setsid first (creates new session, detaches from PHP cgroup); fall back to nohup only
+    $hasSetsid = (trim((string) shell_exec('which setsid 2>/dev/null')) !== '');
+    if ($hasSetsid) {
+        $cmd = 'cd ' . APP_DIR
+             . ' && HOME=' . HOME_DIR
+             . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
+    } else {
+        $cmd = 'cd ' . APP_DIR
+             . ' && HOME=' . HOME_DIR
+             . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
+    }
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
     $pid = trim((string) shell_exec($cmd));
     if ($pid) file_put_contents(PID_FILE, $pid);
-    sleep(6);
+    sleep(8);
 
     // #region agent log — post-launch diagnostics
     $ts2 = date('Y-m-d H:i:s');
     $pidAlive   = ($pid && file_exists("/proc/$pid")) ? 'YES' : 'NO';
-    $port3000   = false;
-    $sock = @fsockopen('127.0.0.1', 3000, $sockErrno, $sockErrstr, 3);
-    if ($sock) { $port3000 = true; fclose($sock); }
+    $port8765   = false;
+    $sock = @fsockopen('127.0.0.1', 8765, $sockErrno, $sockErrstr, 3);
+    if ($sock) { $port8765 = true; fclose($sock); }
     $anyNode = shell_exec('pgrep -f "node" 2>/dev/null') ?: '';
     file_put_contents(LOG_FILE,
-        "[$ts2][POST-LAUNCH] pid=$pid pidAlive=$pidAlive port3000=" . ($port3000 ? 'OPEN' : 'CLOSED') . " anyNodePids=" . trim(str_replace("\n", ',', $anyNode)) . "\n",
+        "[$ts2][POST-LAUNCH] pid=$pid pidAlive=$pidAlive port8765=" . ($port8765 ? 'OPEN' : 'CLOSED') . " anyNodePids=" . trim(str_replace("\n", ',', $anyNode)) . "\n",
         FILE_APPEND);
     // #endregion
 }
