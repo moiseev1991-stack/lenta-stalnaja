@@ -88,6 +88,6 @@ router.post('/bonus-page', a(controller.saveBonusPage));
 
 // ─── Database restore ─────────────────────────────────────────────────────────
 router.get('/db-restore', controller.dbRestoreForm);
-router.post('/db-restore', memUpload.single('db_file'), controller.dbRestore);
+router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
 
 module.exports = router;

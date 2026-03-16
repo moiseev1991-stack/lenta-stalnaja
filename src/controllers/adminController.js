@@ -523,17 +523,44 @@ async function saveBonusPage(req, res) {
   }
 }
 
-// ─── Database restore (не применимо при MySQL) ───────────────────────────────
+// ─── Database restore (SQL file upload) ──────────────────────────────────────
 
 function dbRestoreForm(req, res) {
   res.render('admin/db-restore.html', { message: null, error: null });
 }
 
-function dbRestore(req, res) {
-  res.render('admin/db-restore.html', {
-    message: null,
-    error: 'Функция восстановления базы данных не поддерживается в режиме MySQL.',
-  });
+async function dbRestore(req, res) {
+  if (!req.file) {
+    return res.render('admin/db-restore.html', { message: null, error: 'Файл не выбран.' });
+  }
+  const sql = req.file.buffer.toString('utf8');
+  const statements = sql
+    .split(/;\s*\n/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !s.startsWith('--'));
+
+  const errors = [];
+  let ok = 0;
+  for (const stmt of statements) {
+    try {
+      await pool.query(stmt);
+      ok++;
+    } catch (e) {
+      errors.push(e.message.substring(0, 120));
+    }
+  }
+
+  if (errors.length === 0) {
+    res.render('admin/db-restore.html', {
+      message: `Успешно выполнено ${ok} запросов.`,
+      error: null,
+    });
+  } else {
+    res.render('admin/db-restore.html', {
+      message: `Выполнено ${ok} из ${ok + errors.length} запросов.`,
+      error: 'Ошибки:\n' + errors.slice(0, 5).join('\n'),
+    });
+  }
 }
 
 module.exports = {
