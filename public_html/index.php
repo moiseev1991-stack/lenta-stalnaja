@@ -32,6 +32,11 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgAllLines = file_exists(LOG_FILE) ? file(LOG_FILE) : [];
     $dbgRealLines = array_values(array_filter($dbgAllLines, function($l) { return strpos($l, '[DIAG]') === false; }));
     $dbgLogLines  = array_slice($dbgRealLines, -30);
+    // Check alternative launchers
+    $dbgAtAvail     = trim((string) shell_exec('which at 2>/dev/null'));
+    $dbgScreenAvail = trim((string) shell_exec('which screen 2>/dev/null'));
+    $dbgTmuxAvail   = trim((string) shell_exec('which tmux 2>/dev/null'));
+    $dbgAtqOut      = trim((string) shell_exec('atq 2>/dev/null'));
     // Optional: force a node start via ?start=1
     $dbgStartLog = '';
     if (isset($_GET['start'])) {
@@ -39,6 +44,12 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
         sleep(1);
         startNode();
         $dbgStartLog = 'startNode() triggered';
+    }
+    // Optional: test `at` launcher via ?at=1
+    if (isset($_GET['at']) && $dbgAtAvail) {
+        $atCmd = 'cd ' . APP_DIR . ' && HOME=' . HOME_DIR . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1';
+        $echoCmd = 'echo ' . escapeshellarg($atCmd) . ' | at now 2>&1';
+        $dbgStartLog = 'at: ' . trim((string) shell_exec($echoCmd));
     }
     // Run quick node sanity check (not full app — just version)
     $dbgNodeTest = shell_exec('node --version 2>&1');
@@ -58,6 +69,10 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
         'port_8765_err'=> $dbgSockErr . ': ' . $dbgSockMsg,
         'port_3000'    => $dbgPort3000,
         'node_pids'    => $dbgPgrep,
+        'at_avail'     => $dbgAtAvail,
+        'screen_avail' => $dbgScreenAvail,
+        'tmux_avail'   => $dbgTmuxAvail,
+        'atq_out'      => $dbgAtqOut,
         'start_result' => $dbgStartLog,
         'node_test'    => $dbgNodeTest,
         'last_log'     => $dbgLogLines,
@@ -182,20 +197,14 @@ function startNode(): void {
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Launching node src/app.js...\n", FILE_APPEND);
     // Try setsid first (creates new session, detaches from PHP cgroup); fall back to nohup only
     $hasSetsid = (trim((string) shell_exec('which setsid 2>/dev/null')) !== '');
-    // Write a startup shell script so we can capture exit code without quoting hell
-    $startScript = APP_DIR . '/start_node.sh';
-    file_put_contents($startScript,
-        "#!/bin/sh\n" .
-        "cd " . APP_DIR . "\n" .
-        "export HOME=" . HOME_DIR . "\n" .
-        "node src/app.js >> " . LOG_FILE . " 2>&1\n" .
-        "echo \"[EXIT] node exited: \$?\" >> " . LOG_FILE . "\n"
-    );
-    shell_exec('chmod +x ' . escapeshellarg($startScript));
     if ($hasSetsid) {
-        $cmd = 'setsid nohup ' . escapeshellarg($startScript) . ' >> /dev/null 2>&1 & echo $!';
+        $cmd = 'cd ' . APP_DIR
+             . ' && HOME=' . HOME_DIR
+             . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
     } else {
-        $cmd = 'nohup ' . escapeshellarg($startScript) . ' >> /dev/null 2>&1 & echo $!';
+        $cmd = 'cd ' . APP_DIR
+             . ' && HOME=' . HOME_DIR
+             . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
     }
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
     $pid = trim((string) shell_exec($cmd));
