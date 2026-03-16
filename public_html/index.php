@@ -4,6 +4,10 @@
  * Auto-starts Node.js if not running (requires exec/shell_exec on hosting)
  */
 
+// Keep running even if browser disconnects (npm install can take 2-3 min)
+ignore_user_abort(true);
+set_time_limit(300);
+
 define('NODE_URL',  'http://127.0.0.1:3000');
 define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja/public_html');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
@@ -87,7 +91,7 @@ function startNode(): void {
          . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
     $pid = trim((string) shell_exec($cmd));
     if ($pid) file_put_contents(PID_FILE, $pid);
-    sleep(4);
+    sleep(6);
 }
 
 // ── 4. Try to ensure Node.js is running ──────────────────────────────────────
