@@ -17,7 +17,7 @@ define('LOCK_FILE', '/home/i/infogkmeta/npm_install.lock');
 define('NPM_CACHE', HOME_DIR . '/.npm-cache');
 
 // #region agent log — debug endpoint (returns JSON state + node crash test)
-if (($_SERVER['REQUEST_URI'] ?? '') === '/__debug__') {
+if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
     $dbgPid      = (int) $dbgPidRaw;
     $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
