@@ -37,6 +37,11 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgScreenAvail = trim((string) shell_exec('which screen 2>/dev/null'));
     $dbgTmuxAvail   = trim((string) shell_exec('which tmux 2>/dev/null'));
     $dbgAtqOut      = trim((string) shell_exec('atq 2>/dev/null'));
+    // Check port 8765 on BOTH IPv4 and IPv6
+    $dbgSockV6 = @fsockopen('[::1]', 8765, $dbgSockV6Err, $dbgSockV6Msg, 2);
+    $dbgPortV6 = (bool)$dbgSockV6; if ($dbgSockV6) fclose($dbgSockV6);
+    // Check what's actually listening (netstat/ss)
+    $dbgNetstat = trim((string) shell_exec('ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null'));
     // Optional: force a node start via ?start=1
     $dbgStartLog = '';
     if (isset($_GET['start'])) {
@@ -72,7 +77,9 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
         'at_avail'     => $dbgAtAvail,
         'screen_avail' => $dbgScreenAvail,
         'tmux_avail'   => $dbgTmuxAvail,
-        'atq_out'      => $dbgAtqOut,
+        'port_8765_v6' => $dbgPortV6,
+        'port_8765_v6_err' => $dbgSockV6Err . ': ' . $dbgSockV6Msg,
+        'netstat'      => $dbgNetstat,
         'start_result' => $dbgStartLog,
         'node_test'    => $dbgNodeTest,
         'last_log'     => $dbgLogLines,
