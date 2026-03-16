@@ -196,10 +196,24 @@ $canExec = function_exists('shell_exec') && function_exists('exec')
            && !in_array('shell_exec', array_map('trim', explode(',', ini_get('disable_functions'))));
 
 if ($canExec && !isPort3000Open()) {
-    // Kill any stale node processes (may be bound to wrong interface)
-    exec('pkill -f "node.*app.js" 2>/dev/null');
-    sleep(1);
-    startNode();
+    $startLock = HOME_DIR . '/node_start.lock';
+    $startFh   = fopen($startLock, 'c');
+    if ($startFh) {
+        if (flock($startFh, LOCK_EX | LOCK_NB)) {
+            // Got the lock: we are the only request starting node
+            if (!isPort3000Open()) {          // double-check under lock
+                exec('pkill -f "node.*app.js" 2>/dev/null');
+                sleep(1);
+                startNode();
+            }
+            flock($startFh, LOCK_UN);
+        } else {
+            // Another request is already starting node — just wait for it
+            fclose($startFh);
+            sleep(10);
+        }
+        if (is_resource($startFh)) fclose($startFh);
+    }
 }
 
 // ── 7. Proxy request via cURL ─────────────────────────────────────────────────
