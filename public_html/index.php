@@ -8,7 +8,8 @@
 ignore_user_abort(true);
 set_time_limit(300);
 
-define('NODE_URL',  'http://127.0.0.1:8765');
+define('NODE_URL',    'http://localhost');   // host is ignored when using Unix socket
+define('NODE_SOCKET', '/home/i/infogkmeta/node.sock'); // Unix domain socket path
 define('APP_DIR',   '/home/i/infogkmeta/lenta-stalnaja');
 define('LOG_FILE',  '/home/i/infogkmeta/node_app.log');
 define('PID_FILE',  '/home/i/infogkmeta/node_app.pid');
@@ -21,9 +22,10 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgPidRaw   = file_exists(PID_FILE) ? trim(file_get_contents(PID_FILE)) : '';
     $dbgPid      = (int) $dbgPidRaw;
     $dbgPidAlive = ($dbgPid > 0 && file_exists("/proc/$dbgPid"));
-    $dbgSock = @fsockopen('127.0.0.1', 8765, $dbgSockErr, $dbgSockMsg, 2);
-    $dbgPort = (bool) $dbgSock;
-    if ($dbgSock) fclose($dbgSock);
+    $dbgSocketExists = file_exists(NODE_SOCKET);
+    $dbgSocketType   = $dbgSocketExists ? filetype(NODE_SOCKET) : 'missing';
+    $dbgPort         = ($dbgSocketExists && $dbgSocketType === 'socket');
+    $dbgSockErr      = 0; $dbgSockMsg = $dbgSocketType;
     $dbgSock3000 = @fsockopen('127.0.0.1', 3000, $e3, $m3, 2);
     $dbgPort3000 = (bool) $dbgSock3000;
     if ($dbgSock3000) fclose($dbgSock3000);
@@ -53,9 +55,10 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     $dbgStartLog = '';
     if (isset($_GET['start'])) {
         exec('pkill -f "node.*app.js" 2>/dev/null');
+        if (file_exists(NODE_SOCKET)) @unlink(NODE_SOCKET);
         sleep(1);
         startNode();
-        $dbgStartLog = 'startNode() triggered';
+        $dbgStartLog = 'startNode() triggered; socket=' . (file_exists(NODE_SOCKET) ? filetype(NODE_SOCKET) : 'missing');
     }
     // Optional: test `at` launcher via ?at=1
     if (isset($_GET['at']) && $dbgAtAvail) {
@@ -77,8 +80,9 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
         'nm_bcryptjs'  => file_exists(APP_DIR.'/node_modules/bcryptjs/package.json'),
         'pid'          => $dbgPidRaw,
         'pid_alive'    => $dbgPidAlive,
-        'port_8765'    => $dbgPort,
-        'port_8765_err'=> $dbgSockErr . ': ' . $dbgSockMsg,
+        'socket_exists' => $dbgSocketExists,
+        'socket_type'   => $dbgSocketType,
+        'socket_ready'  => $dbgPort,
         'port_3000'    => $dbgPort3000,
         'node_pids'    => $dbgPgrep,
         'at_avail'     => $dbgAtAvail,
@@ -101,13 +105,11 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
 }
 // #endregion
 
-// ── 1. Check if port 3000 is actually accepting connections ───────────────────
-// Replaces PID-based check: node may be bound to IPv6 (:::3000) which is
-// invisible to fsockopen('127.0.0.1'). We try both IPv4 and IPv6.
+// ── 1. Check if Node.js Unix socket is ready ─────────────────────────────────
+// TCP loopback is blocked by per-process network namespace isolation on SpaceWeb.
+// Unix domain socket uses the filesystem so it bypasses network isolation.
 function isNodePortOpen(): bool {
-    $s = @fsockopen('127.0.0.1', 8765, $e, $m, 2);
-    if ($s) { fclose($s); return true; }
-    return false;
+    return file_exists(NODE_SOCKET) && filetype(NODE_SOCKET) === 'socket';
 }
 
 // ── 2. Write correct package.json (no native modules) ────────────────────────
@@ -213,6 +215,9 @@ function startNode(): void {
     writeMigrationsStub();
     exec('cd ' . APP_DIR . ' && ' . $env . ' node src/db/migrations.js >> ' . LOG_FILE . ' 2>&1');
 
+    // Remove stale Unix socket file if it exists
+    if (file_exists(NODE_SOCKET)) @unlink(NODE_SOCKET);
+
     // Launch — setsid creates new session so hosting cgroup cleanup won't kill node
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Launching node src/app.js...\n", FILE_APPEND);
     // Try setsid first (creates new session, detaches from PHP cgroup); fall back to nohup only
@@ -220,10 +225,12 @@ function startNode(): void {
     if ($hasSetsid) {
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
+             . ' SOCKET_PATH=' . NODE_SOCKET
              . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
     } else {
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
+             . ' SOCKET_PATH=' . NODE_SOCKET
              . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
     }
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
@@ -233,13 +240,11 @@ function startNode(): void {
 
     // #region agent log — post-launch diagnostics
     $ts2 = date('Y-m-d H:i:s');
-    $pidAlive   = ($pid && file_exists("/proc/$pid")) ? 'YES' : 'NO';
-    $port8765   = false;
-    $sock = @fsockopen('127.0.0.1', 8765, $sockErrno, $sockErrstr, 3);
-    if ($sock) { $port8765 = true; fclose($sock); }
-    $anyNode = shell_exec('pgrep -f "node" 2>/dev/null') ?: '';
+    $pidAlive  = ($pid && file_exists("/proc/$pid")) ? 'YES' : 'NO';
+    $sockReady = (file_exists(NODE_SOCKET) && filetype(NODE_SOCKET) === 'socket') ? 'READY' : 'MISSING';
+    $anyNode   = shell_exec('pgrep -f "node" 2>/dev/null') ?: '';
     file_put_contents(LOG_FILE,
-        "[$ts2][POST-LAUNCH] pid=$pid pidAlive=$pidAlive port8765=" . ($port8765 ? 'OPEN' : 'CLOSED') . " anyNodePids=" . trim(str_replace("\n", ',', $anyNode)) . "\n",
+        "[$ts2][POST-LAUNCH] pid=$pid pidAlive=$pidAlive socket=$sockReady anyNodePids=" . trim(str_replace("\n", ',', $anyNode)) . "\n",
         FILE_APPEND);
     // #endregion
 }
@@ -269,19 +274,20 @@ if ($canExec && !isNodePortOpen()) {
     }
 }
 
-// ── 7. Proxy request via cURL ─────────────────────────────────────────────────
+// ── 7. Proxy request via cURL (via Unix domain socket) ───────────────────────
 $uri    = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
-$target = NODE_URL . $uri;
+$target = NODE_URL . $uri;  // host part is irrelevant; cURL uses the socket file
 
 $ch = curl_init($target);
 curl_setopt_array($ch, [
-    CURLOPT_CUSTOMREQUEST  => $method,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HEADER         => true,
-    CURLOPT_FOLLOWLOCATION => false,
-    CURLOPT_TIMEOUT        => 30,
-    CURLOPT_CONNECTTIMEOUT => 5,
+    CURLOPT_CUSTOMREQUEST    => $method,
+    CURLOPT_RETURNTRANSFER   => true,
+    CURLOPT_HEADER           => true,
+    CURLOPT_FOLLOWLOCATION   => false,
+    CURLOPT_TIMEOUT          => 30,
+    CURLOPT_CONNECTTIMEOUT   => 5,
+    CURLOPT_UNIX_SOCKET_PATH => NODE_SOCKET,  // bypass network namespace isolation
 ]);
 
 // Forward request body (POST / PUT / PATCH)
@@ -325,13 +331,10 @@ if ($response === false || $errno || $httpCode === 0) {
     $diagPgrep  = trim((string) shell_exec('pgrep -f "node" 2>/dev/null'));
     $diagPgrepFmt = $diagPgrep ? "✅ $diagPgrep" : '❌ none';
 
-    // Live port check
-    $diagSock = @fsockopen('127.0.0.1', 8765, $diagSockErr, $diagSockMsg, 2);
-    $diagPort = $diagSock ? '✅ OPEN' : "❌ CLOSED ($diagSockErr: $diagSockMsg)";
-    if ($diagSock) fclose($diagSock);
-    $diagSock3k = @fsockopen('127.0.0.1', 3000, $e3k, $m3k, 2);
-    $diagPort3k = $diagSock3k ? '⚠️ OCCUPIED (other user)' : '✅ free';
-    if ($diagSock3k) fclose($diagSock3k);
+    // Live socket check
+    $diagSockExists = file_exists(NODE_SOCKET);
+    $diagSockType   = $diagSockExists ? filetype(NODE_SOCKET) : 'missing';
+    $diagPort       = ($diagSockExists && $diagSockType === 'socket') ? '✅ READY' : "❌ MISSING (type=$diagSockType)";
 
     // Last 10 log lines (most recent crash reason)
     $diagLastLines = file_exists(LOG_FILE) ? implode('', array_slice(file(LOG_FILE), -10)) : '(empty)';
@@ -345,8 +348,7 @@ if ($response === false || $errno || $httpCode === 0) {
         ['─── LIVE STATE ───',              ''],
         ['Node PID (from file)',             $diagPidAlive],
         ['Node processes (pgrep)',           $diagPgrepFmt],
-        ['Port 8765 (our node)',              $diagPort],
-        ['Port 3000 (conflict check)',        $diagPort3k],
+        ['Unix socket (node.sock)',           $diagPort],
     ];
     $diag_html  = '<table border="1" cellpadding="4" style="border-collapse:collapse;font-size:13px;margin-bottom:10px">';
     foreach ($diag_rows as [$k, $v]) {

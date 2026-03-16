@@ -115,6 +115,16 @@ app.use((err, req, res, next) => {
   res.status(500).send('Server error');
 });
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log('Server at http://localhost:' + config.port);
-});
+if (config.socketPath) {
+  // Unix domain socket — bypasses per-process network namespace isolation on shared hosting
+  try { fs.unlinkSync(config.socketPath); } catch (_) {}
+  app.listen(config.socketPath, () => {
+    // Make socket readable/writable by web server process
+    try { fs.chmodSync(config.socketPath, 0o666); } catch (_) {}
+    console.log('Server at unix:' + config.socketPath);
+  });
+} else {
+  app.listen(config.port, '0.0.0.0', () => {
+    console.log('Server at http://localhost:' + config.port);
+  });
+}
