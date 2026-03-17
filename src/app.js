@@ -82,6 +82,8 @@ app.use(express.urlencoded({ extended: true }));
 // Menu data middleware - adds grades and groups to all pages (async, MySQL)
 const lentaService = require('./services/lenta');
 const pool = require('./db/mysql');
+// Fallback site name (Unicode escapes = encoding-safe, works regardless of DB or file encoding)
+const FALLBACK_SITE_NAME = 'Лента стальная — каталог металлопроката';
 
 async function getDbSiteName() {
   try {
@@ -90,7 +92,7 @@ async function getDbSiteName() {
     // Reject mojibake: garbled = Cyrillic + Latin-extended chars mixed
     const hasCyr = /[Ѐ-ӿ]/.test(row.value);
     const hasLat = /[-ÿ]/.test(row.value);
-    if (!hasCyr || (hasCyr && hasLat)) return null;
+    if (!hasCyr || (hasCyr && hasLat)) return FALLBACK_SITE_NAME;
     return row.value;
   } catch (_) { return null; }
 }
@@ -105,7 +107,7 @@ app.use(async (req, res, next) => {
     ]);
     res.locals.menuGrades = menuGrades;
     res.locals.menuGroups = menuGroups;
-    res.locals.siteName   = dbSiteName || config.siteName;
+    res.locals.siteName   = dbSiteName || FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
@@ -113,7 +115,7 @@ app.use(async (req, res, next) => {
     // If MySQL is unavailable, still render the page with empty menus.
     res.locals.menuGrades = [];
     res.locals.menuGroups = [];
-    res.locals.siteName   = config.siteName;
+    res.locals.siteName   = FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
