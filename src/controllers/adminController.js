@@ -529,6 +529,36 @@ function dbRestoreForm(req, res) {
   res.render('admin/db-restore.html', { message: null, error: null });
 }
 
+// Исправление кодировки настроек (без загрузки файла) — только 4 запроса к settings
+const FIX_SETTINGS_VALUES = [
+  ['site_name', 'Лента стальная — каталог металлопроката'],
+  ['home_title', 'Лента стальная — каталог металлопроката'],
+  ['home_h1', 'Каталог металлопроката'],
+  ['home_meta_description', 'Нержавеющая и конструкционная лента по ГОСТ. Наличие на складе, резка в размер, доставка по России.'],
+];
+
+async function fixSettingsEncoding(req, res) {
+  let done = 0;
+  try {
+    for (const [key, val] of FIX_SETTINGS_VALUES) {
+      await pool.query(
+        'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+        [key, val, val]
+      );
+      done++;
+    }
+    res.render('admin/db-restore.html', {
+      message: `Кодировка настроек исправлена: обновлено ${done} записей в таблице settings.`,
+      error: null,
+    });
+  } catch (e) {
+    res.render('admin/db-restore.html', {
+      message: null,
+      error: 'Ошибка: ' + (e.message || String(e)).substring(0, 200),
+    });
+  }
+}
+
 async function dbRestore(req, res) {
   if (!req.file) {
     return res.render('admin/db-restore.html', { message: null, error: 'Файл не выбран.' });
@@ -575,4 +605,5 @@ module.exports = {
   mainPageForm, saveMainPage,
   bonusPageForm, saveBonusPage,
   dbRestoreForm, dbRestore,
+  fixSettingsEncoding,
 };

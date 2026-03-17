@@ -15,6 +15,13 @@
   <div class="adm-alert adm-alert-error">{{ error }}</div>
   {% endif %}
 
+  <div class="adm-form-group" style="margin-bottom: 1.5rem;">
+    <p class="adm-text" style="margin-bottom: 0.5rem;">Если на сайте в заголовках и подвале отображаются кракозябры вместо русского текста — обновите только настройки (таблица <code>settings</code>), без загрузки файла:</p>
+    <form method="post" action="/admin/fix-settings-encoding" style="display: inline;">
+      <button type="submit" class="adm-btn adm-btn-green" onclick="return confirm('Перезаписать site_name, home_title, home_h1, home_meta_description корректным русским текстом?')">Исправить кодировку настроек</button>
+    </form>
+  </div>
+
   <form method="post" action="/admin/db-restore" enctype="multipart/form-data">
     <div class="adm-form-group">
       <label class="adm-label">Файл SQL или SQLite (.sql / .sqlite / .db)</label>

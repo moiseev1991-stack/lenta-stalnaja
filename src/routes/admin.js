@@ -89,6 +89,7 @@ router.post('/bonus-page', a(controller.saveBonusPage));
 // ─── Database restore ─────────────────────────────────────────────────────────
 router.get('/db-restore', controller.dbRestoreForm);
 router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
+router.post('/fix-settings-encoding', a(controller.fixSettingsEncoding));
 
 // ─── Process restart (triggers PM2 / process manager restart) ────────────────
 router.get('/restart', (req, res) => {
