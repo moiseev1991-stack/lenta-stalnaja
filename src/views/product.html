@@ -4,7 +4,7 @@
 {% if product.image_url %}<meta property="og:image" content="{{ siteUrl ~ (product.image_url | imgUrl) }}">{% endif %}
 <meta property="og:type" content="product">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Product","name":{{ (product.name | normalizeName) | json | safe }}{% if product.image_url %},"image":{{ (siteUrl ~ (product.image_url | imgUrl)) | json | safe }}{% endif %}{% if metaDescription %},"description":{{ metaDescription | json | safe }}{% endif %},"sku":{{ product.slug | json | safe }}{% if product.mark %},"brand":{"@type":"Brand","name":{{ product.mark | json | safe }}}{% endif %},"offers":{"@type":"Offer","priceCurrency":"RUB"{% if product.price != null %},"price":{{ product.price }}{% endif %},"availability":"https://schema.org/{% if product.stock_qty %}InStock{% else %}OutOfStock{% endif %}","seller":{"@type":"Organization","name":{{ displaySiteName | json | safe }}}}}
+{"@context":"https://schema.org","@type":"Product","name":{{ (product.name | normalizeName) | json | safe }}{% if product.image_url %},"image":{{ (siteUrl ~ (product.image_url | imgUrl)) | json | safe }}{% endif %}{% if metaDescription %},"description":{{ metaDescription | json | safe }}{% endif %},"sku":{{ product.slug | json | safe }}{% if product.mark %},"brand":{"@type":"Brand","name":{{ product.mark | json | safe }}}{% endif %},"offers":{"@type":"Offer","priceCurrency":"RUB"{% if product.price != null %},"price":{{ product.price }}{% endif %},"availability":"https://schema.org/{% if product.stock_qty %}InStock{% else %}OutOfStock{% endif %}","seller":{"@type":"Organization","name":"Лента стальная — каталог металлопроката"}}}
 </script>
 {% endblock %}
 {% block content %}
