@@ -86,7 +86,12 @@ const pool = require('./db/mysql');
 async function getDbSiteName() {
   try {
     const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', ['site_name']);
-    return (row && row.value) ? row.value : null;
+    if (!row || !row.value) return null;
+    // Reject mojibake: garbled = Cyrillic + Latin-extended chars mixed
+    const hasCyr = /[Ѐ-ӿ]/.test(row.value);
+    const hasLat = /[-ÿ]/.test(row.value);
+    if (!hasCyr || (hasCyr && hasLat)) return null;
+    return row.value;
   } catch (_) { return null; }
 }
 
