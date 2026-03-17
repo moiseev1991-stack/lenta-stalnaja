@@ -7,14 +7,14 @@
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
   {% if robots %}<meta name="robots" content="{{ robots }}">{% endif %}
   {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
-  <meta property="og:site_name" content="{{ siteName | safeSiteName }}">
+  <meta property="og:site_name" content="{{ displaySiteName }}">
   <meta property="og:type" content="{{ ogType | default('website') }}">
   <meta property="og:title" content="{{ (title | default(siteName)) | safeSiteName }}">
   {% if metaDescription %}<meta property="og:description" content="{{ metaDescription }}">{% endif %}
   {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
   {% if ogImage %}<meta property="og:image" content="{{ ogImage }}">{% endif %}
   <script type="application/ld+json">
-  [{"@context":"https://schema.org","@type":"WebSite","name":{{ (siteName | safeSiteName) | json | safe }},"url":{{ siteUrl | json | safe }}},{"@context":"https://schema.org","@type":"Organization","name":{{ (siteName | safeSiteName) | json | safe }},"url":{{ siteUrl | json | safe }}}]
+  [{"@context":"https://schema.org","@type":"WebSite","name":{{ displaySiteName | json | safe }},"url":{{ siteUrl | json | safe }}},{"@context":"https://schema.org","@type":"Organization","name":{{ displaySiteName | json | safe }},"url":{{ siteUrl | json | safe }}}]
   </script>
   {% if breadcrumbs and breadcrumbs.length %}
   <script type="application/ld+json">
@@ -35,7 +35,7 @@
   <header class="header">
     <div class="container">
       <a href="/" class="logo">
-        <img src="/img/logo-icon.png" alt="{{ siteName | safeSiteName }}" width="36" height="36">
+        <img src="/img/logo-icon.png" alt="{{ displaySiteName }}" width="36" height="36">
       </a>
       <button class="burger" type="button" aria-label="Меню" onclick="document.body.classList.toggle('menu-open')">
         <span></span><span></span><span></span>

@@ -121,6 +121,7 @@ app.use(async (req, res, next) => {
     res.locals.menuGrades = menuGrades;
     res.locals.menuGroups = menuGroups;
     res.locals.siteName   = dbSiteName || FALLBACK_SITE_NAME;
+    res.locals.displaySiteName = FALLBACK_SITE_NAME; // всегда корректный русский для og:site_name, JSON-LD, alt логотипа
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
@@ -129,6 +130,7 @@ app.use(async (req, res, next) => {
     res.locals.menuGrades = [];
     res.locals.menuGroups = [];
     res.locals.siteName   = FALLBACK_SITE_NAME;
+    res.locals.displaySiteName = FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
