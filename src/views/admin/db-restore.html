@@ -6,6 +6,21 @@
 </div>
 
 <div class="adm-card">
+  <h2 class="adm-page-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Деплой с GitHub</h2>
+  <p class="adm-text" style="margin-bottom: 0.75rem;">Подтянуть код с GitHub и перезапустить приложение (после того как ты запушил изменения).</p>
+  {% if deployMessage %}
+  <div class="adm-alert adm-alert-success">{{ deployMessage }}</div>
+  {% if deployLog %}<pre class="adm-text" style="font-size: 0.85rem; overflow: auto; max-height: 150px;">{{ deployLog }}</pre>{% endif %}
+  {% endif %}
+  {% if deployError %}
+  <div class="adm-alert adm-alert-error">{{ deployError }}</div>
+  {% if deployLog %}<pre class="adm-text" style="font-size: 0.85rem; overflow: auto; max-height: 150px;">{{ deployLog }}</pre>{% endif %}
+  {% endif %}
+  <form method="post" action="/admin/deploy" style="margin-bottom: 1.5rem;">
+    <button type="submit" class="adm-btn adm-btn-green" onclick="return confirm('Выполнить git pull и перезапустить приложение? Сайт будет недоступен 5–10 сек.');">Деплой и перезапуск</button>
+  </form>
+
+  <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #ccc;">
   <p class="adm-text">Загрузите файл <strong>sync_to_server_full.sql</strong> (или <code>database.sqlite</code>) с вашего компьютера — из папки <code>data/</code> проекта.</p>
 
   {% if message %}
