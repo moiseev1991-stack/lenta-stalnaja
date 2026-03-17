@@ -85,14 +85,24 @@ const pool = require('./db/mysql');
 // Fallback site name (Unicode escapes = encoding-safe, works regardless of DB or file encoding)
 const FALLBACK_SITE_NAME = 'Лента стальная — каталог металлопроката';
 
+// Detect Cyrillic UTF-8 bytes misread as Windows-1251 ("mojibake").
+// Two signals:
+//   1. Latin-1 supplement chars U+0080-U+00FF mixed in (e.g. °, ¾, ») —
+//      these are 0xBx/0xCx low-bytes of Cyrillic UTF-8 sequences.
+//   2. Р or С makes up >25 % of all chars — in mojibake every Cyrillic
+//      char becomes "Р[x]" or "С[x]"; real Russian text has <5 % Р/С.
+function isMojibake(s) {
+  if (!s || s.length < 4) return false;
+  if (/[-ÿ]/.test(s)) return true;
+  const pc = (s.match(/[РС]/g) || []).length;
+  return pc / s.length > 0.25;
+}
+
 async function getDbSiteName() {
   try {
     const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', ['site_name']);
     if (!row || !row.value) return null;
-    // Reject mojibake: garbled = Cyrillic + Latin-extended chars mixed
-    const hasCyr = /[Ѐ-ӿ]/.test(row.value);
-    const hasLat = /[-ÿ]/.test(row.value);
-    if (!hasCyr || (hasCyr && hasLat)) return FALLBACK_SITE_NAME;
+    if (isMojibake(row.value)) return FALLBACK_SITE_NAME;
     return row.value;
   } catch (_) { return null; }
 }

@@ -2,6 +2,19 @@ const pool = require('./mysql');
 const bcrypt = require('bcryptjs');
 const config = require('../config');
 
+// Detect Cyrillic UTF-8 bytes misread as Windows-1251 ("mojibake").
+// Two signals:
+//   1. Latin-1 supplement chars U+0080-U+00FF mixed in (e.g. °, ¾, ») —
+//      these are 0xBx/0xCx low-bytes of Cyrillic UTF-8 sequences.
+//   2. Р or С makes up >25 % of all chars — in mojibake every Cyrillic
+//      char becomes "Р[x]" or "С[x]"; real Russian text has <5 % Р/С.
+function isMojibake(s) {
+  if (!s || s.length < 4) return false;
+  if (/[-ÿ]/.test(s)) return true;
+  const pc = (s.match(/[РС]/g) || []).length;
+  return pc / s.length > 0.25;
+}
+
 async function runMysqlMigrations() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS \`groups\` (
@@ -160,9 +173,7 @@ async function runMysqlMigrations() {
   try {
     const [[row]] = await pool.query("SELECT value FROM settings WHERE `key` = 'site_name'");
     const _v = row ? (row.value || '') : '';
-    const _hasCyr = /[Ѐ-ӿ]/.test(_v);
-    const _hasLat = /[-ÿ]/.test(_v);
-    if (!_v || !_hasCyr || (_hasCyr && _hasLat)) {
+    if (!_v || isMojibake(_v)) {
       for (const [key, val] of defaultSettings) {
         await pool.query(
           'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',

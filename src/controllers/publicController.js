@@ -6,10 +6,19 @@ const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText } = require('../helpers/seoTemplates');
 
+// Returns the DB setting value, or fallback when empty or mojibake-garbled.
+function isMojibake(s) {
+  if (!s || s.length < 4) return false;
+  if (/[\u0080-\u00FF]/.test(s)) return true;
+  const pc = (s.match(/[РС]/g) || []).length;
+  return pc / s.length > 0.25;
+}
+
 async function getSetting(key, fallback = '') {
   try {
     const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', [key]);
-    return (row && row.value) ? row.value : fallback;
+    if (!row || !row.value || isMojibake(row.value)) return fallback;
+    return row.value;
   } catch (_) { return fallback; }
 }
 
