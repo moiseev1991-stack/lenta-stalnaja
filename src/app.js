@@ -107,6 +107,9 @@ async function getDbSiteName() {
   } catch (_) { return null; }
 }
 
+// Фильтр Nunjucks: при рендере подменяет mojibake на корректное название (работает даже при старом кэше/проде)
+njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NAME : v);
+
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
   try {
