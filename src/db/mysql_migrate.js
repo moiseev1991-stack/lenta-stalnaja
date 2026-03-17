@@ -150,6 +150,26 @@ async function runMysqlMigrations() {
   }
   console.log('MySQL migrations OK');
 
+  // Auto-fix garbled settings (missing Cyrillic = stored with wrong charset)
+  const defaultSettings = [
+    ['site_name',             'Лента стальная — каталог металлопроката'],
+    ['home_title',            'Лента стальная — каталог металлопроката'],
+    ['home_h1',               'Каталог металлопроката'],
+    ['home_meta_description', 'Нержавеющая и конструкционная лента по ГОСТ. Наличие на складе, резка в размер, доставка по России.'],
+  ];
+  try {
+    const [[row]] = await pool.query("SELECT value FROM settings WHERE `key` = 'site_name'");
+    if (!row || !/[\u0400-\u04FF]/.test(row.value || '')) {
+      for (const [key, val] of defaultSettings) {
+        await pool.query(
+          'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+          [key, val, val]
+        );
+      }
+      console.log('Settings encoding fixed');
+    }
+  } catch (_) {}
+
   // Seed admin user if table is empty
   try {
     const [[{ cnt }]] = await pool.query('SELECT COUNT(*) AS cnt FROM admin_users');
