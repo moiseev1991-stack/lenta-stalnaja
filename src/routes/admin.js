@@ -91,13 +91,17 @@ router.get('/db-restore', controller.dbRestoreForm);
 router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
 router.post('/fix-settings-encoding', a(controller.fixSettingsEncoding));
 
+// ─── Деплой (git pull + перезапуск) ─────────────────────────────────────────
+router.get('/deploy', controller.deployForm);
+router.post('/deploy', a(controller.deploy));
+
 // ─── Process restart (triggers PM2 / process manager restart) ────────────────
 router.get('/restart', (req, res) => {
-  res.send('<h2>Restarting server in 1 second...</h2><p>Refresh the main page in a few seconds.</p>');
+  res.send('<h2>Перезапуск через 1 сек...</h2><p>Через 5–10 сек обновите главную страницу.</p>');
   setTimeout(() => process.exit(0), 1000);
 });
 router.post('/restart', (req, res) => {
-  res.send('Restarting server...');
+  res.send('Перезапуск...');
   setTimeout(() => process.exit(0), 300);
 });
 

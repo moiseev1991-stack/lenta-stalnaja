@@ -1,0 +1,33 @@
+{% extends "admin/layout.html" %}
+{% block title %}Деплой — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Деплой с GitHub</h1>
+</div>
+
+<div class="adm-card">
+  <p class="adm-text">Подтянуть последний код из GitHub (<code>git pull origin main</code>) и перезапустить приложение. Используйте после того, как запушили изменения в репозиторий.</p>
+
+  {% if message %}
+  <div class="adm-alert adm-alert-success">{{ message }}</div>
+  {% if log %}
+  <pre class="adm-text" style="margin-top: 0.5rem; font-size: 0.85rem; overflow: auto; max-height: 200px;">{{ log }}</pre>
+  {% endif %}
+  {% endif %}
+  {% if error %}
+  <div class="adm-alert adm-alert-error">{{ error }}</div>
+  {% if log %}
+  <pre class="adm-text" style="margin-top: 0.5rem; font-size: 0.85rem; overflow: auto; max-height: 200px;">{{ log }}</pre>
+  {% endif %}
+  {% endif %}
+
+  <form method="post" action="/admin/deploy" style="margin-top: 1rem;">
+    <button type="submit" class="adm-btn adm-btn-green"
+            onclick="return confirm('Выполнить git pull и перезапустить приложение? Сайт будет недоступен 5–10 сек.')">
+      Деплой и перезапуск
+    </button>
+  </form>
+
+  <p class="adm-back-link"><a href="/admin">← В админку</a></p>
+</div>
+{% endblock %}

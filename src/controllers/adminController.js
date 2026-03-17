@@ -593,6 +593,37 @@ async function dbRestore(req, res) {
   }
 }
 
+// ─── Деплой с GitHub (git pull + перезапуск процесса) ───────────────────────
+
+function deployForm(req, res) {
+  res.render('admin/deploy.html', { message: null, error: null });
+}
+
+async function deploy(req, res) {
+  const { execSync } = require('child_process');
+  const cwd = process.cwd();
+  try {
+    const out = execSync('git pull origin main', {
+      encoding: 'utf8',
+      cwd,
+      timeout: 60000,
+    });
+    res.render('admin/deploy.html', {
+      message: 'Деплой выполнен. Перезапуск приложения через 2 сек… Обновите главную страницу через 5–10 сек.',
+      error: null,
+      log: (out || '').trim() || '(нет вывода)',
+    });
+    setTimeout(() => process.exit(0), 2000);
+  } catch (e) {
+    const log = [e.stdout, e.stderr].filter(Boolean).join('\n').trim() || e.message;
+    res.render('admin/deploy.html', {
+      message: null,
+      error: 'Ошибка git pull: ' + (e.message || String(e)).substring(0, 300),
+      log: log.substring(0, 2000),
+    });
+  }
+}
+
 module.exports = {
   dashboard,
   loginForm, login, logout,
@@ -606,4 +637,5 @@ module.exports = {
   bonusPageForm, saveBonusPage,
   dbRestoreForm, dbRestore,
   fixSettingsEncoding,
+  deployForm, deploy,
 };
