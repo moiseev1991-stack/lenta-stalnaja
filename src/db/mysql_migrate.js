@@ -159,7 +159,7 @@ async function runMysqlMigrations() {
   ];
   try {
     const [[row]] = await pool.query("SELECT value FROM settings WHERE `key` = 'site_name'");
-    if (!row || !/[\u0400-\u04FF]/.test(row.value || '')) {
+    if (!row || !/[Ѐ-ӿ]/.test(row.value || '')) {
       for (const [key, val] of defaultSettings) {
         await pool.query(
           'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',

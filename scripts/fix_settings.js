@@ -1,5 +1,5 @@
 /**
- * Generates data/fix_settings.db AND applies fixes directly to MySQL.
+ * Generates fix_settings.db — resets home page metatags on server
  * Run: node scripts/fix_settings.js
  */
 require('dotenv').config();
