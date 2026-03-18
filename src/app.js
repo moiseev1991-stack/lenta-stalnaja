@@ -81,7 +81,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Menu data middleware - adds grades and groups to all pages (async, MySQL)
 const lentaService = require('./services/lenta');
-const pool = require('./db/mysql');
 // Fallback site name (Unicode escapes = encoding-safe, works regardless of DB or file encoding)
 const FALLBACK_SITE_NAME = 'Лента стальная — каталог металлопроката';
 
@@ -98,30 +97,22 @@ function isMojibake(s) {
   return pc / s.length > 0.25;
 }
 
-async function getDbSiteName() {
-  try {
-    const [[row]] = await pool.query('SELECT value FROM settings WHERE `key` = ?', ['site_name']);
-    if (!row || !row.value) return null;
-    if (isMojibake(row.value)) return FALLBACK_SITE_NAME;
-    return row.value;
-  } catch (_) { return null; }
-}
-
 // Фильтр Nunjucks: при рендере подменяет mojibake на корректное название (работает даже при старом кэше/проде)
 njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NAME : v);
 
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
   try {
-    const [menuGrades, menuGroups, dbSiteName] = await Promise.all([
+    const [menuGrades, menuGroups] = await Promise.all([
       lentaService.getAllGrades(),
       lentaService.getAllGroups(),
-      getDbSiteName(),
     ]);
     res.locals.menuGrades = menuGrades;
     res.locals.menuGroups = menuGroups;
-    res.locals.siteName   = dbSiteName || FALLBACK_SITE_NAME;
-    res.locals.displaySiteName = FALLBACK_SITE_NAME; // всегда корректный русский для og:site_name, JSON-LD, alt логотипа
+    // Не брать site_name из БД: на проде часто битая кодировка (og:site_name / подвал / alt),
+    // при этом home_title из той же БД может быть нормальным.
+    res.locals.siteName = FALLBACK_SITE_NAME;
+    res.locals.displaySiteName = FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
