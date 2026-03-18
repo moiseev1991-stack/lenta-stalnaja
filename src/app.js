@@ -101,9 +101,66 @@ const MOJIBAKE_SITE = String.fromCharCode(
   1056, 1112, 1056, 181, 1057, 8218, 1056, 176, 1056, 187, 1056, 187, 1056, 1109, 1056, 1111,
   1057, 1026, 1056, 1109, 1056, 1108, 1056, 176, 1057, 8218, 1056, 176
 );
+/** Экранирование для HTML-атрибута */
+function htmlEscapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+const LOGO_ALT =
+  '\u041b\u0435\u043d\u0442\u0430 \u0441\u0442\u0430\u043b\u044c\u043d\u0430\u044f';
+
+/**
+ * После рендера принудительно чинит бренд: og:site_name, JSON-LD WebSite/Organization,
+ * alt логотипа, копирайт в подвале. Работает даже если на сервере старый layout.html
+ * в кэше Nunjucks или деплой не туда.
+ */
+function forceSiteBrandingInHtml(html) {
+  if (typeof html !== 'string' || html.length < 300) return html;
+  if (!html.includes('og:site_name') && !html.includes('schema.org')) return html;
+
+  let out = html;
+
+  out = out.replace(
+    /<meta\s+property="og:site_name"\s+content="[^"]*"\s*\/?>/gi,
+    '<meta property="og:site_name" content="' + htmlEscapeAttr(FALLBACK_SITE_NAME) + '">',
+  );
+  out = out.replace(
+    /<meta\s+content="[^"]*"\s+property="og:site_name"\s*\/?>/gi,
+    '<meta property="og:site_name" content="' + htmlEscapeAttr(FALLBACK_SITE_NAME) + '">',
+  );
+
+  const webOrgNameRe = (type) =>
+    new RegExp(`"@type"\\s*:\\s*"${type}"\\s*,\\s*"name"\\s*:\\s*"([^"]*)"`, 'g');
+  out = out.replace(webOrgNameRe('WebSite'), (m, n) => {
+    if (!isMojibake(n)) return m;
+    return m.replace(/"name"\s*:\s*"[^"]*"/, '"name":' + JSON.stringify(FALLBACK_SITE_NAME));
+  });
+  out = out.replace(webOrgNameRe('Organization'), (m, n) => {
+    if (!isMojibake(n)) return m;
+    return m.replace(/"name"\s*:\s*"[^"]*"/, '"name":' + JSON.stringify(FALLBACK_SITE_NAME));
+  });
+
+  out = out.replace(
+    /<img\s+src="\/img\/logo-icon\.png"\s+alt="([^"]*)"/gi,
+    (m, alt) => (isMojibake(alt) ? m.replace(/alt="[^"]*"/, 'alt="' + htmlEscapeAttr(LOGO_ALT) + '"') : m),
+  );
+
+  out = out.replace(
+    /(<footer[^>]*class="footer"[^>]*>[\s\S]*?<p>&copy;\s*)([^<]+)(<\/p>)/i,
+    (full, pre, mid, post) => (isMojibake(String(mid).trim()) ? pre + FALLBACK_SITE_NAME + post : full),
+  );
+
+  return out;
+}
+
 function fixMojibakeInHtml(body) {
-  if (typeof body !== 'string' || !body.includes(MOJIBAKE_SITE)) return body;
-  return body.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
+  if (typeof body !== 'string') return body;
+  let out = body;
+  if (out.includes(MOJIBAKE_SITE)) {
+    out = out.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
+  }
+  out = forceSiteBrandingInHtml(out);
+  return out;
 }
 app.use((req, res, next) => {
   const origSend = res.send;
