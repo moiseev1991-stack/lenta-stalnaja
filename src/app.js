@@ -117,14 +117,16 @@ app.use((req, res, next) => {
     }
     return origSend.call(this, body);
   };
-  res.end = function (chunk, enc, cb) {
-    if (typeof chunk === 'string') chunk = fixMojibakeInHtml(chunk);
-    else if (Buffer.isBuffer(chunk)) {
-      const s = chunk.toString('utf8');
+  // Нельзя origEnd.apply(this, arguments) после правки chunk — arguments[0] остаётся старым
+  res.end = function () {
+    const args = Array.prototype.slice.call(arguments);
+    if (typeof args[0] === 'string') args[0] = fixMojibakeInHtml(args[0]);
+    else if (Buffer.isBuffer(args[0])) {
+      const s = args[0].toString('utf8');
       const f = fixMojibakeInHtml(s);
-      if (f !== s) chunk = Buffer.from(f, 'utf8');
+      if (f !== s) args[0] = Buffer.from(f, 'utf8');
     }
-    return origEnd.apply(this, arguments);
+    return origEnd.apply(this, args);
   };
   next();
 });
