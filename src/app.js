@@ -95,15 +95,36 @@ njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NA
 // Единственный источник для og:site_name и JSON-LD name — не зависит от res.locals и кодировки шаблона
 njkEnv.addGlobal('fixedSiteName', FALLBACK_SITE_NAME);
 
-// Подмена кракозябры в HTML-ответе (если на проде старый шаблон или кэш)
-const MOJIBAKE_SITE = 'РљР°С‚Р°Р»РѕРі РјРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚Р°';
+// «Каталог металлопроката» в виде кракозябры — только коды, без кириллицы в файле (иначе на сервере строка могла не совпасть)
+const MOJIBAKE_SITE = String.fromCharCode(
+  1056, 1113, 1056, 176, 1057, 8218, 1056, 176, 1056, 187, 1056, 1109, 1056, 1110, 32,
+  1056, 1112, 1056, 181, 1057, 8218, 1056, 176, 1056, 187, 1056, 187, 1056, 1109, 1056, 1111,
+  1057, 1026, 1056, 1109, 1056, 1108, 1056, 176, 1057, 8218, 1056, 176
+);
+function fixMojibakeInHtml(body) {
+  if (typeof body !== 'string' || !body.includes(MOJIBAKE_SITE)) return body;
+  return body.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
+}
 app.use((req, res, next) => {
   const origSend = res.send;
+  const origEnd = res.end;
   res.send = function (body) {
-    if (typeof body === 'string' && (body.startsWith('<!') || body.trimStart().startsWith('<!'))) {
-      body = body.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
+    if (typeof body === 'string') body = fixMojibakeInHtml(body);
+    else if (Buffer.isBuffer(body)) {
+      const s = body.toString('utf8');
+      const f = fixMojibakeInHtml(s);
+      if (f !== s) body = Buffer.from(f, 'utf8');
     }
-    origSend.call(this, body);
+    return origSend.call(this, body);
+  };
+  res.end = function (chunk, enc, cb) {
+    if (typeof chunk === 'string') chunk = fixMojibakeInHtml(chunk);
+    else if (Buffer.isBuffer(chunk)) {
+      const s = chunk.toString('utf8');
+      const f = fixMojibakeInHtml(s);
+      if (f !== s) chunk = Buffer.from(f, 'utf8');
+    }
+    return origEnd.apply(this, arguments);
   };
   next();
 });
