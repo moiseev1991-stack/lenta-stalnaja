@@ -1,14 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
-
-// #region agent log — catch signals and unhandled errors for diagnosis
-process.on('SIGTERM', () => { console.log('[SIGNAL] SIGTERM received'); process.exit(0); });
-process.on('SIGHUP',  () => { console.log('[SIGNAL] SIGHUP received');  process.exit(0); });
-process.on('SIGINT',  () => { console.log('[SIGNAL] SIGINT received');  process.exit(0); });
-process.on('uncaughtException',  (err) => { console.error('[CRASH] uncaughtException:', err.message, err.stack); process.exit(1); });
-process.on('unhandledRejection', (reason) => { console.error('[CRASH] unhandledRejection:', reason); process.exit(1); });
-// #endregion
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const nunjucks = require('nunjucks');
