@@ -108,7 +108,6 @@ app.use(async (req, res, next) => {
     res.locals.displaySiteName = FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
-    res.setHeader('X-Lebta-SiteName-L', String(FALLBACK_SITE_NAME.charCodeAt(0)));
     next();
   } catch (err) {
     // If MySQL is unavailable, still render the page with empty menus.
@@ -118,7 +117,6 @@ app.use(async (req, res, next) => {
     res.locals.displaySiteName = FALLBACK_SITE_NAME;
     res.locals.siteUrl    = config.siteUrl;
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
-    res.setHeader('X-Lebta-SiteName-L', String(FALLBACK_SITE_NAME.charCodeAt(0)));
     next();
   }
 });
