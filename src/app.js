@@ -73,8 +73,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Menu data middleware - adds grades and groups to all pages (async, MySQL)
 const lentaService = require('./services/lenta');
-// Fallback site name (Unicode escapes = encoding-safe, works regardless of DB or file encoding)
-const FALLBACK_SITE_NAME = 'Лента стальная — каталог металлопроката';
+// Только \uXXXX в исходнике — строка корректна в рантайме даже если файл сохранили не в UTF-8
+const FALLBACK_SITE_NAME =
+  '\u041b\u0435\u043d\u0442\u0430 \u0441\u0442\u0430\u043b\u044c\u043d\u0430\u044f \u2014 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \u043c\u0435\u0442\u0430\u043b\u043b\u043e\u043f\u0440\u043e\u043a\u0430\u0442\u0430';
 
 // Detect Cyrillic UTF-8 bytes misread as Windows-1251 ("mojibake").
 // Two signals:

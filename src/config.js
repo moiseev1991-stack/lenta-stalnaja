@@ -4,7 +4,9 @@ module.exports = {
   port: parseInt(process.env.PORT || '8765', 10),
   socketPath: process.env.SOCKET_PATH || '',
   nodeEnv: process.env.NODE_ENV || 'development',
-  siteName: process.env.SITE_NAME_OVERRIDE || 'Лента стальная — каталог металлопроката',
+  siteName:
+    process.env.SITE_NAME_OVERRIDE ||
+    '\u041b\u0435\u043d\u0442\u0430 \u0441\u0442\u0430\u043b\u044c\u043d\u0430\u044f \u2014 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \u043c\u0435\u0442\u0430\u043b\u043b\u043e\u043f\u0440\u043e\u043a\u0430\u0442\u0430',
   siteUrl: (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   dbPath: process.env.DB_PATH || './data/app.db',
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
