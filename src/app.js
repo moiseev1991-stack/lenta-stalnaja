@@ -95,6 +95,19 @@ njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NA
 // Единственный источник для og:site_name и JSON-LD name — не зависит от res.locals и кодировки шаблона
 njkEnv.addGlobal('fixedSiteName', FALLBACK_SITE_NAME);
 
+// Подмена кракозябры в HTML-ответе (если на проде старый шаблон или кэш)
+const MOJIBAKE_SITE = 'РљР°С‚Р°Р»РѕРі РјРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚Р°';
+app.use((req, res, next) => {
+  const origSend = res.send;
+  res.send = function (body) {
+    if (typeof body === 'string' && (body.startsWith('<!') || body.trimStart().startsWith('<!'))) {
+      body = body.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
+    }
+    origSend.call(this, body);
+  };
+  next();
+});
+
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
   try {
