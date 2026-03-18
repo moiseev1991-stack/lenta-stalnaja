@@ -92,6 +92,8 @@ function isMojibake(s) {
 
 // Фильтр Nunjucks: при рендере подменяет mojibake на корректное название (работает даже при старом кэше/проде)
 njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NAME : v);
+// Единственный источник для og:site_name и JSON-LD name — не зависит от res.locals и кодировки шаблона
+njkEnv.addGlobal('fixedSiteName', FALLBACK_SITE_NAME);
 
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
