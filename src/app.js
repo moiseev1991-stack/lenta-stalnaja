@@ -150,6 +150,19 @@ function forceSiteBrandingInHtml(html) {
     (full, pre, mid, post) => (isMojibake(String(mid).trim()) ? pre + FALLBACK_SITE_NAME + post : full),
   );
 
+  // Чиним <title> и og:title (Telegram/vk ломают кодировку без charset в Content-Type)
+  out = out.replace(/<title>([^<]*)<\/title>/i, (m, inner) =>
+    isMojibake(inner) ? '<title>' + FALLBACK_SITE_NAME + '</title>' : m
+  );
+  out = out.replace(
+    /<meta\s+property="og:title"\s+content="([^"]*)"\s*\/?>/gi,
+    (m, c) => isMojibake(c) ? '<meta property="og:title" content="' + htmlEscapeAttr(FALLBACK_SITE_NAME) + '">' : m,
+  );
+  out = out.replace(
+    /<meta\s+content="([^"]*)"\s+property="og:title"\s*\/?>/gi,
+    (m, c) => isMojibake(c) ? '<meta property="og:title" content="' + htmlEscapeAttr(FALLBACK_SITE_NAME) + '">' : m,
+  );
+
   return out;
 }
 
@@ -166,11 +179,19 @@ app.use((req, res, next) => {
   const origSend = res.send;
   const origEnd = res.end;
   res.send = function (body) {
-    if (typeof body === 'string') body = fixMojibakeInHtml(body);
-    else if (Buffer.isBuffer(body)) {
+    if (typeof body === 'string') {
+      body = fixMojibakeInHtml(body);
+      // Явный charset для Telegram/VK и др. — без него кракозябры в превью
+      if (/^\s*<!DOCTYPE/i.test(body) || body.trim().startsWith('<html')) {
+        this.setHeader('Content-Type', 'text/html; charset=utf-8');
+      }
+    } else if (Buffer.isBuffer(body)) {
       const s = body.toString('utf8');
       const f = fixMojibakeInHtml(s);
       if (f !== s) body = Buffer.from(f, 'utf8');
+      if (/^\s*<!DOCTYPE/i.test(s) || s.trim().startsWith('<html')) {
+        this.setHeader('Content-Type', 'text/html; charset=utf-8');
+      }
     }
     return origSend.call(this, body);
   };
