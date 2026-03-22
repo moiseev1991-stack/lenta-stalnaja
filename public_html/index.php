@@ -1,4 +1,11 @@
 <?php
+// HTTP → HTTPS redirect (301)
+if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+    $url = 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '/');
+    header('Location: ' . $url, true, 301);
+    exit;
+}
+
 /**
  * PHP proxy → Node.js (port 3000)
  * Auto-starts Node.js if not running (requires exec/shell_exec on hosting)

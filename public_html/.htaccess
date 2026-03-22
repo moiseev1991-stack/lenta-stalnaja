@@ -1,4 +1,8 @@
 RewriteEngine On
+# HTTP → HTTPS (301)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 Options +FollowSymLinks
 
 # Route all requests through PHP proxy (index.php → Node.js)
