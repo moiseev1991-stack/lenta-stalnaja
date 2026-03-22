@@ -1,6 +1,8 @@
 <?php
-// HTTP → HTTPS redirect (301)
-if (empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === 'off') {
+// HTTP → HTTPS redirect (301) — не редиректить, если прокси передал X-Forwarded-Proto: https
+$isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+$forwardedHttps = ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+if (!$isHttps && !$forwardedHttps) {
     $url = 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '/');
     header('Location: ' . $url, true, 301);
     exit;

@@ -1,6 +1,7 @@
 RewriteEngine On
-# HTTP → HTTPS (301)
+# HTTP → HTTPS (301) — не редиректить, если прокси уже передал HTTPS (X-Forwarded-Proto)
 RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 Options +FollowSymLinks
