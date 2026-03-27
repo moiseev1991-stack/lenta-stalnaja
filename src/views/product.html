@@ -20,57 +20,62 @@
     </a>
   </div>
   {% endif %}
-  <div class="product-hero">
-    <div class="product-image-wrap">
-      {% set _imgSrc = (product.image_url | imgUrl) | default('/img/placeholder.svg') %}
-      <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
-    </div>
-    <div class="product-detail-main">
-      <h1>{{ h1 }}</h1>
-      <div class="product-hero-meta">
-        <div class="product-price">{% if product.price != null %}{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}{% else %}Цена по запросу{% endif %}</div>
-        {% if product.stock_qty %}<div class="stock-badge stock-badge--ok">В наличии на складе</div>{% else %}<div class="stock-badge">Наличие уточняйте</div>{% endif %}
-      </div>
-      <table class="product-specs">
-        <tbody>
-          {% if product.mark %}<tr><th>Марка</th><td>{{ product.mark }}</td></tr>{% endif %}
-          {% if product.thickness_mm != null %}<tr><th>Толщина, мм</th><td>{{ product.thickness_mm }}</td></tr>{% endif %}
-          {% if product.width_mm != null %}<tr><th>Ширина, мм</th><td>{{ product.width_mm }}</td></tr>{% endif %}
-          {% if product.length_mm != null %}<tr><th>Длина, мм</th><td>{{ product.length_mm }}</td></tr>{% endif %}
-          {% if product.surface %}<tr><th>Поверхность</th><td>{{ product.surface }}</td></tr>{% endif %}
-          {% if product.state %}<tr><th>Состояние</th><td>{{ product.state }}</td></tr>{% endif %}
-          {% if product.standard %}<tr><th>ГОСТ</th><td>{{ product.standard }}</td></tr>{% endif %}
-          {% if product.sku_code %}<tr><th>Артикул</th><td>{{ product.sku_code }}</td></tr>{% endif %}
-        </tbody>
-      </table>
-      <div class="product-actions">
-        <a href="/contacts/#lead" class="btn btn-primary btn-lg">Заказать</a>
-        <a href="/contacts/" class="btn btn-outline">Задать вопрос</a>
-      </div>
-    </div>
-    <aside class="product-sidebox">
-      <h2>Быстрый расчёт и заказ</h2>
-      <div class="side-contact-item"><a href="{{ productContacts.phoneHref }}">{{ productContacts.phone }}</a></div>
-      <div class="side-contact-item"><a href="{{ productContacts.emailHref }}">{{ productContacts.email }}</a></div>
-      <p class="side-note">{{ productContacts.responseTime }}</p>
-      <ul class="side-features">
-        <li>Работаем с НДС и без НДС</li>
-        <li>Самовывоз, ТК или курьерская доставка</li>
-        <li>Отгрузка со склада и через филиалы</li>
-        <li>Резка в размер и отмотка по заказу</li>
-      </ul>
-      <a href="/contacts/#lead" class="btn btn-outline btn-sm">Связаться с менеджером</a>
-    </aside>
-  </div>
 
-  <section class="product-description-block content">
+  <section class="product-hero">
+    <div class="product-hero-grid">
+      <div class="product-image-wrap">
+        {% set _imgSrc = (product.image_url | imgUrl) | default('/img/placeholder.svg') %}
+        <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
+      </div>
+
+      <div class="product-detail-main">
+        <h1>{{ h1 }}</h1>
+        <div class="product-hero-meta">
+          <div class="product-price">{% if product.price != null %}{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}{% else %}Цена по запросу{% endif %}</div>
+          {% if product.stock_qty %}<div class="stock-badge stock-badge--ok">В наличии на складе</div>{% else %}<div class="stock-badge">Наличие уточняйте</div>{% endif %}
+        </div>
+        <table class="product-specs">
+          <tbody>
+            {% if product.mark %}<tr><th>Марка</th><td>{{ product.mark }}</td></tr>{% endif %}
+            {% if product.thickness_mm != null %}<tr><th>Толщина, мм</th><td>{{ product.thickness_mm }}</td></tr>{% endif %}
+            {% if product.width_mm != null %}<tr><th>Ширина, мм</th><td>{{ product.width_mm }}</td></tr>{% endif %}
+            {% if product.length_mm != null %}<tr><th>Длина, мм</th><td>{{ product.length_mm }}</td></tr>{% endif %}
+            {% if product.surface %}<tr><th>Поверхность</th><td>{{ product.surface }}</td></tr>{% endif %}
+            {% if product.state %}<tr><th>Состояние</th><td>{{ product.state }}</td></tr>{% endif %}
+            {% if product.standard %}<tr><th>ГОСТ</th><td>{{ product.standard }}</td></tr>{% endif %}
+            {% if product.sku_code %}<tr><th>Артикул</th><td>{{ product.sku_code }}</td></tr>{% endif %}
+          </tbody>
+        </table>
+        <div class="product-actions">
+          <a href="/contacts/#lead" class="btn btn-primary btn-lg">Заказать</a>
+          <a href="/contacts/" class="btn btn-outline">Задать вопрос</a>
+        </div>
+      </div>
+
+      <aside class="product-sidebox">
+        <h2>Быстрый расчёт и заказ</h2>
+        <div class="side-contact-item"><a href="{{ productContacts.phoneHref }}">{{ productContacts.phone }}</a></div>
+        <div class="side-contact-item"><a href="{{ productContacts.emailHref }}">{{ productContacts.email }}</a></div>
+        <p class="side-note">{{ productContacts.responseTime }}</p>
+        <ul class="side-features">
+          <li>Работаем с НДС и без НДС</li>
+          <li>Самовывоз, ТК или курьерская доставка</li>
+          <li>Отгрузка со склада и через филиалы</li>
+          <li>Резка в размер и отмотка по заказу</li>
+        </ul>
+        <a href="/contacts/#lead" class="btn btn-outline btn-sm">Связаться с менеджером</a>
+      </aside>
+    </div>
+  </section>
+
+  <section class="product-description-block content product-card">
     <h2 class="section-title">Описание товара</h2>
     {{ productDescriptionHtml | safe }}
     <a href="{{ gradePageUrl }}" class="text-link">Все размеры {{ product.mark or 'этой марки' }}</a>
   </section>
 
   <section class="product-info-grid">
-    <article class="info-tile">
+    <article class="info-tile product-card">
       <h3>Доставка и отгрузка</h3>
       <ul>
         <li>Самовывоз со склада по согласованию</li>
@@ -80,7 +85,7 @@
       </ul>
       <a href="/delivery/" class="text-link">Подробнее о доставке</a>
     </article>
-    <article class="info-tile">
+    <article class="info-tile product-card">
       <h3>Оплата и документы</h3>
       <ul>
         <li>Оплата для юрлиц и физлиц</li>
@@ -90,7 +95,7 @@
       </ul>
       <a href="/payment/" class="text-link">Подробнее об оплате</a>
     </article>
-    <article class="info-tile">
+    <article class="info-tile product-card">
       <h3>Контакты и быстрый заказ</h3>
       <ul>
         <li><a href="{{ productContacts.phoneHref }}">{{ productContacts.phone }}</a></li>
@@ -100,7 +105,7 @@
       </ul>
       <a href="/contacts/#lead" class="text-link">Оставить запрос на расчёт</a>
     </article>
-    <article class="info-tile">
+    <article class="info-tile product-card">
       <h3>Резка, упаковка, отмотка</h3>
       <ul>
         <li>Резка в размер под задачу</li>
@@ -110,29 +115,25 @@
       </ul>
       <a href="/contacts/" class="text-link">Согласовать условия заказа</a>
     </article>
-  </section>
-
-  <section class="price-factors">
-    <h2 class="section-title">Что влияет на стоимость</h2>
-    <ul>
-      <li>объём заказа</li>
-      <li>марка стали</li>
-      <li>толщина</li>
-      <li>ширина</li>
-      <li>состояние</li>
-      <li>поверхность</li>
-      <li>дополнительные услуги и доставка</li>
-    </ul>
-  </section>
-
-  <section class="cities-shipping">
-    <h2 class="section-title">Наличие и отгрузка по городам</h2>
-    <p>Отгружаем заказы в Москву, Санкт-Петербург, Екатеринбург, Казань и другие города РФ. Наличие конкретной позиции уточняйте на ближайшем складе перед оформлением заказа.</p>
-    <a href="/delivery/" class="text-link">Условия доставки и отгрузки</a>
+    <article class="info-tile product-card">
+      <h3>Что влияет на стоимость</h3>
+      <ul>
+        <li>объём заказа</li>
+        <li>марка стали</li>
+        <li>толщина и ширина</li>
+        <li>состояние и поверхность</li>
+        <li>дополнительные услуги и доставка</li>
+      </ul>
+    </article>
+    <article class="info-tile product-card">
+      <h3>Наличие и отгрузка по городам</h3>
+      <p>Отгружаем заказы в Москву, Санкт-Петербург, Екатеринбург, Казань и другие города РФ. Наличие уточняйте на ближайшем складе перед оформлением заказа.</p>
+      <a href="/delivery/" class="text-link">Условия доставки и отгрузки</a>
+    </article>
   </section>
 
   {% if productFaqItems and productFaqItems.length %}
-  <section class="product-faq">
+  <section class="product-faq product-card">
     <h2 class="section-title">Вопросы по заказу</h2>
     <div class="faq-list">
       {% for item in productFaqItems %}
@@ -145,7 +146,7 @@
   </section>
   {% endif %}
 
-  <section class="product-links">
+  <section class="product-links product-card">
     <div class="links-group">
       <h2 class="section-title">Все размеры этой марки</h2>
       {% if sameGradeProducts and sameGradeProducts.length %}
