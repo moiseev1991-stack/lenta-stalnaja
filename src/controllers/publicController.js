@@ -144,6 +144,104 @@ function productCanonical(product) {
   return '/' + product.grade_slug + '/' + product.slug + '/';
 }
 
+const COMPANY_CONTACTS = {
+  phone: '+7 (800) 100-08-74',
+  phoneHref: 'tel:+78001000874',
+  email: 'corp-metalinvest01265@yandex.ru',
+  emailHref: 'mailto:corp-metalinvest01265@yandex.ru',
+  responseTime: 'Ответ по наличию и цене в течение 15 минут',
+  workHours: 'Пн-Пт: 09:00-18:00',
+};
+
+const PRODUCT_FAQ_ITEMS = [
+  {
+    q: 'Есть ли товар в наличии?',
+    a: 'Наличие зависит от марки, толщины и ширины. Уточним остатки и ближайшую дату отгрузки по телефону или e-mail.',
+  },
+  {
+    q: 'Можно ли заказать резку в размер?',
+    a: 'Да, согласуем резку под ваш размер при оформлении заявки.',
+  },
+  {
+    q: 'Работаете ли с НДС?',
+    a: 'Да, работаем с НДС и без НДС в зависимости от формы расчёта.',
+  },
+  {
+    q: 'Есть ли доставка транспортной компанией?',
+    a: 'Да, отправляем транспортными компаниями по России, также доступен самовывоз.',
+  },
+  {
+    q: 'Как быстро выставляется счёт?',
+    a: 'Счёт подготавливаем после согласования параметров заказа и реквизитов.',
+  },
+];
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildCompactProductDescription(product) {
+  const mark = product.mark || '';
+  const thickness = product.thickness_mm != null ? `${product.thickness_mm}` : '';
+  const width = product.width_mm != null ? `${product.width_mm}` : '';
+  const state = product.state || '';
+  const surface = product.surface || '';
+  const standard = product.standard || '';
+  const dims = thickness && width ? `${thickness}×${width} мм` : (thickness || width ? `${thickness || width} мм` : '');
+  const pricePart = product.price != null ? `Ориентир по цене: от ${Math.round(product.price).toLocaleString('ru-RU')} ₽ за кг (уточняется на дату заказа).` : 'Цена рассчитывается по запросу с учётом объёма и условий поставки.';
+  const statePart = state ? `в состоянии ${state}` : 'в согласованном состоянии поставки';
+  const surfacePart = surface ? `с поверхностью ${surface}` : 'с требуемой поверхностью';
+  const stdPart = standard ? `по ${standard}` : 'по действующим стандартам';
+
+  const p1 = `Лента ${mark} ${dims} ${statePart} ${stdPart} применяется в промышленном производстве и заготовительных работах, когда важны стабильная геометрия и повторяемость партии. Позиция поставляется ${surfacePart}; отгрузка формируется под задачу клиента.`;
+  const p2 = `${pricePart} Принимаем заказы от B2B и частных клиентов, помогаем с подбором параметров, согласуем резку в размер и отмотку. Доступны самовывоз и доставка по России через ТК или курьерские службы.`;
+
+  return `<p>${escapeHtml(p1)}</p><p>${escapeHtml(p2)}</p>`;
+}
+
+function buildFaqSchema(items) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
+}
+
+async function buildProductPageData(product, canonical) {
+  const [similarProducts, sameGradeProducts, sameThicknessProducts] = await Promise.all([
+    lenta.getSimilarProducts(product.grade_id, product.id, 4),
+    lenta.getProductsByGradeId(product.grade_id, product.id, 10),
+    lenta.getProductsByThickness(product.thickness_mm, product.id, 10),
+  ]);
+
+  const sameThicknessOtherMarks = sameThicknessProducts.filter((p) => p.grade_id !== product.grade_id);
+  const productDescriptionHtml = buildCompactProductDescription(product);
+  const faqItems = PRODUCT_FAQ_ITEMS;
+
+  return {
+    similarProducts,
+    sameGradeProducts,
+    sameThicknessOtherMarks,
+    productDescriptionHtml,
+    productFaqItems: faqItems,
+    productFaqSchema: faqItems.length ? buildFaqSchema(faqItems) : null,
+    productContacts: COMPANY_CONTACTS,
+    gradePageUrl: product.grade_slug ? `/${product.grade_slug}/` : canonical,
+  };
+}
+
 async function productPage(req, res, next) {
   try {
     const product = await lenta.getProductBySlug(req.params.productSlug);
@@ -155,11 +253,11 @@ async function productPage(req, res, next) {
       return res.redirect(301, productCanonical(product));
     }
 
-    const similarProducts = await lenta.getSimilarProducts(product.grade_id, product.id, 4);
     const productSeo  = buildProductSEO(product, config.siteName);
     const productName = normalizeProductName(product.name);
     const canonical   = productCanonical(product);
     const gradeUrl    = '/' + product.grade_slug + '/';
+    const pageData    = await buildProductPageData(product, canonical);
 
     if (!product.short_text_html) product.short_text_html = buildProductShortText(product);
 
@@ -174,7 +272,14 @@ async function productPage(req, res, next) {
       ],
       product,
       category: { name: 'Лента', slug: 'lenta' },
-      similarProducts,
+      similarProducts: pageData.similarProducts,
+      sameGradeProducts: pageData.sameGradeProducts,
+      sameThicknessOtherMarks: pageData.sameThicknessOtherMarks,
+      productDescriptionHtml: pageData.productDescriptionHtml,
+      productFaqItems: pageData.productFaqItems,
+      productFaqSchema: pageData.productFaqSchema,
+      productContacts: pageData.productContacts,
+      gradePageUrl: pageData.gradePageUrl || gradeUrl,
     });
   } catch (err) { next(err); }
 }
@@ -201,10 +306,10 @@ async function productBySlugPage(req, res, next) {
     if (product.grade_slug) {
       return res.redirect(301, productCanonical(product));
     }
-    const similarProducts = await lenta.getSimilarProducts(product.grade_id, product.id, 4);
     const productSeo  = buildProductSEO(product, config.siteName);
     const productName = normalizeProductName(product.name);
     const canonical   = '/' + product.slug + '/';
+    const pageData    = await buildProductPageData(product, canonical);
 
     if (!product.short_text_html) product.short_text_html = buildProductShortText(product);
 
@@ -218,7 +323,14 @@ async function productBySlugPage(req, res, next) {
       ],
       product,
       category: { name: 'Лента', slug: 'lenta' },
-      similarProducts,
+      similarProducts: pageData.similarProducts,
+      sameGradeProducts: pageData.sameGradeProducts,
+      sameThicknessOtherMarks: pageData.sameThicknessOtherMarks,
+      productDescriptionHtml: pageData.productDescriptionHtml,
+      productFaqItems: pageData.productFaqItems,
+      productFaqSchema: pageData.productFaqSchema,
+      productContacts: pageData.productContacts,
+      gradePageUrl: pageData.gradePageUrl,
     });
   } catch (err) { next(err); }
 }

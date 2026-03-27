@@ -310,6 +310,24 @@ async function getSimilarProducts(gradeId, excludeId, limit = 4) {
   return rows.map(mapProduct);
 }
 
+async function getProductsByGradeId(gradeId, excludeId, limit = 12) {
+  if (!gradeId) return [];
+  const [rows] = await pool.query(
+    BASE_SELECT + ' WHERE p.grade_id = ? AND p.id != ? ORDER BY p.thickness_mm, p.width_mm LIMIT ?',
+    [gradeId, excludeId || 0, limit]
+  );
+  return rows.map(mapProduct);
+}
+
+async function getProductsByThickness(thicknessMm, excludeId, limit = 12) {
+  if (thicknessMm == null) return [];
+  const [rows] = await pool.query(
+    BASE_SELECT + ' WHERE p.thickness_mm = ? AND p.id != ? ORDER BY gr.name, p.width_mm LIMIT ?',
+    [thicknessMm, excludeId || 0, limit]
+  );
+  return rows.map(mapProduct);
+}
+
 // ── Search ────────────────────────────────────────────────────────────────────
 
 async function searchProducts(q, page = 1) {
@@ -365,5 +383,7 @@ module.exports = {
   getLentaFilterValues,
   getProductBySlug,
   getSimilarProducts,
+  getProductsByGradeId,
+  getProductsByThickness,
   searchProducts,
 };
