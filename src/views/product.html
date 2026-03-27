@@ -25,7 +25,22 @@
     <div class="product-hero-grid">
       <div class="product-image-wrap">
         {% set _imgSrc = (product.image_url | imgUrl) | default('/img/placeholder.svg') %}
-        <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
+        <div class="product-image-shell">
+          <img src="{{ _imgSrc }}" alt="{% if product.mark and (product.thickness_mm != null) and (product.width_mm != null) %}Фото: {{ product.mark }} {{ product.thickness_mm }}×{{ product.width_mm }}{% else %}Фото товара{% endif %}" class="product-image" onerror="this.onerror=null;this.src='/img/placeholder.svg';">
+        </div>
+        <aside class="product-sidebox product-sidebox--in-image">
+          <h2>Быстрый расчёт и заказ</h2>
+          <div class="side-contact-item"><a href="{{ productContacts.phoneHref }}">{{ productContacts.phone }}</a></div>
+          <div class="side-contact-item"><a href="{{ productContacts.emailHref }}">{{ productContacts.email }}</a></div>
+          <p class="side-note">{{ productContacts.responseTime }}</p>
+          <ul class="side-features">
+            <li>Работаем с НДС и без НДС</li>
+            <li>Самовывоз, ТК или курьерская доставка</li>
+            <li>Отгрузка со склада и через филиалы</li>
+            <li>Резка в размер и отмотка по заказу</li>
+          </ul>
+          <a href="/contacts/#lead" class="btn btn-outline btn-sm">Связаться с менеджером</a>
+        </aside>
       </div>
 
       <div class="product-detail-main">
@@ -52,19 +67,6 @@
         </div>
       </div>
 
-      <aside class="product-sidebox">
-        <h2>Быстрый расчёт и заказ</h2>
-        <div class="side-contact-item"><a href="{{ productContacts.phoneHref }}">{{ productContacts.phone }}</a></div>
-        <div class="side-contact-item"><a href="{{ productContacts.emailHref }}">{{ productContacts.email }}</a></div>
-        <p class="side-note">{{ productContacts.responseTime }}</p>
-        <ul class="side-features">
-          <li>Работаем с НДС и без НДС</li>
-          <li>Самовывоз, ТК или курьерская доставка</li>
-          <li>Отгрузка со склада и через филиалы</li>
-          <li>Резка в размер и отмотка по заказу</li>
-        </ul>
-        <a href="/contacts/#lead" class="btn btn-outline btn-sm">Связаться с менеджером</a>
-      </aside>
     </div>
   </section>
 
