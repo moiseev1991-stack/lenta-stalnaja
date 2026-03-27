@@ -518,14 +518,22 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
   background: #f4f6f9;
   border: 1px solid #dbe1e8;
   border-radius: var(--radius);
-  min-height: 300px;
+  min-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   padding: 0.65rem;
 }
-.product-image { width: 100%; height: 100%; object-fit: contain; }
+.product-image {
+  width: auto;
+  height: auto;
+  max-width: 82%;
+  max-height: 82%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
 .product-detail-main { min-width: 0; }
 .product-detail-main h1 { margin: 0 0 0.55rem; line-height: 1.15; }
 .product-hero-meta { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
@@ -597,11 +605,43 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 }
 .info-tile {
   min-height: 100%;
+  border-color: #d5dee8;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
 }
-.info-tile h3 { margin: 0 0 0.5rem; font-size: 0.92rem; }
-.info-tile ul { margin: 0 0 0.45rem; padding-left: 1rem; font-size: 0.82rem; color: #334155; }
+.info-tile h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: #0f172a;
+}
+.info-tile ul { margin: 0 0 0.45rem; padding-left: 1rem; font-size: 0.83rem; color: #334155; }
 .info-tile li { margin-bottom: 0.22rem; }
 .info-tile p { margin: 0.3rem 0 0.5rem; font-size: 0.84rem; color: #334155; }
+.info-tile .text-link { font-weight: 600; }
+
+.info-tile:hover {
+  border-color: #bfccda;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+/* Compatibility for old product layouts still using separate blocks */
+.price-factors,
+.cities-shipping {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+  border: 1px solid #d5dee8;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 0.9rem 1rem;
+}
+.price-factors ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  columns: 2;
+  font-size: 0.84rem;
+  color: #334155;
+}
+.price-factors li { margin-bottom: 0.2rem; }
+.cities-shipping p { margin: 0.35rem 0 0.5rem; font-size: 0.85rem; color: #334155; }
 
 .faq-list { display: grid; gap: 0.45rem; margin-top: 0.45rem; }
 .faq-item {
@@ -1267,8 +1307,10 @@ body.menu-open .mobile-menu { display: block; }
   .similar-products .product-list { grid-template-columns: 1fr 1fr; }
   .product-hero { padding: 0.75rem; }
   .product-hero-grid { grid-template-columns: 1fr; gap: 0.7rem; }
-  .product-image-wrap { min-height: 240px; }
+  .product-image-wrap { min-height: 220px; }
+  .product-image { max-width: 76%; max-height: 76%; }
   .product-info-grid { grid-template-columns: 1fr; }
+  .price-factors ul { columns: 1; }
   .catalog-top-bar { flex-direction: column; align-items: stretch; }
   .catalog-top-bar .catalog-sort { margin-left: 0; justify-content: space-between; }
   .lead-form { grid-template-columns: 1fr; }
