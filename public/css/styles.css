@@ -569,8 +569,9 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .product-specs tr:last-child th, .product-specs tr:last-child td { border-bottom: none; }
 .product-specs th { width: 43%; font-weight: 600; color: #334155; background: #f3f6f9; border-right: 1px solid #dce1e7; }
 .product-specs td { color: #0f172a; font-weight: 500; }
-.product-actions { margin: 0.75rem 0 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.product-actions { margin: 1.2rem 0 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .product-actions .btn { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+.product-actions .btn-primary { padding-top: 0.8rem; padding-bottom: 0.8rem; }
 
 .product-sidebox {
   background: #f8fafc;
