@@ -163,6 +163,42 @@ pm2 startup   # выполнить команду, которую выведет
 2. Добавить все 4 секрета из таблицы выше
 3. После этого каждый `git push origin main` будет автоматически загружать изменения
 
+### Docker-деплой (рекомендуется для стабильных обновлений)
+
+Если сервер поддерживает Docker, используйте контейнерный деплой вместо FTP/PHP-прокси.
+
+Что уже добавлено в проект:
+- workflow `.github/workflows/docker-image.yml` (build + push образа в GHCR при каждом push в `main`);
+- `docker-compose.prod.yml` для запуска `web + mysql`;
+- `.env.docker.example` как шаблон переменных.
+
+Шаги на сервере (один раз):
+
+```bash
+mkdir -p ~/lenta-stalnaja && cd ~/lenta-stalnaja
+curl -L -o docker-compose.prod.yml https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/docker-compose.prod.yml
+curl -L -o .env https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/.env.docker.example
+```
+
+Далее отредактируйте `.env`:
+- `APP_IMAGE=ghcr.io/moiseev1991-stack/lenta-stalnaja:latest`
+- домен `SITE_URL`;
+- пароли `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `ADMIN_PASSWORD`, `SESSION_SECRET`.
+
+Запуск:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env pull
+docker compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
+Обновление после нового push:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env pull
+docker compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
 ### Настройка Node.js на SpaceWeb
 
 После первой загрузки через FTP — зайти по SSH и выполнить один раз:
