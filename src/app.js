@@ -57,14 +57,17 @@ njkEnv.addFilter('normalizeName', (s) => {
   if (s == null || typeof s !== 'string') return '';
   return s.replace(/\s+\d[\d\s]*([.,]\d+)?\s*$/, '').trim();
 });
-// Форматирование толщины: 1.00 -> "1", 0.10 -> "0.1", 0.01 -> "0.01"
-njkEnv.addFilter('formatThickness', (n) => {
-  if (n == null || Number.isNaN(Number(n))) return '';
+// мм в UI: убрать лишние нули (3.00 -> 3, 10.5 -> 10.5)
+function formatMmForDisplay(n) {
+  if (n == null || n === '' || Number.isNaN(Number(n))) return '';
   const num = Number(n);
+  if (!Number.isFinite(num)) return '';
   if (Number.isInteger(num)) return String(num);
   const str = num.toFixed(2);
   return str.replace(/\.?0+$/, '');
-});
+}
+njkEnv.addFilter('formatThickness', formatMmForDisplay);
+njkEnv.addFilter('formatMm', formatMmForDisplay);
 // JSON-сериализация для использования в JSON-LD (совместно с | safe)
 njkEnv.addFilter('json', (v) => JSON.stringify(v));
 app.set('view engine', 'html');

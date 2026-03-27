@@ -42,6 +42,18 @@ router.get('/logout', controller.logout);
 
 router.use(requireAdmin);
 
+// ─── Деплой и перезапуск (литеральные пути первыми, чтобы не перехватили :id) ─
+router.get('/deploy', controller.deployForm);
+router.post('/deploy', a(controller.deploy));
+router.get('/restart', (req, res) => {
+  res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Перезапуск</title><link rel="stylesheet" href="/css/admin.css"></head><body class="adm-body"><div class="adm-main" style="padding: 2rem;"><p class="adm-text">Приложение перезапускается. Через 5–10 сек обновите <a href="/">главную</a> или <a href="/admin">админку</a>.</p></div></body></html>`);
+  setTimeout(() => process.exit(0), 1000);
+});
+router.post('/restart', (req, res) => {
+  res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Перезапуск</title><link rel="stylesheet" href="/css/admin.css"></head><body class="adm-body"><div class="adm-main" style="padding: 2rem;"><p class="adm-text">Приложение перезапускается. Через 5–10 сек обновите <a href="/">главную</a> или <a href="/admin">админку</a>.</p></div></body></html>`);
+  setTimeout(() => process.exit(0), 800);
+});
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 router.get('/', a(controller.dashboard));
 
@@ -90,19 +102,5 @@ router.post('/bonus-page', a(controller.saveBonusPage));
 router.get('/db-restore', controller.dbRestoreForm);
 router.post('/db-restore', memUpload.single('db_file'), a(controller.dbRestore));
 router.post('/fix-settings-encoding', a(controller.fixSettingsEncoding));
-
-// ─── Деплой (git pull + перезапуск) ─────────────────────────────────────────
-router.get('/deploy', controller.deployForm);
-router.post('/deploy', a(controller.deploy));
-
-// ─── Process restart (triggers PM2 / process manager restart) ────────────────
-router.get('/restart', (req, res) => {
-  res.send('<h2>Перезапуск через 1 сек...</h2><p>Через 5–10 сек обновите главную страницу.</p>');
-  setTimeout(() => process.exit(0), 1000);
-});
-router.post('/restart', (req, res) => {
-  res.send('Перезапуск...');
-  setTimeout(() => process.exit(0), 300);
-});
 
 module.exports = router;

@@ -16,9 +16,13 @@
   <div class="adm-alert adm-alert-error">{{ deployError }}</div>
   {% if deployLog %}<pre class="adm-text" style="font-size: 0.85rem; overflow: auto; max-height: 150px;">{{ deployLog }}</pre>{% endif %}
   {% endif %}
-  <form method="post" action="/admin/deploy" style="margin-bottom: 1.5rem;">
+  <form method="post" action="/admin/deploy" style="display: inline-block; margin-right: 0.5rem; margin-bottom: 1rem;">
     <button type="submit" class="adm-btn adm-btn-green" onclick="return confirm('Выполнить git pull и перезапустить приложение? Сайт будет недоступен 5–10 сек.');">Деплой и перезапуск</button>
   </form>
+  <form method="post" action="/admin/restart" style="display: inline-block; margin-bottom: 1rem;">
+    <button type="submit" class="adm-btn adm-btn-outline" onclick="return confirm('Только перезапустить процесс Node (без git pull)? Сайт будет недоступен 5–10 сек.');">Только перезапуск</button>
+  </form>
+  <p class="adm-text" style="margin-top: 0; margin-bottom: 1.5rem; color: #666;">Если код уже обновлён (например, через хостинг), используйте «Только перезапуск», чтобы приложение подхватило изменения. Не открывайте адрес /admin/restart по ссылке — только нажимайте кнопку.</p>
 
   <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #ccc;">
   <p class="adm-text">Загрузите файл <strong>sync_to_server_full.sql</strong> (или <code>database.sqlite</code>) с вашего компьютера — из папки <code>data/</code> проекта.</p>
