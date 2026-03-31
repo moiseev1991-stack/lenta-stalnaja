@@ -103,6 +103,19 @@ app.set('view engine', 'html');
 
 app.use(express.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  res.locals.deployGitSha = config.deployGitSha;
+  res.locals.deployBootAt = config.deployBootAt;
+  if (req.path === '/') {
+    res.setHeader('X-Deploy-Sha', config.deployGitSha || 'unknown');
+    res.setHeader('X-Deploy-Boot-At', config.deployBootAt || 'unknown');
+    // #region agent log
+    safeFetch({ runId: 'post-fix', hypothesisId: 'H6', location: 'src/app.js:deploy-header', message: 'Set deploy headers on root', data: { sha: config.deployGitSha || 'unknown', bootAt: config.deployBootAt || 'unknown' }, timestamp: Date.now() });
+    // #endregion
+  }
+  next();
+});
+
 // Menu data middleware - adds grades and groups to all pages (async, MySQL)
 const lentaService = require('./services/lenta');
 // Только \uXXXX в исходнике — строка корректна в рантайме даже если файл сохранили не в UTF-8

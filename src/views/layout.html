@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ (title | default(siteName)) | safeSiteName }}{% endblock %}</title>
+  <!-- DEPLOY_CHECK_GLOBAL: git_sha={{ deployGitSha or 'unknown' }} boot_at={{ deployBootAt or 'unknown' }} -->
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
   {% if robots %}<meta name="robots" content="{{ robots }}">{% endif %}
   {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
