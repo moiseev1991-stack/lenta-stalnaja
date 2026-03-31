@@ -601,14 +601,16 @@ function deployForm(req, res) {
 
 async function deploy(req, res) {
   const { execSync } = require('child_process');
-  const cwd = process.cwd();
+  const repoDir = process.env.DEPLOY_REPO_DIR || process.cwd();
+  const gitCmd = `git -C "${repoDir}" pull origin main`;
+  const npmCmd = `npm --prefix "${repoDir}" ci --omit=dev`;
   const renderRestore = (opts) => {
     res.render('admin/db-restore.html', { message: null, error: null, ...opts });
   };
   try {
-    const out = execSync('git pull origin main', {
+    const out = execSync(`${gitCmd} && ${npmCmd}`, {
       encoding: 'utf8',
-      cwd,
+      cwd: repoDir,
       timeout: 60000,
     });
     renderRestore({
@@ -619,7 +621,7 @@ async function deploy(req, res) {
   } catch (e) {
     const log = [e.stdout, e.stderr].filter(Boolean).join('\n').trim() || e.message;
     renderRestore({
-      deployError: 'Ошибка git pull: ' + (e.message || String(e)).substring(0, 300),
+      deployError: 'Ошибка деплоя: ' + (e.message || String(e)).substring(0, 300),
       deployLog: log.substring(0, 2000),
     });
   }

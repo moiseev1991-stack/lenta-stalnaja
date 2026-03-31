@@ -207,6 +207,8 @@ cd ~/lenta-stalnaja.ru/
 npm ci --omit=dev
 cp .env.production.example .env
 # Заполнить .env данными из SpaceWeb панель
+# Для кнопки "Деплой и перезапуск" в админке:
+# DEPLOY_REPO_DIR=/home/i/infogkmeta/lenta-stalnaja
 pm2 start ecosystem.config.js --env production
 pm2 save
 ```

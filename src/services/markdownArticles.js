@@ -1,12 +1,140 @@
 const fs = require('fs');
 const path = require('path');
-const MarkdownIt = require('markdown-it');
 
 const ARCHIVE_DIR = path.join(__dirname, '../../lenta_articles_markdown_archive');
 const INDEX_FILE = path.join(ARCHIVE_DIR, '00-INDEX.md');
 
 let cache = null;
-const md = new MarkdownIt({ html: false, linkify: true, typographer: false });
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function inlineMarkdownToHtml(text) {
+  let out = escapeHtml(text);
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return out;
+}
+
+function isTableDivider(line) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return false;
+  const cols = trimmed.slice(1, -1).split('|').map((s) => s.trim());
+  if (!cols.length) return false;
+  return cols.every((col) => /^:?-{3,}:?$/.test(col));
+}
+
+function parseTableRow(line) {
+  return line.trim().slice(1, -1).split('|').map((s) => s.trim());
+}
+
+function markdownToHtml(markdown) {
+  if (!markdown) return '';
+  const lines = markdown.split(/\r?\n/);
+  const html = [];
+  let inUl = false;
+  let inOl = false;
+  let inTable = false;
+  let tableHeader = null;
+  let paragraph = [];
+
+  function flushParagraph() {
+    if (!paragraph.length) return;
+    html.push('<p>' + inlineMarkdownToHtml(paragraph.join(' ')) + '</p>');
+    paragraph = [];
+  }
+
+  function closeLists() {
+    if (inUl) { html.push('</ul>'); inUl = false; }
+    if (inOl) { html.push('</ol>'); inOl = false; }
+  }
+
+  function closeTable() {
+    if (!inTable) return;
+    html.push('</tbody></table>');
+    inTable = false;
+    tableHeader = null;
+  }
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i];
+    const line = raw.trim();
+
+    if (!line) {
+      flushParagraph();
+      closeLists();
+      closeTable();
+      continue;
+    }
+
+    const heading = line.match(/^(#{2,6})\s+(.+)\s*$/);
+    if (heading) {
+      flushParagraph();
+      closeLists();
+      closeTable();
+      const level = heading[1].length;
+      html.push(`<h${level}>${inlineMarkdownToHtml(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    if (line.startsWith('|') && line.endsWith('|')) {
+      const next = (lines[i + 1] || '').trim();
+      if (!inTable && isTableDivider(next)) {
+        flushParagraph();
+        closeLists();
+        const headers = parseTableRow(line);
+        html.push('<table><thead><tr>' + headers.map((h) => `<th>${inlineMarkdownToHtml(h)}</th>`).join('') + '</tr></thead><tbody>');
+        inTable = true;
+        tableHeader = headers.length;
+        i += 1; // skip divider
+        continue;
+      }
+      if (inTable) {
+        const cols = parseTableRow(line);
+        const cells = tableHeader ? cols.slice(0, tableHeader) : cols;
+        html.push('<tr>' + cells.map((c) => `<td>${inlineMarkdownToHtml(c)}</td>`).join('') + '</tr>');
+        continue;
+      }
+    }
+
+    const ul = line.match(/^[-*]\s+(.+)\s*$/);
+    if (ul) {
+      flushParagraph();
+      closeTable();
+      if (inOl) { html.push('</ol>'); inOl = false; }
+      if (!inUl) { html.push('<ul>'); inUl = true; }
+      html.push('<li>' + inlineMarkdownToHtml(ul[1]) + '</li>');
+      continue;
+    }
+
+    const ol = line.match(/^(\d+)\.\s+(.+)\s*$/);
+    if (ol) {
+      flushParagraph();
+      closeTable();
+      if (inUl) { html.push('</ul>'); inUl = false; }
+      if (!inOl) { html.push('<ol>'); inOl = true; }
+      html.push('<li>' + inlineMarkdownToHtml(ol[2]) + '</li>');
+      continue;
+    }
+
+    closeLists();
+    closeTable();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  closeLists();
+  closeTable();
+  return html.join('\n');
+}
 
 function normalizeKey(value) {
   return (value || '')
@@ -80,7 +208,7 @@ function parseArticle(filePath, urlFromIndex) {
 
   const contentWithoutUrl = lines.filter((line) => !/^URL:\s*(https?:\/\/\S+)\s*$/i.test(line));
   const markdown = contentWithoutUrl.join('\n').trim();
-  const html = markdown ? md.render(markdown) : '';
+  const html = markdown ? markdownToHtml(markdown) : '';
 
   return {
     filename,
