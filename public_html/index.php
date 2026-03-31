@@ -599,6 +599,12 @@ $respBody    = substr($response, $hdrSize);
 
 // Add deploy marker at PHP proxy layer (works even when Node code is stale).
 $phpDeploySha = trim((string) shell_exec('git -C ' . escapeshellarg(APP_DIR) . ' rev-parse --short HEAD 2>/dev/null'));
+if (!$phpDeploySha) {
+    $stampFile = APP_DIR . '/.deploy_sha';
+    if (file_exists($stampFile)) {
+        $phpDeploySha = trim((string) file_get_contents($stampFile));
+    }
+}
 if (!$phpDeploySha) $phpDeploySha = 'unknown';
 $phpDeployAt = gmdate('c');
 $phpMarker = "<!-- DEPLOY_CHECK_PHP: git_sha={$phpDeploySha} ts={$phpDeployAt} -->";

@@ -23,6 +23,10 @@ jobs:
           RAW="${{ secrets.FTP_PATH }}"
           echo "FTP_DIR=${RAW%/}/" >> $GITHUB_ENV
 
+      - name: Write deploy SHA stamp
+        run: |
+          echo "${GITHUB_SHA}" > .deploy_sha
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
