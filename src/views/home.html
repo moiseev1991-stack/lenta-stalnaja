@@ -55,7 +55,7 @@
           <summary class="filter-group-summary">Ширина, мм</summary>
           <fieldset class="filter-fieldset filter-fieldset--grid">
             {% for v in filterValues.width %}
-            <label><input type="checkbox" name="width" value="{{ v }}" {% if v in filters.width %}checked{% endif %}> {{ v | formatMm }}</label>
+            <label><input type="checkbox" name="width" value="{{ v }}" {% if v in filters.width %}checked{% endif %}> {{ v | formatThickness }}</label>
             {% endfor %}
           </fieldset>
         </details>

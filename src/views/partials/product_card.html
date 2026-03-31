@@ -12,7 +12,7 @@
   <div class="product-card-body">
     <a href="{{ _productUrl }}" class="product-card-title"><strong>{{ product.name | normalizeName }}</strong></a>
     {% if product.mark %}<p class="product-card-meta">Марка: {{ product.mark }}</p>{% endif %}
-    {% if product.thickness_mm != null and product.width_mm != null %}<p class="product-card-meta">{{ product.thickness_mm | formatMm }} × {{ product.width_mm | formatMm }} мм</p>{% endif %}
+    {% if product.thickness_mm != null and product.width_mm != null %}<p class="product-card-meta">{{ product.thickness_mm | formatThickness }} × {{ product.width_mm | formatThickness }} мм</p>{% endif %}
     {% if product.surface %}<p class="product-card-meta">Поверхность: {{ product.surface }}</p>{% endif %}
     {% if product.standard %}<p class="product-card-meta">{{ product.standard }}</p>{% endif %}
     {% if product.price != null %}<p class="product-card-price">{{ product.price | formatNumber }} ₽ / {{ product.unit or 'kg' }}</p>{% endif %}
