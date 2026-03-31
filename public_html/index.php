@@ -597,7 +597,24 @@ HTML;
 $respHeaders = substr($response, 0, $hdrSize);
 $respBody    = substr($response, $hdrSize);
 
+// Add deploy marker at PHP proxy layer (works even when Node code is stale).
+$phpDeploySha = trim((string) shell_exec('git -C ' . escapeshellarg(APP_DIR) . ' rev-parse --short HEAD 2>/dev/null'));
+if (!$phpDeploySha) $phpDeploySha = 'unknown';
+$phpDeployAt = gmdate('c');
+$phpMarker = "<!-- DEPLOY_CHECK_PHP: git_sha={$phpDeploySha} ts={$phpDeployAt} -->";
+if (stripos($respHeaders, 'content-type: text/html') !== false || stripos($respBody, '<html') !== false) {
+    if (strpos($respBody, 'DEPLOY_CHECK_PHP:') === false) {
+        if (strpos($respBody, '</head>') !== false) {
+            $respBody = str_replace('</head>', "  {$phpMarker}\n</head>", $respBody);
+        } else {
+            $respBody = $phpMarker . "\n" . $respBody;
+        }
+    }
+}
+
 http_response_code($httpCode);
+header('X-Deploy-Php-Sha: ' . $phpDeploySha, true);
+header('X-Deploy-Php-At: ' . $phpDeployAt, true);
 
 $skip = ['transfer-encoding', 'connection', 'keep-alive', 'content-length'];
 foreach (explode("\r\n", $respHeaders) as $line) {
