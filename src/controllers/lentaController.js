@@ -2,6 +2,7 @@ const fs          = require('fs');
 const path        = require('path');
 const config      = require('../config');
 const lenta       = require('../services/lenta');
+const markdownArticles = require('../services/markdownArticles');
 const { buildGradeSEO, buildGroupSEO, buildCategorySEO } = require('../helpers/seoTemplates');
 
 const TEXT_DIR = path.join(__dirname, '../../text');
@@ -149,6 +150,11 @@ async function lentaIndex(req, res, next) {
     // ?tab= pages: noindex + canonical on clean /catalog/lenta/
     const hasTab    = req.query.tab === 'grades' || req.query.tab === 'groups';
     const categorySeo = buildCategorySEO(config.siteName);
+    const { article: seoArticle } = markdownArticles.findArticle({
+      urlPath: '/',
+      filenameCandidates: ['Каталог металлопроката'],
+      h1Candidates: [categorySeo.h1],
+    });
     base(res, {
       _template: 'catalog/lenta/index.html',
       title:           categorySeo.title,
@@ -164,6 +170,7 @@ async function lentaIndex(req, res, next) {
       hasActiveFilters: hasFilters(filters),
       activeGrade, activeGroup,
       categoryDescription: 'Нержавеющая и конструкционная лента по ГОСТ. Выберите марку или назначение ниже.',
+      seoArticle,
     });
   } catch (err) { next(err); }
 }
@@ -183,6 +190,11 @@ async function gradePage(req, res, next) {
     const q = { ...req.query }; delete q.page;
     const gradeSeo = buildGradeSEO(grade, config.siteName);
     const pageUrl  = GRADE_BASE + req.params.slug + '/';
+    const { article: seoArticle } = markdownArticles.findArticle({
+      urlPath: pageUrl,
+      filenameCandidates: [`Лента ${grade.name}`],
+      h1Candidates: [gradeSeo.h1, grade.name],
+    });
     base(res, {
       _template: 'catalog/lenta/grade.html',
       title:           gradeSeo.title,
@@ -201,6 +213,7 @@ async function gradePage(req, res, next) {
       filters, filterValues,
       queryString:     new URLSearchParams(q).toString(),
       hasActiveFilters: withFilters,
+      seoArticle,
     });
   } catch (err) { next(err); }
 }
@@ -223,6 +236,11 @@ async function groupPage(req, res, next) {
     const q = { ...req.query }; delete q.page;
     const groupSeo  = buildGroupSEO(group, config.siteName);
     const pageUrl   = GROUP_BASE + req.params.slug + '/';
+    const { article: seoArticle } = markdownArticles.findArticle({
+      urlPath: pageUrl,
+      filenameCandidates: [`Лента по назначению - ${group.name}`, `Лента по назначению — ${group.name}`],
+      h1Candidates: [groupSeo.h1, group.name],
+    });
     base(res, {
       _template: 'catalog/lenta/group.html',
       title:           groupSeo.title,
@@ -241,6 +259,7 @@ async function groupPage(req, res, next) {
       filters, filterValues,
       queryString:     new URLSearchParams(q).toString(),
       hasActiveFilters: withFilters,
+      seoArticle,
     });
   } catch (err) { next(err); }
 }

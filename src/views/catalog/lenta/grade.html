@@ -115,7 +115,11 @@
     </nav>
     {% endif %}
     {% endif %}
-    {% if grade.article_text %}
+    {% if seoArticle and seoArticle.html %}
+    <section class="page-article content">
+      {{ seoArticle.html | safe }}
+    </section>
+    {% elif grade.article_text %}
     <section class="page-article content">
       {% if grade.article_title %}<h2>{{ grade.article_title }}</h2>{% endif %}
       {% if grade.article_format == 'html' %}

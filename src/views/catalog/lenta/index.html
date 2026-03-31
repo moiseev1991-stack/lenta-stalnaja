@@ -106,5 +106,10 @@
     {% endif %}
   </section>
 </div>
+{% if seoArticle and seoArticle.html %}
+<section class="page-article content">
+  {{ seoArticle.html | safe }}
+</section>
+{% endif %}
 {% include "partials/lead_section.html" %}
 {% endblock %}
