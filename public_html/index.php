@@ -393,6 +393,9 @@ function installDeps(): void {
 function startNode(): void {
     $ts = date('Y-m-d H:i:s');
     file_put_contents(LOG_FILE, "\n[$ts] === NODE START ===\n", FILE_APPEND);
+    $deploySha = trim((string) shell_exec('git -C ' . escapeshellarg(APP_DIR) . ' rev-parse --short HEAD 2>/dev/null'));
+    if (!$deploySha) $deploySha = 'unknown';
+    $bootAt = gmdate('c');
 
     // Pull latest code from the repository folder (never from /home root).
     tryGitPullRepo();
@@ -423,14 +426,19 @@ function startNode(): void {
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
              . ' SOCKET_PATH=' . NODE_SOCKET
+             . ' DEPLOY_GIT_SHA=' . escapeshellarg($deploySha)
+             . ' DEPLOY_BOOT_AT=' . escapeshellarg($bootAt)
              . ' setsid nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & echo $!';
     } else {
         $cmd = 'cd ' . APP_DIR
              . ' && HOME=' . HOME_DIR
              . ' SOCKET_PATH=' . NODE_SOCKET
+             . ' DEPLOY_GIT_SHA=' . escapeshellarg($deploySha)
+             . ' DEPLOY_BOOT_AT=' . escapeshellarg($bootAt)
              . ' nohup node src/app.js >> ' . LOG_FILE . ' 2>&1 & NPID=$!; disown $NPID 2>/dev/null; echo $NPID';
     }
     file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] setsid=" . ($hasSetsid ? 'YES' : 'NO') . "\n", FILE_APPEND);
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] deploy_sha=" . $deploySha . " deploy_boot_at=" . $bootAt . "\n", FILE_APPEND);
     $pid = trim((string) shell_exec($cmd));
     if ($pid) file_put_contents(PID_FILE, $pid);
     sleep(8);

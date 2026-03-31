@@ -20,4 +20,6 @@ module.exports = {
   mysqlUser:     process.env.MYSQL_USER     || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '',
   mysqlDatabase: process.env.MYSQL_DATABASE || 'metal_catalog',
+  deployGitSha:  process.env.DEPLOY_GIT_SHA || 'unknown',
+  deployBootAt:  process.env.DEPLOY_BOOT_AT || '',
 };

@@ -95,6 +95,8 @@ async function home(req, res, next) {
       products, total, page, totalPages,
       filters, filterValues, queryString: qs,
       hasActiveFilters: hasFilters(filters),
+      deployGitSha: config.deployGitSha,
+      deployBootAt: config.deployBootAt,
     });
   } catch (err) { next(err); }
 }
