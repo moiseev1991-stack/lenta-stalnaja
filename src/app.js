@@ -41,6 +41,15 @@ const njkEnv = nunjucks.configure(viewsPath, {
   express: app,
   noCache: config.nodeEnv === 'development',
 });
+const safeFetch = (payload) => {
+  try {
+    if (typeof fetch !== 'function') return;
+    fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
+  } catch (_) {}
+};
+// #region agent log
+safeFetch({runId:'pre-fix',hypothesisId:'H1',location:'src/app.js:njk-configured',message:'Nunjucks configured',data:{cwd:process.cwd(),viewsPath,nodeEnv:config.nodeEnv},timestamp:Date.now()});
+// #endregion
 // Нормализация URL картинки: всегда начинается с /, без пробелов
 njkEnv.addFilter('imgUrl', (s) => {
   if (s == null || typeof s !== 'string') return '';
@@ -68,6 +77,26 @@ function formatMmForDisplay(n) {
 }
 njkEnv.addFilter('formatThickness', formatMmForDisplay);
 njkEnv.addFilter('formatMm', formatMmForDisplay);
+// Fallback for legacy templates that still reference formatMm.
+const _origGetFilter = njkEnv.getFilter.bind(njkEnv);
+njkEnv.getFilter = function patchedGetFilter(name) {
+  try {
+    return _origGetFilter(name);
+  } catch (e) {
+    if (name === 'formatMm') {
+      safeFetch({ runId: 'pre-fix', hypothesisId: 'H5', location: 'src/app.js:patchedGetFilter', message: 'formatMm missing, fallback used', data: {}, timestamp: Date.now() });
+      try {
+        return _origGetFilter('formatThickness');
+      } catch (_) {
+        return formatMmForDisplay;
+      }
+    }
+    throw e;
+  }
+};
+// #region agent log
+safeFetch({runId:'pre-fix',hypothesisId:'H2',location:'src/app.js:filters-registered',message:'Registered thickness filters',data:{hasFormatThickness:!!(njkEnv.getFilter&&njkEnv.getFilter('formatThickness')),hasFormatMm:!!(njkEnv.getFilter&&njkEnv.getFilter('formatMm'))},timestamp:Date.now()});
+// #endregion
 // JSON-сериализация для использования в JSON-LD (совместно с | safe)
 njkEnv.addFilter('json', (v) => JSON.stringify(v));
 app.set('view engine', 'html');
@@ -213,6 +242,11 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
+  if (req.path === '/' || req.path.includes('vysokoe-elektrosoprotivlenie') || req.path.startsWith('/admin')) {
+    // #region agent log
+    safeFetch({runId:'pre-fix',hypothesisId:'H3',location:'src/app.js:request-middleware',message:'Request with filter visibility',data:{path:req.path,hasFormatMm:!!(njkEnv.getFilter&&njkEnv.getFilter('formatMm')),hasFormatThickness:!!(njkEnv.getFilter&&njkEnv.getFilter('formatThickness'))},timestamp:Date.now()});
+    // #endregion
+  }
   if (req.path.startsWith('/admin')) return next();
   try {
     const [menuGrades, menuGroups] = await Promise.all([
@@ -248,6 +282,9 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  // #region agent log
+  safeFetch({runId:'pre-fix',hypothesisId:'H4',location:'src/app.js:error-handler',message:'Unhandled server error',data:{path:req.path,error:String(err&&err.message||err),name:err&&err.name},timestamp:Date.now()});
+  // #endregion
   console.error(err);
   res.status(500).send('Server error');
 });
