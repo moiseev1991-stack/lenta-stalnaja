@@ -259,7 +259,17 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
 // TCP loopback is blocked by per-process network namespace isolation on SpaceWeb.
 // Unix domain socket uses the filesystem so it bypasses network isolation.
 function isNodePortOpen(): bool {
-    return file_exists(NODE_SOCKET) && filetype(NODE_SOCKET) === 'socket';
+    if (!file_exists(NODE_SOCKET) || filetype(NODE_SOCKET) !== 'socket') return false;
+    $errno = 0; $errstr = '';
+    $sock = @stream_socket_client('unix://' . NODE_SOCKET, $errno, $errstr, 1);
+    if ($sock) {
+        fclose($sock);
+        return true;
+    }
+    // Stale socket file from dead Node process.
+    @unlink(NODE_SOCKET);
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Removed stale socket: " . NODE_SOCKET . "\n", FILE_APPEND);
+    return false;
 }
 
 // ── 2. Write correct package.json (no native modules) ────────────────────────
