@@ -249,19 +249,7 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  // #region agent log — временный вывод ошибки в браузер для диагностики
-  const safeMsg = String(err && err.message ? err.message : err).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const safeCode = err && err.code ? String(err.code) : '';
-  const safeSql = err && err.sql ? String(err.sql).slice(0, 300).replace(/</g, '&lt;') : '';
-  res.status(500).send(
-    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Server error</title></head><body>' +
-    '<h2>Server error (debug)</h2>' +
-    '<p><b>Message:</b> ' + safeMsg + '</p>' +
-    (safeCode ? '<p><b>Code:</b> ' + safeCode + '</p>' : '') +
-    (safeSql  ? '<p><b>SQL:</b> <code>' + safeSql + '</code></p>' : '') +
-    '</body></html>'
-  );
-  // #endregion
+  res.status(500).send('Server error');
 });
 
 if (config.socketPath) {

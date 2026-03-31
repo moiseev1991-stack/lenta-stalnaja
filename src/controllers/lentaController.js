@@ -172,20 +172,7 @@ async function lentaIndex(req, res, next) {
 
 async function gradePage(req, res, next) {
   try {
-    // #region agent log
-    let grade;
-    try {
-      grade = await lenta.getGradeBySlug(req.params.slug);
-      const _dbgA = {location:'lentaController.js:gradePage',message:'getGradeBySlug OK',data:{slug:req.params.slug,found:!!grade},hypothesisId:'A-B-C',timestamp:Date.now()};
-      console.log('[DEBUG]', JSON.stringify(_dbgA));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgA)}).catch(()=>{});
-    } catch (dbErr) {
-      const _dbgB = {location:'lentaController.js:gradePage',message:'getGradeBySlug THREW',data:{slug:req.params.slug,error:dbErr.message,code:dbErr.code},hypothesisId:'A-B-C',timestamp:Date.now()};
-      console.error('[DEBUG]', JSON.stringify(_dbgB));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgB)}).catch(()=>{});
-      return next(dbErr);
-    }
-    // #endregion
+    const grade = await lenta.getGradeBySlug(req.params.slug);
     if (!grade) return next();
 
     const filters      = parseFilters(req.query);
@@ -222,42 +209,16 @@ async function gradePage(req, res, next) {
 
 async function groupPage(req, res, next) {
   try {
-    // #region agent log
-    let group;
-    try {
-      group = await lenta.getGroupBySlug(req.params.slug);
-      const _dbgC = {location:'lentaController.js:groupPage',message:'getGroupBySlug OK',data:{slug:req.params.slug,found:!!group,groupId:group&&group.id},hypothesisId:'A-C',timestamp:Date.now()};
-      console.log('[DEBUG]', JSON.stringify(_dbgC));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgC)}).catch(()=>{});
-    } catch (dbErr) {
-      const _dbgD = {location:'lentaController.js:groupPage',message:'getGroupBySlug THREW',data:{slug:req.params.slug,error:dbErr.message,code:dbErr.code},hypothesisId:'A-C',timestamp:Date.now()};
-      console.error('[DEBUG]', JSON.stringify(_dbgD));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgD)}).catch(()=>{});
-      return next(dbErr);
-    }
-    // #endregion
+    const group = await lenta.getGroupBySlug(req.params.slug);
     if (!group) return next();
 
     const filters      = parseFilters(req.query);
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
-    // #region agent log
-    let result, filterValues, gradesInGroup;
-    try {
-      [result, filterValues, gradesInGroup] = await Promise.all([
-        lenta.getProductsByGroup(group.id, filters, page),
-        lenta.getFilterValuesByGroup(group.id),
-        lenta.getGradesByGroup(group.id),
-      ]);
-      const _dbgE = {location:'lentaController.js:groupPage',message:'group queries OK',data:{groupId:group.id,total:result&&result.total},hypothesisId:'B-D',timestamp:Date.now()};
-      console.log('[DEBUG]', JSON.stringify(_dbgE));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgE)}).catch(()=>{});
-    } catch (dbErr) {
-      const _dbgF = {location:'lentaController.js:groupPage',message:'group queries THREW',data:{groupId:group.id,error:dbErr.message,code:dbErr.code},hypothesisId:'B-D',timestamp:Date.now()};
-      console.error('[DEBUG]', JSON.stringify(_dbgF));
-      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgF)}).catch(()=>{});
-      return next(dbErr);
-    }
-    // #endregion
+    const [result, filterValues, gradesInGroup] = await Promise.all([
+      lenta.getProductsByGroup(group.id, filters, page),
+      lenta.getFilterValuesByGroup(group.id),
+      lenta.getGradesByGroup(group.id),
+    ]);
     const withFilters = hasFilters(filters);
     const q = { ...req.query }; delete q.page;
     const groupSeo  = buildGroupSEO(group, config.siteName);
