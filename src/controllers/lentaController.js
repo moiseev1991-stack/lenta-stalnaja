@@ -1,6 +1,78 @@
+const fs          = require('fs');
+const path        = require('path');
 const config      = require('../config');
 const lenta       = require('../services/lenta');
 const { buildGradeSEO, buildGroupSEO, buildCategorySEO } = require('../helpers/seoTemplates');
+
+const TEXT_DIR = path.join(__dirname, '../../text');
+
+function parseArticleFile(filePath) {
+  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+  let title = '', description = '', bodyLines = [], pastMeta = false;
+  for (const line of lines) {
+    if (line.includes('**Title:**')) {
+      title = line.replace(/\*\*Title:\*\*/, '').trim();
+      continue;
+    }
+    if (line.includes('**Description:**')) {
+      description = line.replace(/\*\*Description:\*\*/, '').trim();
+      pastMeta = true;
+      continue;
+    }
+    if (pastMeta) bodyLines.push(line);
+  }
+  const body = bodyLines
+    .map(l => { const t = l.trim(); if (!t) return ''; return t.startsWith('<') ? t : `<p>${t}</p>`; })
+    .filter(Boolean)
+    .join('\n');
+  return { title, description, body };
+}
+
+// Пробует ключи по порядку; файлы названы по-кириллически, слаги — латиницей
+function tryLoadArticle(keys) {
+  const seen = new Set();
+  for (const key of keys) {
+    if (!key || typeof key !== 'string') continue;
+    const k = key.trim();
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    const fp = path.join(TEXT_DIR, `статья ${k}_ru_ru_moscow_.txt`);
+    if (fs.existsSync(fp)) return parseArticleFile(fp);
+  }
+  return null;
+}
+
+// «12Х18Н10Т» → «12х18н10т», «ЭИ814 (17ХНГТ)» → «эи814-17хнгт»
+function gradeArticleKeys(gradeName) {
+  if (!gradeName) return [];
+  const k = gradeName.toLowerCase()
+    .replace(/\s*\(\s*/g, '-')
+    .replace(/\)\s*/g, '')
+    .trim();
+  return k ? [k] : [];
+}
+
+// В некоторых файлах опечатки: «стойкие» → «стоикие»
+function withFilenameTypos(s) {
+  return s
+    .replace(/жаростойкие/g, 'жаростоикие')
+    .replace(/стойкие/g, 'стоикие');
+}
+
+// «Коррозионно-стойкие стали» → [«коррозионно-стойкие-стали», «…-лента», «…-металлическая-лента» + варианты с опечатками]
+function groupArticleKeys(groupName) {
+  if (!groupName) return [];
+  const hyphen = groupName.toLowerCase().trim().replace(/\s+/g, '-');
+  const hTypo  = withFilenameTypos(hyphen);
+  const out = [];
+  const push = x => { if (x && !out.includes(x)) out.push(x); };
+  push(hyphen);
+  push(`${hyphen}-лента`);
+  push(`${hTypo}-лента`);
+  push(`${hyphen}-металлическая-лента`);
+  push(`${hTypo}-металлическая-лента`);
+  return out;
+}
 
 const LENTA_URL  = '/';
 const GRADE_BASE = '/';
@@ -100,7 +172,20 @@ async function lentaIndex(req, res, next) {
 
 async function gradePage(req, res, next) {
   try {
-    const grade = await lenta.getGradeBySlug(req.params.slug);
+    // #region agent log
+    let grade;
+    try {
+      grade = await lenta.getGradeBySlug(req.params.slug);
+      const _dbgA = {location:'lentaController.js:gradePage',message:'getGradeBySlug OK',data:{slug:req.params.slug,found:!!grade},hypothesisId:'A-B-C',timestamp:Date.now()};
+      console.log('[DEBUG]', JSON.stringify(_dbgA));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgA)}).catch(()=>{});
+    } catch (dbErr) {
+      const _dbgB = {location:'lentaController.js:gradePage',message:'getGradeBySlug THREW',data:{slug:req.params.slug,error:dbErr.message,code:dbErr.code},hypothesisId:'A-B-C',timestamp:Date.now()};
+      console.error('[DEBUG]', JSON.stringify(_dbgB));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgB)}).catch(()=>{});
+      return next(dbErr);
+    }
+    // #endregion
     if (!grade) return next();
 
     const filters      = parseFilters(req.query);
@@ -111,7 +196,6 @@ async function gradePage(req, res, next) {
     const q = { ...req.query }; delete q.page;
     const gradeSeo = buildGradeSEO(grade, config.siteName);
     const pageUrl  = GRADE_BASE + req.params.slug + '/';
-
     base(res, {
       _template: 'catalog/lenta/grade.html',
       title:           gradeSeo.title,
@@ -138,21 +222,46 @@ async function gradePage(req, res, next) {
 
 async function groupPage(req, res, next) {
   try {
-    const group = await lenta.getGroupBySlug(req.params.slug);
+    // #region agent log
+    let group;
+    try {
+      group = await lenta.getGroupBySlug(req.params.slug);
+      const _dbgC = {location:'lentaController.js:groupPage',message:'getGroupBySlug OK',data:{slug:req.params.slug,found:!!group,groupId:group&&group.id},hypothesisId:'A-C',timestamp:Date.now()};
+      console.log('[DEBUG]', JSON.stringify(_dbgC));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgC)}).catch(()=>{});
+    } catch (dbErr) {
+      const _dbgD = {location:'lentaController.js:groupPage',message:'getGroupBySlug THREW',data:{slug:req.params.slug,error:dbErr.message,code:dbErr.code},hypothesisId:'A-C',timestamp:Date.now()};
+      console.error('[DEBUG]', JSON.stringify(_dbgD));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgD)}).catch(()=>{});
+      return next(dbErr);
+    }
+    // #endregion
     if (!group) return next();
 
     const filters      = parseFilters(req.query);
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const [result, filterValues, gradesInGroup] = await Promise.all([
-      lenta.getProductsByGroup(group.id, filters, page),
-      lenta.getFilterValuesByGroup(group.id),
-      lenta.getGradesByGroup(group.id),
-    ]);
+    // #region agent log
+    let result, filterValues, gradesInGroup;
+    try {
+      [result, filterValues, gradesInGroup] = await Promise.all([
+        lenta.getProductsByGroup(group.id, filters, page),
+        lenta.getFilterValuesByGroup(group.id),
+        lenta.getGradesByGroup(group.id),
+      ]);
+      const _dbgE = {location:'lentaController.js:groupPage',message:'group queries OK',data:{groupId:group.id,total:result&&result.total},hypothesisId:'B-D',timestamp:Date.now()};
+      console.log('[DEBUG]', JSON.stringify(_dbgE));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgE)}).catch(()=>{});
+    } catch (dbErr) {
+      const _dbgF = {location:'lentaController.js:groupPage',message:'group queries THREW',data:{groupId:group.id,error:dbErr.message,code:dbErr.code},hypothesisId:'B-D',timestamp:Date.now()};
+      console.error('[DEBUG]', JSON.stringify(_dbgF));
+      fetch('http://127.0.0.1:7246/ingest/e30f7c28-399b-4c8e-aebe-534d8a1619d9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_dbgF)}).catch(()=>{});
+      return next(dbErr);
+    }
+    // #endregion
     const withFilters = hasFilters(filters);
     const q = { ...req.query }; delete q.page;
-    const groupSeo = buildGroupSEO(group, config.siteName);
-    const pageUrl  = GROUP_BASE + req.params.slug + '/';
-
+    const groupSeo  = buildGroupSEO(group, config.siteName);
+    const pageUrl   = GROUP_BASE + req.params.slug + '/';
     base(res, {
       _template: 'catalog/lenta/group.html',
       title:           groupSeo.title,
