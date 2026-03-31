@@ -214,6 +214,11 @@ function forceSiteBrandingInHtml(html) {
 function fixMojibakeInHtml(body) {
   if (typeof body !== 'string') return body;
   let out = body;
+  const deployMarker = `<!-- DEPLOY_CHECK_RUNTIME: git_sha=${config.deployGitSha || 'unknown'} boot_at=${config.deployBootAt || 'unknown'} -->`;
+  if (!out.includes('DEPLOY_CHECK_RUNTIME:')) {
+    if (out.includes('</head>')) out = out.replace('</head>', `  ${deployMarker}\n</head>`);
+    else out = `${deployMarker}\n${out}`;
+  }
   if (out.includes(MOJIBAKE_SITE)) {
     out = out.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
   }
