@@ -298,6 +298,37 @@ function writeMigrationsStub(): void {
     file_put_contents($dir . '/migrations.js', $stub);
 }
 
+// ── 3b. Ensure legacy Nunjucks filter alias exists in app.js ──────────────────
+function ensureFormatMmAliasInAppJs(): void {
+    $appJs = APP_DIR . '/src/app.js';
+    if (!file_exists($appJs)) return;
+    $src = file_get_contents($appJs);
+    if ($src === false || strpos($src, "addFilter('formatThickness'") === false) return;
+    if (strpos($src, "addFilter('formatMm'") !== false) return;
+
+    $patched = preg_replace(
+        "/(addFilter\\('formatThickness'[^\\n]*\\);)/",
+        "$1\nnjkEnv.addFilter('formatMm', formatMmForDisplay);",
+        $src,
+        1
+    );
+    if ($patched && $patched !== $src) {
+        file_put_contents($appJs, $patched);
+        file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Patched app.js: injected formatMm alias\n", FILE_APPEND);
+    }
+}
+
+// ── 3c. Pull latest code from git repo using explicit APP_DIR ─────────────────
+function tryGitPullRepo(): void {
+    if (!is_dir(APP_DIR . '/.git')) {
+        file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] Git repo not found in APP_DIR, skip pull\n", FILE_APPEND);
+        return;
+    }
+    $cmd = 'git -C ' . escapeshellarg(APP_DIR) . ' pull origin main 2>&1';
+    $out = trim((string) shell_exec($cmd));
+    file_put_contents(LOG_FILE, "[" . date('Y-m-d H:i:s') . "] git pull (APP_DIR): " . ($out ?: 'ok') . "\n", FILE_APPEND);
+}
+
 // ── 4. Install npm deps ───────────────────────────────────────────────────────
 function installDeps(): void {
     $lockFh = fopen(LOCK_FILE, 'c');
@@ -352,6 +383,12 @@ function installDeps(): void {
 function startNode(): void {
     $ts = date('Y-m-d H:i:s');
     file_put_contents(LOG_FILE, "\n[$ts] === NODE START ===\n", FILE_APPEND);
+
+    // Pull latest code from the repository folder (never from /home root).
+    tryGitPullRepo();
+
+    // Ensure compatibility alias before Node boot, even on stale FTP deploy.
+    ensureFormatMmAliasInAppJs();
 
     // Install deps if node_modules is missing OR mysql2/bcryptjs is missing
     if (!file_exists(APP_DIR . '/node_modules/express/index.js')
