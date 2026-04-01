@@ -8,13 +8,19 @@ function toLastmod(dateLike) {
 }
 
 function buildLoc(baseUrl, ...segments) {
+  const rawBase = String(baseUrl || '').trim().replace(/\/+$/, '');
+  const normalizedBase = /^https?:\/\//i.test(rawBase) ? rawBase : ('https://' + rawBase);
   const cleanSegments = segments
     .filter(Boolean)
     .map(s => String(s).trim())
     .filter(Boolean)
     .map(s => encodeURIComponent(s));
   const path = cleanSegments.length ? '/' + cleanSegments.join('/') + '/' : '/';
-  return new URL(path, baseUrl + '/').toString();
+  try {
+    return new URL(path, normalizedBase + '/').toString();
+  } catch (_) {
+    return null;
+  }
 }
 
 function finalizeUrls(urls, fallbackLastmod) {
