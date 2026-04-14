@@ -268,7 +268,9 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .header-strip-usp .usp-title { font-size: 0.8125rem; }
 
 /* ========== MAIN ========== */
-.main { padding: 1.25rem 0 2rem; flex: 1 0 auto; }
+/* header-strip и full_bleed идут первыми в main — без padding-top у .main, иначе зазор под шапкой */
+.main { padding: 0 0 2rem; flex: 1 0 auto; }
+.main > .container { padding-top: 1.25rem; }
 
 /* Breadcrumbs */
 .breadcrumbs { font-size: 0.8125rem; margin-bottom: 0.75rem; color: var(--muted); }

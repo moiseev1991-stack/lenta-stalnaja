@@ -1,0 +1,113 @@
+.hero-collage {
+  position: relative;
+  width: 100%;
+  height: 560px;
+  overflow: hidden;
+  margin: 0 0 18px;
+}
+
+.hero-collage__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 100%;
+  height: 100%;
+  gap: 0;
+}
+
+.hero-collage__cell {
+  position: relative;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.hero-collage__cell video,
+.hero-collage__cell img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease;
+}
+
+.hero-collage__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 12px;
+  padding: 28px 36px;
+  max-width: 420px;
+  width: 90%;
+  text-align: left;
+  z-index: 10;
+}
+
+.hero-collage__card h1,
+.hero-collage__brand {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.hero-collage__card p {
+  font-size: 0.95rem;
+  color: #444;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.hero-collage__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.hero-collage__actions .btn-secondary {
+  background: #fff;
+  border: 1px solid var(--border, #e2e8f0);
+  color: var(--text, #1e293b);
+}
+
+.hero-collage__actions .btn-secondary:hover {
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+}
+
+@media (max-width: 768px) {
+  .hero-collage {
+    height: 320px;
+  }
+
+  .hero-collage__grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+  }
+
+  .hero-collage__card {
+    padding: 18px 20px;
+    max-width: 95%;
+  }
+
+  .hero-collage__card h1,
+  .hero-collage__brand {
+    font-size: 1.35rem;
+  }
+
+  .hero-collage__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-collage__actions .btn-lg {
+    width: 100%;
+    justify-content: center;
+  }
+}

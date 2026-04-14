@@ -41,7 +41,11 @@ function hasFilters(f) {
 }
 
 function renderPage(res, template, data = {}) {
-  res.render(template, { siteUrl: config.siteUrl, ...data });
+  res.render(template, {
+    siteUrl: config.siteUrl,
+    ...data,
+    isHome: data.isHome === true,
+  });
 }
 
 // ── Home ──────────────────────────────────────────────────────────────────────
@@ -97,6 +101,7 @@ async function home(req, res, next) {
       hasActiveFilters: hasFilters(filters),
       deployGitSha: config.deployGitSha,
       deployBootAt: config.deployBootAt,
+      isHome: true,
     });
   } catch (err) { next(err); }
 }

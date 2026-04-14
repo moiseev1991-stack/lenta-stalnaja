@@ -101,6 +101,7 @@ function base(res, data) {
   res.render(data._template, {
     siteUrl: config.siteUrl,
     ...data,
+    isHome: data.isHome === true,
   });
 }
 

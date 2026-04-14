@@ -30,6 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/hero-collage.css">
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16">
@@ -90,7 +91,68 @@
       </div>
     </div>
   </header>
-  <div class="header-strip">
+  <div class="mobile-menu">
+    <nav class="mobile-nav">
+      <a href="/">Главная</a>
+      <details class="mobile-accordion">
+        <summary>Марки стали</summary>
+        <div class="mobile-accordion-content">
+          <input type="text" class="mobile-search" placeholder="Поиск марки..." id="mobileGradeSearch" autocomplete="off">
+          <ul class="mobile-grade-list" id="mobileGradeList">
+            {% for gr in menuGrades %}
+            <li data-name="{{ gr.name | lower }}"><a href="/{{ gr.slug }}/">{{ gr.name }} <span>{{ gr.product_count }}</span></a></li>
+            {% endfor %}
+          </ul>
+          <a href="/" class="mobile-all-link">Все марки</a>
+        </div>
+      </details>
+      <details class="mobile-accordion">
+        <summary>По назначению</summary>
+        <div class="mobile-accordion-content">
+          <ul class="mobile-group-list">
+            {% for g in menuGroups %}
+            <li><a href="/{{ g.slug }}/">{{ g.name }} <span>{{ g.product_count }}</span></a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </details>
+      <a href="/about/">О компании</a>
+      <a href="/delivery/">Доставка</a>
+      <a href="/contacts/">Контакты</a>
+    </nav>
+    <div class="mobile-menu-contacts">
+      <a href="tel:+78001000874" class="mobile-menu-contacts__phone">+7 (800) 100-08-74</a>
+      <a href="mailto:corp-metalinvest01265@yandex.ru" class="mobile-menu-contacts__email">corp-metalinvest01265@yandex.ru</a>
+    </div>
+    <div class="mobile-menu-cta">
+      <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
+    </div>
+  </div>
+  <main class="main">
+    <section class="hero-collage" aria-label="Промо-блок">
+      <div class="hero-collage__grid">
+        <div class="hero-collage__cell" data-cell="0"></div>
+        <div class="hero-collage__cell" data-cell="1"></div>
+        <div class="hero-collage__cell" data-cell="2"></div>
+        <div class="hero-collage__cell" data-cell="3"></div>
+        <div class="hero-collage__cell" data-cell="4"></div>
+        <div class="hero-collage__cell" data-cell="5"></div>
+      </div>
+      <div class="hero-collage__card">
+        {% if isHome %}
+        <h1>{{ h1 | safe }}</h1>
+        <p>Нержавеющая и конструкционная лента по ГОСТ. Наличие на складе, резка в размер, доставка по России.</p>
+        {% else %}
+        <p class="hero-collage__brand">{{ displaySiteName | default(siteName) | safeSiteName }}</p>
+        <p>Подберём марку, толщину и поверхность — быстро и точно под вашу задачу.</p>
+        {% endif %}
+        <div class="hero-collage__actions">
+          <a href="/#catalog" class="btn btn-primary btn-lg">Перейти к товарам</a>
+          <a href="/#lead" class="btn btn-secondary btn-lg">Оставить заявку</a>
+        </div>
+      </div>
+    </section>
+    <div class="header-strip">
     <div class="container">
       <div class="header-strip-chips">
         <div class="chips-group" data-collapsible="grades" id="chipsGroupGrades">
@@ -153,45 +215,7 @@
         </div>
       </div>
     </div>
-  </div>
-  <div class="mobile-menu">
-    <nav class="mobile-nav">
-      <a href="/">Главная</a>
-      <details class="mobile-accordion">
-        <summary>Марки стали</summary>
-        <div class="mobile-accordion-content">
-          <input type="text" class="mobile-search" placeholder="Поиск марки..." id="mobileGradeSearch" autocomplete="off">
-          <ul class="mobile-grade-list" id="mobileGradeList">
-            {% for gr in menuGrades %}
-            <li data-name="{{ gr.name | lower }}"><a href="/{{ gr.slug }}/">{{ gr.name }} <span>{{ gr.product_count }}</span></a></li>
-            {% endfor %}
-          </ul>
-          <a href="/" class="mobile-all-link">Все марки</a>
-        </div>
-      </details>
-      <details class="mobile-accordion">
-        <summary>По назначению</summary>
-        <div class="mobile-accordion-content">
-          <ul class="mobile-group-list">
-            {% for g in menuGroups %}
-            <li><a href="/{{ g.slug }}/">{{ g.name }} <span>{{ g.product_count }}</span></a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </details>
-      <a href="/about/">О компании</a>
-      <a href="/delivery/">Доставка</a>
-      <a href="/contacts/">Контакты</a>
-    </nav>
-    <div class="mobile-menu-contacts">
-      <a href="tel:+78001000874" class="mobile-menu-contacts__phone">+7 (800) 100-08-74</a>
-      <a href="mailto:corp-metalinvest01265@yandex.ru" class="mobile-menu-contacts__email">corp-metalinvest01265@yandex.ru</a>
     </div>
-    <div class="mobile-menu-cta">
-      <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
-    </div>
-  </div>
-  <main class="main">
     <div class="container">
     {% if breadcrumbs and breadcrumbs.length %}
     <nav class="breadcrumbs" aria-label="Хлебные крошки">
@@ -300,5 +324,7 @@
     initChipsGroups();
   })();
   </script>
+  <script src="/js/hero-collage.js" defer></script>
+  {% block body_end %}{% endblock %}
 </body>
 </html>

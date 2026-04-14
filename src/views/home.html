@@ -5,19 +5,6 @@
 {% endblock %}
 {% block content %}
 <!-- DEPLOY_CHECK: git_sha={{ deployGitSha or 'unknown' }} boot_at={{ deployBootAt or 'unknown' }} -->
-<section class="hero">
-  <div class="container hero-inner">
-    <div class="hero-content">
-      <h1>{{ h1 }}</h1>
-      <p class="lead">Нержавеющая и конструкционная лента по ГОСТ. Наличие на складе, резка в размер, доставка по России.</p>
-      <div class="hero-actions">
-        <a href="#catalog" class="btn btn-primary btn-lg">Перейти к товарам</a>
-        <a href="#lead" class="btn btn-secondary btn-lg">Оставить заявку</a>
-      </div>
-    </div>
-  </div>
-</section>
-
 <section id="catalog">
   <h2 class="section-title">{% if hasActiveFilters %}Результаты поиска{% else %}Популярные товары{% endif %}</h2>
   
