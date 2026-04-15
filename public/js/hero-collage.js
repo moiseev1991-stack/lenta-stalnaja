@@ -12,59 +12,43 @@
     '/vid/video_2026-04-14_21-07-08.mp4',
   ];
 
-  const POSTER_PAUSE = 4000;
-  const FADE_MS = 400;
+  const POSTER_PAUSE    = 4000;
+  const FADE_MS         = 400;
   const CELL_STAGGER_MS = 900;
+  const LOAD_TIMEOUT_MS = 8000;  // skip if canplay never fires
+  const STALL_EXTRA_MS  = 3000;  // extra wait after stall before skipping
 
   function getRandom(arr, exclude) {
-    const pool = arr.filter(function (v) {
-      return v !== exclude;
-    });
-    if (pool.length) {
-      return pool[Math.floor(Math.random() * pool.length)];
-    }
-    if (arr.length) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+    var pool = arr.filter(function (v) { return v !== exclude; });
+    if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+    if (arr.length)  return arr[Math.floor(Math.random() * arr.length)];
     return null;
   }
 
   function fadeOut(el, cb) {
-    if (!el) {
-      if (typeof cb === 'function') cb();
-      return;
-    }
+    if (!el) { if (cb) cb(); return; }
     el.style.opacity = '0';
-    setTimeout(function () {
-      if (typeof cb === 'function') cb();
-    }, FADE_MS);
+    setTimeout(function () { if (cb) cb(); }, FADE_MS);
   }
 
-  function fadeIn(el) {
-    if (el) el.style.opacity = '1';
-  }
+  function fadeIn(el) { if (el) el.style.opacity = '1'; }
 
   function capturePosterFrame(video) {
     try {
-      var w = video.videoWidth;
-      var h = video.videoHeight;
+      var w = video.videoWidth, h = video.videoHeight;
       if (!w || !h) return null;
       var canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
       if (!ctx) return null;
       ctx.drawImage(video, 0, 0, w, h);
       return canvas.toDataURL('image/jpeg', 0.8);
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   function initCell(cell, startDelay) {
-    var firstSrc = getRandom(VIDEO_POOL, null);
     setTimeout(function () {
-      playVideo(cell, firstSrc);
+      playVideo(cell, getRandom(VIDEO_POOL, null));
     }, startDelay);
 
     function playVideo(cell, src) {
@@ -82,24 +66,49 @@
       cell.innerHTML = '';
       cell.appendChild(video);
 
-      var played = false;
-      function onCanPlay() {
-        if (played) return;
-        played = true;
-        fadeIn(video);
-        video.play().catch(function () {});
+      // Single-use guard: once skip() is called, nothing else can fire
+      var finished = false;
+      function skip() {
+        if (finished) return;
+        finished = true;
+        clearTimeout(loadTimer);
+        cell.innerHTML = '';
+        playVideo(cell, getRandom(VIDEO_POOL, src));
       }
-      video.addEventListener('canplay', onCanPlay, { once: true });
-      video.addEventListener('loadeddata', onCanPlay, { once: true });
 
+      // Watchdog: skip if video never becomes playable
+      var loadTimer = setTimeout(skip, LOAD_TIMEOUT_MS);
+
+      function onCanPlay() {
+        clearTimeout(loadTimer);
+        fadeIn(video);
+        video.play().catch(skip);
+      }
+      video.addEventListener('canplay',     onCanPlay, { once: true });
+      video.addEventListener('loadeddata',  onCanPlay, { once: true });
+
+      // Skip if the browser reports an unrecoverable load error
+      video.addEventListener('error', skip);
+
+      // On stall, give a short extra window then skip
+      video.addEventListener('stalled', function () {
+        clearTimeout(loadTimer);
+        loadTimer = setTimeout(skip, STALL_EXTRA_MS);
+      });
+
+      // Normal end: show poster frame briefly, then next video
       video.addEventListener('ended', function () {
+        if (finished) return;
+        finished = true;
+        clearTimeout(loadTimer);
+
         fadeOut(video, function () {
           video.pause();
           var posterDataUrl = capturePosterFrame(video);
 
           if (!posterDataUrl) {
-            var nextA = getRandom(VIDEO_POOL, src);
-            playVideo(cell, nextA);
+            cell.innerHTML = '';
+            playVideo(cell, getRandom(VIDEO_POOL, src));
             return;
           }
 
@@ -112,31 +121,22 @@
           cell.appendChild(img);
 
           requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              img.style.opacity = '1';
-            });
+            requestAnimationFrame(function () { img.style.opacity = '1'; });
           });
 
           setTimeout(function () {
-            var nextSrc = getRandom(VIDEO_POOL, src);
             fadeOut(img, function () {
-              playVideo(cell, nextSrc);
+              cell.innerHTML = '';
+              playVideo(cell, getRandom(VIDEO_POOL, src));
             });
           }, POSTER_PAUSE);
         });
-      });
-
-      video.addEventListener('error', function () {
-        var nextSrc = getRandom(VIDEO_POOL, src);
-        cell.innerHTML = '';
-        playVideo(cell, nextSrc);
       });
     }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    var cells = document.querySelectorAll('.hero-collage__cell');
-    cells.forEach(function (cell, i) {
+    document.querySelectorAll('.hero-collage__cell').forEach(function (cell, i) {
       initCell(cell, i * CELL_STAGGER_MS);
     });
   });
