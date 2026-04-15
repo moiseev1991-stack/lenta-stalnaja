@@ -3,6 +3,7 @@ node_modules/
 data/*.db
 data/*.db-shm
 data/*.db-wal
+data/*.sql
 .env
 *.log
 .DS_Store
@@ -10,3 +11,10 @@ images*.zip
 images_new_extract/
 server.err
 server.log
+export/
+lenta_articles_markdown_archive/
+public/vid/
+tmp/
+_commit_msg.txt
+commit_msg.txt
+.ftp-deploy-sync-state-v4.json

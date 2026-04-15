@@ -1,5 +1,8 @@
-name: Deploy to SpaceWeb via FTP
+name: Deploy to SpaceWeb via SSH
 
+# Triggers:
+#   - every push to main branch
+#   - manual run from GitHub → Actions → "Run workflow"
 on:
   push:
     branches:
@@ -9,48 +12,31 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create restart trigger (Passenger/SpaceWeb restart mechanism)
-        run: |
-          mkdir -p tmp
-          date -u > tmp/restart.txt
-
-      - name: Normalize FTP path (ensure trailing slash)
-        run: |
-          RAW="${{ secrets.FTP_PATH }}"
-          echo "FTP_DIR=${RAW%/}/" >> $GITHUB_ENV
-
-      - name: Write deploy SHA stamp
-        run: |
-          echo "${GITHUB_SHA}" > .deploy_sha
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          protocol: ftp
-          local-dir: ./
-          # FTP_PATH must be a path RELATIVE to the FTP root (e.g. "/" or "/myproject/")
-          # Do NOT set it to an absolute server path like /home/i/user/ — FTP already starts there
-          server-dir: ${{ env.FTP_DIR }}
-          state-name: .ftp-deploy-sync-state-v4.json
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            data/*.db
-            data/*.db-shm
-            data/*.db-wal
-            images*.zip
-            images_new_extract/**
-            .env
-            *.log
-            server.err
-            public/uploads/**
-            public_html/uploads/**
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          # Set either SSH_KEY (private key, recommended) or SSH_PASSWORD
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          # Stop on first error
+          script_stop: true
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_DIR }}"
+
+            echo "==> git pull"
+            git pull origin main
+
+            echo "==> npm ci"
+            npm ci --omit=dev
+
+            echo "==> pm2 restart"
+            pm2 restart lenta-stalnaja \
+              || pm2 start ecosystem.config.js --env production
+
+            pm2 save
+            echo "==> Done: $(date)"

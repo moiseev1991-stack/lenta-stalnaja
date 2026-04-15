@@ -116,101 +116,95 @@ npm run dev
 - PM2: `npm install -g pm2`
 - MySQL (SpaceWeb → Базы данных → MySQL — создать БД и пользователя)
 
-### Первый деплой (вручную через SSH)
+---
+
+### Шаг 1 — Первый деплой (один раз вручную через SSH)
 
 ```bash
-# 1. Подключиться по SSH
+# Подключиться по SSH
 ssh infogkmeta@77.222.40.49
 
-# 2. Склонировать репозиторий в папку сайта
+# Склонировать репозиторий
 cd ~
 git clone https://github.com/moiseev1991-stack/lenta-stalnaja.git lenta-stalnaja
 cd lenta-stalnaja
 
-# 3. Установить зависимости
+# Установить зависимости
 npm ci --omit=dev
 
-# 4. Настроить переменные окружения
+# Настроить переменные окружения
 cp .env.production.example .env
-nano .env   # заполнить MYSQL_*, SITE_URL, SESSION_SECRET, ADMIN_PASSWORD
+nano .env
+# Заполнить: MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE,
+#            SITE_URL, SESSION_SECRET, ADMIN_PASSWORD,
+#            DEPLOY_REPO_DIR=/home/i/infogkmeta/lenta-stalnaja
 
-# 5. Инициализировать SQLite (заявки, настройки)
-npm run init-db
-
-# 6. Запустить через PM2
+# Запустить через PM2
 pm2 start ecosystem.config.js --env production
 pm2 save
 pm2 startup   # выполнить команду, которую выведет PM2
 ```
 
-### Автодеплой через GitHub Actions (FTP)
+---
 
-При каждом `git push origin main` GitHub автоматически загружает файлы на SpaceWeb по FTP.
+### Шаг 2 — Автодеплой: каждый `git push` → сервер сам обновляется
+
+Используется GitHub Actions (`.github/workflows/deploy.yml`).  
+При каждом `git push origin main` GitHub по SSH заходит на сервер и выполняет:
+
+```
+git pull origin main  →  npm ci --omit=dev  →  pm2 restart
+```
 
 **Настройка секретов** (GitHub → Settings → Secrets and variables → Actions → New repository secret):
 
-| Secret | Значение |
-|--------|----------|
-| `FTP_HOST` | SpaceWeb панель → FTP-аккаунты → Сервер (обычно `ftp.ваш-домен.ru`) |
-| `FTP_USER` | SpaceWeb панель → FTP-аккаунты → Логин (например `infogkmeta`) |
-| `FTP_PASSWORD` | SpaceWeb панель → FTP-аккаунты → Пароль |
-| `FTP_PATH` | **`/`** — FTP уже стартует из домашней папки (`~/`), поэтому значение `/` кладёт файлы прямо в `~`. **Не указывать** абсолютный путь вида `/home/i/infogkmeta/` — иначе файлы уйдут в `~/home/i/infogkmeta/` (вложены сами в себя) |
+| Secret | Значение | Пример |
+|--------|----------|--------|
+| `SSH_HOST` | IP или домен сервера | `77.222.40.49` |
+| `SSH_USER` | SSH-логин | `infogkmeta` |
+| `SSH_PASSWORD` | SSH-пароль **или** | `ваш_пароль` |
+| `SSH_KEY` | Приватный SSH-ключ (альтернатива паролю) | содержимое `~/.ssh/id_rsa` |
+| `DEPLOY_DIR` | Путь к проекту на сервере | `/home/i/infogkmeta/lenta-stalnaja` |
 
-> **Важно про `FTP_PATH`**: FTP-сессия на SpaceWeb открывается уже внутри `~/` пользователя. Значение `/` → файлы в `~/`. Значение `/myproject/` → файлы в `~/myproject/`. Абсолютный серверный путь здесь писать **нельзя**.
+> Достаточно задать **либо** `SSH_PASSWORD`, **либо** `SSH_KEY` — не оба сразу.  
+> `SSH_KEY` предпочтительнее: он не требует интерактивного ввода и надёжнее.
 
-**Шаги:**
+**Как добавить секреты:**
 1. Перейти: [github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions](https://github.com/moiseev1991-stack/lenta-stalnaja/settings/secrets/actions)
-2. Добавить все 4 секрета из таблицы выше
-3. После этого каждый `git push origin main` будет автоматически загружать изменения
+2. Нажать «New repository secret» и добавить все 5 значений из таблицы
+3. Готово — теперь каждый `git push origin main` автоматически деплоит сервер
 
-### Docker-деплой (рекомендуется для стабильных обновлений)
+**Проверить последний деплой:**  
+GitHub → Actions → «Deploy to SpaceWeb via SSH» → последний запуск.  
+В логе шага «Deploy via SSH» должно быть `Done: <дата>`.
 
-Если сервер поддерживает Docker, используйте контейнерный деплой вместо FTP/PHP-прокси.
+---
 
-Что уже добавлено в проект:
-- workflow `.github/workflows/docker-image.yml` (build + push образа в GHCR при каждом push в `main`);
-- `docker-compose.prod.yml` для запуска `web + mysql`;
-- `.env.docker.example` как шаблон переменных.
+### Ручной деплой из админки
 
-Шаги на сервере (один раз):
+Кнопка «Деплой и перезапуск» на странице `/admin/db-restore` выполняет то же самое:
+`git pull + npm ci + pm2 restart` — прямо с сервера, без GitHub.  
+Требует, чтобы в `.env` был заполнен `DEPLOY_REPO_DIR`.
+
+---
+
+### Docker-деплой (если сервер поддерживает Docker)
 
 ```bash
 mkdir -p ~/lenta-stalnaja && cd ~/lenta-stalnaja
-curl -L -o docker-compose.prod.yml https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/docker-compose.prod.yml
-curl -L -o .env https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/.env.docker.example
-```
-
-Далее отредактируйте `.env`:
-- `APP_IMAGE=ghcr.io/moiseev1991-stack/lenta-stalnaja:latest`
-- домен `SITE_URL`;
-- пароли `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, `ADMIN_PASSWORD`, `SESSION_SECRET`.
-
-Запуск:
-
-```bash
+curl -L -o docker-compose.prod.yml \
+  https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/docker-compose.prod.yml
+curl -L -o .env \
+  https://raw.githubusercontent.com/moiseev1991-stack/lenta-stalnaja/main/.env.docker.example
+# Отредактировать .env: APP_IMAGE, SITE_URL, пароли MySQL, SESSION_SECRET
 docker compose -f docker-compose.prod.yml --env-file .env pull
 docker compose -f docker-compose.prod.yml --env-file .env up -d
 ```
 
 Обновление после нового push:
-
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env pull
 docker compose -f docker-compose.prod.yml --env-file .env up -d
-```
-
-### Настройка Node.js на SpaceWeb
-
-После первой загрузки через FTP — зайти по SSH и выполнить один раз:
-```bash
-cd ~/lenta-stalnaja.ru/
-npm ci --omit=dev
-cp .env.production.example .env
-# Заполнить .env данными из SpaceWeb панель
-# Для кнопки "Деплой и перезапуск" в админке:
-# DEPLOY_REPO_DIR=/home/i/infogkmeta/lenta-stalnaja
-pm2 start ecosystem.config.js --env production
-pm2 save
 ```
 
 ---
