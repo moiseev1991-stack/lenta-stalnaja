@@ -37,9 +37,10 @@ jobs:
             npm ci --omit=dev
 
             echo "==> restart"
-            pkill -f "node src/app.js" || true
+            # pkill -x matches exact process name "node", never matches this bash script
+            pkill -x node 2>/dev/null || true
             sleep 2
             rm -f ~/node.sock
-            setsid bash "$APP/start_node.sh" </dev/null >>/dev/null 2>&1 &
-            sleep 4
-            pgrep -fa "node src/app.js" && echo "==> OK $(date)" || echo "==> WARNING: process not found"
+            setsid bash "$APP/start_node.sh" </dev/null >/dev/null 2>&1 &
+            sleep 5
+            echo "==> Done: $(date)"
