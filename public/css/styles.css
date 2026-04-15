@@ -176,6 +176,13 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 }
 .header-contacts__email:hover { color: #cbd5e1; text-decoration: none; }
 
+/* Footer address */
+.footer-address {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0.1rem 0 0.3rem;
+}
+
 /* Footer contacts */
 .footer-contacts {
   display: flex;
@@ -1385,3 +1392,70 @@ body.menu-open .mobile-menu { display: block; }
   transition: background 0.15s;
 }
 .product-card__admin-edit:hover { background: #d97706; color: #fff !important; }
+
+/* ── Map section ─────────────────────────────────────────────── */
+.map-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 0 0;
+  margin-top: 2.5rem;
+}
+
+.map-section__layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.map-section__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  color: var(--text);
+}
+
+.map-section__address {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.map-section__details {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.map-section__details li {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.map-section__map {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.map-section__map iframe {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .map-section__layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .map-section__map iframe {
+    height: 260px;
+  }
+}

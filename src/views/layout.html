@@ -231,10 +231,34 @@
     {% endif %}
     {% block content %}{% endblock %}
     </div>
+    <section class="map-section">
+      <div class="container">
+        <div class="map-section__layout">
+          <div class="map-section__info">
+            <h2 class="map-section__title">Как нас найти</h2>
+            <p class="map-section__address">
+              Нижний Новгород,<br>Московское ш., 320Б, корп. 1
+            </p>
+            <ul class="map-section__details">
+              <li>+7 (800) 100-08-74</li>
+              <li>пн–пт 9:00–18:00</li>
+            </ul>
+            <a href="/contacts/" class="btn btn-primary btn-sm">Написать нам</a>
+          </div>
+          <div class="map-section__map">
+            <iframe
+              src="https://yandex.ru/map-widget/v1/?ll=43.831032%2C56.306230&z=16&pt=43.831032%2C56.306230,pm2rdl&l=map"
+              width="100%" height="360" frameborder="0" allowfullscreen
+              title="Схема проезда"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
   <footer class="footer">
     <div class="container">
       <p>&copy; Лента стальная — каталог металлопроката</p>
+      <p class="footer-address">Нижний Новгород, Московское ш., 320Б, корп. 1</p>
       <div class="footer-contacts">
         <a href="tel:+78001000874" class="footer-contacts__phone">+7 (800) 100-08-74</a>
         <a href="mailto:corp-metalinvest01265@yandex.ru" class="footer-contacts__email">corp-metalinvest01265@yandex.ru</a>
