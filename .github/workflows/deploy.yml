@@ -27,7 +27,8 @@ jobs:
           script_stop: true
           script: |
             set -e
-            cd "${{ secrets.DEPLOY_DIR }}"
+            APP="${{ secrets.DEPLOY_DIR }}"
+            cd "$APP"
 
             echo "==> git pull"
             git pull origin main
@@ -35,8 +36,10 @@ jobs:
             echo "==> npm ci"
             npm ci --omit=dev
 
-            echo "==> restart app"
+            echo "==> restart"
             pkill -f "node src/app.js" || true
             sleep 2
-            nohup node src/app.js >> ~/node_app.log 2>&1 &
-            echo "==> Started PID $! at $(date)"
+            rm -f ~/node.sock
+            setsid bash "$APP/start_node.sh" </dev/null >>/dev/null 2>&1 &
+            sleep 4
+            pgrep -fa "node src/app.js" && echo "==> OK $(date)" || echo "==> WARNING: process not found"
