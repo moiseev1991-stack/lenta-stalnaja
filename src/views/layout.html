@@ -138,23 +138,17 @@
         <div class="hero-collage__cell" data-cell="4"></div>
         <div class="hero-collage__cell" data-cell="5"></div>
       </div>
-      <div class="hero-collage__card">
-        {% if isHome %}
-        <h1>{{ h1 | safe }}</h1>
-        <p>Нержавеющая и конструкционная лента по ГОСТ. Наличие на складе, резка в размер, доставка по России.</p>
-        {% else %}
-        <p class="hero-collage__brand">{{ displaySiteName | default(siteName) | safeSiteName }}</p>
-        <p>Подберём марку, толщину и поверхность — быстро и точно под вашу задачу.</p>
-        {% endif %}
-        <div class="hero-collage__badges">
-          <span class="hero-collage__badge hero-collage__badge--accent">ГОСТ</span>
-          <span class="hero-collage__badge">На складе</span>
-          <span class="hero-collage__badge">Резка в размер</span>
-          <span class="hero-collage__badge">Доставка по РФ</span>
-        </div>
-        <div class="hero-collage__actions">
-          <a href="/#catalog" class="btn btn-primary btn-lg">Перейти к товарам</a>
-          <a href="/#lead" class="btn btn-secondary btn-lg">Оставить заявку</a>
+      <div class="hero-collage__content">
+        <div class="hero-collage__inner">
+          {% if isHome %}
+          <h1>{{ h1 | safe }}</h1>
+          {% else %}
+          <p class="hero-collage__brand">{{ displaySiteName | default(siteName) | safeSiteName }}</p>
+          {% endif %}
+          <div class="hero-collage__actions">
+            <a href="/#catalog" class="btn btn-primary btn-lg">Перейти к товарам</a>
+            <a href="/#lead" class="btn btn-secondary btn-lg">Оставить заявку</a>
+          </div>
         </div>
       </div>
     </section>
