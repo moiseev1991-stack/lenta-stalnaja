@@ -1,5 +1,5 @@
 (function () {
-  const VIDEO_POOL = [
+  var VIDEO_POOL = [
     '/vid/IMG_1826.MOV',
     '/vid/IMG_1828.MOV',
     '/vid/IMG_1830.MOV',
@@ -12,11 +12,10 @@
     '/vid/video_2026-04-14_21-07-08.mp4',
   ];
 
-  const POSTER_PAUSE    = 4000;
-  const FADE_MS         = 400;
-  const CELL_STAGGER_MS = 900;
-  const LOAD_TIMEOUT_MS = 8000;  // skip if canplay never fires
-  const STALL_EXTRA_MS  = 3000;  // extra wait after stall before skipping
+  var FADE_MS         = 400;
+  var CELL_STAGGER_MS = 900;
+  var LOAD_TIMEOUT_MS = 9000;  // skip if canplay never fires
+  var STALL_EXTRA_MS  = 3000;  // extra wait after stall before skipping
 
   function getRandom(arr, exclude) {
     var pool = arr.filter(function (v) { return v !== exclude; });
@@ -30,106 +29,111 @@
     el.style.opacity = '0';
     setTimeout(function () { if (cb) cb(); }, FADE_MS);
   }
-
   function fadeIn(el) { if (el) el.style.opacity = '1'; }
 
-  function capturePosterFrame(video) {
-    try {
-      var w = video.videoWidth, h = video.videoHeight;
-      if (!w || !h) return null;
-      var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      var ctx = canvas.getContext('2d');
-      if (!ctx) return null;
-      ctx.drawImage(video, 0, 0, w, h);
-      return canvas.toDataURL('image/jpeg', 0.8);
-    } catch (e) { return null; }
+  function makeVideo(src) {
+    var v = document.createElement('video');
+    v.src = src;
+    v.muted = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.preload = 'auto';
+    v.load();
+    return v;
   }
 
   function initCell(cell, startDelay) {
     setTimeout(function () {
-      playVideo(cell, getRandom(VIDEO_POOL, null));
+      playVideo(cell, getRandom(VIDEO_POOL, null), null);
     }, startDelay);
 
-    function playVideo(cell, src) {
+    function playVideo(cell, src, preloaded) {
       if (!src) return;
 
-      var video = document.createElement('video');
-      video.src = src;
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('playsinline', '');
-      video.preload = 'auto';
-      video.style.opacity = '0';
-      video.style.transition = 'opacity ' + FADE_MS + 'ms ease';
+      // Re-use preloaded element if it's healthy; otherwise create fresh
+      var video = (preloaded && !preloaded.error) ? preloaded : makeVideo(src);
+      video.style.cssText += ';opacity:0;transition:opacity ' + FADE_MS + 'ms ease;';
 
       cell.innerHTML = '';
       cell.appendChild(video);
 
-      // Single-use guard: once skip() is called, nothing else can fire
       var finished = false;
-      function skip() {
+      var nextSrc  = null;
+      var nextVid  = null;
+
+      function goNext() {
         if (finished) return;
         finished = true;
         clearTimeout(loadTimer);
         cell.innerHTML = '';
-        playVideo(cell, getRandom(VIDEO_POOL, src));
+        playVideo(cell, nextSrc || getRandom(VIDEO_POOL, src), nextVid);
       }
 
-      // Watchdog: skip if video never becomes playable
-      var loadTimer = setTimeout(skip, LOAD_TIMEOUT_MS);
+      // Watchdog: skip if canplay never fires
+      var loadTimer = setTimeout(goNext, LOAD_TIMEOUT_MS);
 
-      function onCanPlay() {
+      function onReady() {
         clearTimeout(loadTimer);
         fadeIn(video);
-        video.play().catch(skip);
+        video.play().catch(goNext);
+
+        // Preload next video NOW so it's ready when this one ends
+        nextSrc = getRandom(VIDEO_POOL, src);
+        nextVid = makeVideo(nextSrc);
       }
-      video.addEventListener('canplay',     onCanPlay, { once: true });
-      video.addEventListener('loadeddata',  onCanPlay, { once: true });
 
-      // Skip if the browser reports an unrecoverable load error
-      video.addEventListener('error', skip);
+      // Already buffered (reused preloaded element)?
+      if (video.readyState >= 3) {
+        onReady();
+      } else {
+        video.addEventListener('canplay',    onReady, { once: true });
+        video.addEventListener('loadeddata', onReady, { once: true });
+      }
 
-      // On stall, give a short extra window then skip
+      video.addEventListener('error', goNext);
+
       video.addEventListener('stalled', function () {
         clearTimeout(loadTimer);
-        loadTimer = setTimeout(skip, STALL_EXTRA_MS);
+        loadTimer = setTimeout(goNext, STALL_EXTRA_MS);
       });
 
-      // Normal end: show poster frame briefly, then next video
       video.addEventListener('ended', function () {
         if (finished) return;
         finished = true;
         clearTimeout(loadTimer);
+        video.pause();
 
-        fadeOut(video, function () {
-          video.pause();
-          var posterDataUrl = capturePosterFrame(video);
-
-          if (!posterDataUrl) {
+        // If next video already buffered → swap instantly
+        if (nextVid && nextVid.readyState >= 3) {
+          fadeOut(video, function () {
             cell.innerHTML = '';
-            playVideo(cell, getRandom(VIDEO_POOL, src));
-            return;
-          }
-
-          var img = document.createElement('img');
-          img.alt = '';
-          img.src = posterDataUrl;
-          img.style.opacity = '0';
-          img.style.transition = 'opacity ' + FADE_MS + 'ms ease';
-          cell.innerHTML = '';
-          cell.appendChild(img);
-
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () { img.style.opacity = '1'; });
+            playVideo(cell, nextSrc, nextVid);
           });
+          return;
+        }
 
-          setTimeout(function () {
-            fadeOut(img, function () {
-              cell.innerHTML = '';
-              playVideo(cell, getRandom(VIDEO_POOL, src));
-            });
-          }, POSTER_PAUSE);
+        // Otherwise: fade out, show subtle loading state, wait for next
+        fadeOut(video, function () {
+          cell.innerHTML = '';
+          // nextVid is loading in background; start it as soon as canplay fires
+          if (nextVid) {
+            var waited = false;
+            var waitTimer = setTimeout(function () {
+              // Fallback: canplay never came — create fresh and try anyway
+              if (waited) return;
+              waited = true;
+              playVideo(cell, nextSrc, null);
+            }, 5000);
+
+            nextVid.addEventListener('canplay', function () {
+              if (waited) return;
+              waited = true;
+              clearTimeout(waitTimer);
+              playVideo(cell, nextSrc, nextVid);
+            }, { once: true });
+          } else {
+            playVideo(cell, getRandom(VIDEO_POOL, src), null);
+          }
         });
       });
     }
