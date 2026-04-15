@@ -35,9 +35,8 @@ jobs:
             echo "==> npm ci"
             npm ci --omit=dev
 
-            echo "==> pm2 restart"
-            pm2 restart lenta-stalnaja \
-              || pm2 start ecosystem.config.js --env production
-
-            pm2 save
-            echo "==> Done: $(date)"
+            echo "==> restart app"
+            pkill -f "node src/app.js" || true
+            sleep 2
+            nohup node src/app.js >> ~/node_app.log 2>&1 &
+            echo "==> Started PID $! at $(date)"
