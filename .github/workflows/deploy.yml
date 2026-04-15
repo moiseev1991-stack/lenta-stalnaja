@@ -17,11 +17,12 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          # Set either SSH_KEY (private key, recommended) or SSH_PASSWORD
+          host: ${{ secrets.SSH_HOST || secrets.FTP_HOST }}
+          username: ${{ secrets.SSH_USER || secrets.FTP_USER }}
+          # Accepts SSH_PASSWORD / FTP_PASSWORD / SSH_KEY — whichever is set
+          password: ${{ secrets.SSH_PASSWORD || secrets.FTP_PASSWORD }}
           key: ${{ secrets.SSH_KEY }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
           # Stop on first error
           script_stop: true
           script: |
