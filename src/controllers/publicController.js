@@ -4,7 +4,7 @@ const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
-const { buildProductSEO, buildProductShortText } = require('../helpers/seoTemplates');
+const { buildProductSEO, buildProductShortText, getGradeShortDesc } = require('../helpers/seoTemplates');
 
 // Returns the DB setting value, or fallback when empty or mojibake-garbled.
 function isMojibake(s) {
@@ -81,9 +81,9 @@ async function home(req, res, next) {
       .join('&');
 
     const [homeTitle, homeH1, homeMetaDesc, homeHtml, categories] = await Promise.all([
-      getSetting('home_title', config.siteName),
+      getSetting('home_title', 'Лента стальная купить оптом — все марки, доставка по России | lenta-stalnaja.ru'),
       getSetting('home_h1', 'Каталог металлопроката'),
-      getSetting('home_meta_description', 'Каталог металлопроката: лента и другие позиции. Сортамент, цены.'),
+      getSetting('home_meta_description', 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: 8-800-100-08-74.'),
       getSetting('home_html', ''),
       catalog.getRootCategories(),
     ]);
@@ -196,19 +196,21 @@ function buildCompactProductDescription(product) {
   const mark = product.mark || '';
   const thickness = product.thickness_mm != null ? `${product.thickness_mm}` : '';
   const width = product.width_mm != null ? `${product.width_mm}` : '';
-  const state = product.state || '';
-  const surface = product.surface || '';
-  const standard = product.standard || '';
-  const dims = thickness && width ? `${thickness}×${width} мм` : (thickness || width ? `${thickness || width} мм` : '');
-  const pricePart = product.price != null ? `Ориентир по цене: от ${Math.round(product.price).toLocaleString('ru-RU')} ₽ за кг (уточняется на дату заказа).` : 'Цена рассчитывается по запросу с учётом объёма и условий поставки.';
-  const statePart = state ? `в состоянии ${state}` : 'в согласованном состоянии поставки';
-  const surfacePart = surface ? `с поверхностью ${surface}` : 'с требуемой поверхностью';
-  const stdPart = standard ? `по ${standard}` : 'по действующим стандартам';
+  const gradeShortDesc = getGradeShortDesc(mark);
 
-  const p1 = `Лента ${mark} ${dims} ${statePart} ${stdPart} применяется в промышленном производстве и заготовительных работах, когда важны стабильная геометрия и повторяемость партии. Позиция поставляется ${surfacePart}; отгрузка формируется под задачу клиента.`;
-  const p2 = `${pricePart} Принимаем заказы от B2B и частных клиентов, помогаем с подбором параметров, согласуем резку в размер и отмотку. Доступны самовывоз и доставка по России через ТК или курьерские службы.`;
+  const parts = [];
+  if (mark && thickness && width) {
+    parts.push(`Лента стальная ${mark} толщиной ${thickness} мм, шириной ${width} мм.`);
+  } else if (mark) {
+    parts.push(`Лента стальная ${mark}.`);
+  }
+  if (gradeShortDesc) {
+    parts.push(`Марка ${mark} — ${gradeShortDesc}.`);
+  }
+  parts.push('Поставляем нарезку под заказ, доставка по всей России.');
+  parts.push('Для уточнения цены и наличия звоните: 8-800-100-08-74.');
 
-  return `<p>${escapeHtml(p1)}</p><p>${escapeHtml(p2)}</p>`;
+  return `<p>${escapeHtml(parts.join(' '))}</p>`;
 }
 
 function buildFaqSchema(items) {

@@ -40,7 +40,7 @@ async function getSitemapUrls() {
   const base  = config.siteUrl;
   const today = toLastmod(new Date()) || '2026-01-01';
   const urls = [
-    { loc: buildLoc(base),               changefreq: 'daily',   priority: 1.0, lastmod: today },
+    { loc: buildLoc(base),               changefreq: 'weekly',  priority: 1.0, lastmod: today },
     { loc: buildLoc(base, 'about'),      changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'contacts'),   changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'delivery'),   changefreq: 'monthly', priority: 0.5, lastmod: today },
@@ -105,7 +105,7 @@ async function getSitemapUrls() {
       urls.push({
         loc: buildLoc(base, g.slug),
         changefreq: 'weekly',
-        priority: 0.7,
+        priority: 0.9,
         lastmod: toLastmod(g.created_at) || today,
       });
     });
@@ -122,8 +122,8 @@ async function getSitemapUrls() {
     products.forEach(p => {
       urls.push({
         loc: buildLoc(base, p.grade_slug, p.slug),
-        changefreq: 'weekly',
-        priority: 0.6,
+        changefreq: 'monthly',
+        priority: 0.5,
         lastmod: toLastmod(p.updated_at) || today,
       });
     });

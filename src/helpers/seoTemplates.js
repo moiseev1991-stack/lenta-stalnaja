@@ -5,7 +5,36 @@
  * missing fields are generated from templates on the fly.
  */
 
-const SITE_SUFFIX = '| Каталог';
+const SITE_SUFFIX = '| lenta-stalnaja.ru';
+
+const GRADE_SHORT_DESCS = {
+  '12Х18Н10Т':      'коррозионностойкая аустенитная сталь с титановой стабилизацией, аналог AISI 321',
+  '65Г':            'рессорно-пружинная углеродистая сталь высокой упругости',
+  '20Х13':          'мартенситная нержавеющая сталь, стойкая к атмосферной коррозии',
+  '08Х18Н10':       'аустенитная нержавеющая сталь с низким углеродом, аналог AISI 304L',
+  'Х20Н80':         'нихромовый сплав с высоким электросопротивлением, рабочая температура до 1100°C',
+  'Х15Н60':         'нихромовый сплав для нагревательных элементов, до 1000°C',
+  '12Х18Н9':        'аустенитная коррозионностойкая сталь, аналог AISI 302',
+  '10Х17Н13М3Т':    'нержавеющая сталь с молибденом и титаном, аналог AISI 316Ti',
+  '10Х17Н13М2Т':    'нержавеющая сталь с молибденом и титаном, аналог AISI 316Ti',
+  '17ХНГТ':         'цементуемая легированная сталь для деталей, работающих на износ',
+  'ЭИ814 (17ХНГТ)': 'цементуемая легированная сталь для деталей, работающих на износ',
+  'Х23Ю5':          'фехралевый сплав для нагревательных элементов, до 1300°C',
+  'Х23Ю5Т':         'фехралевый сплав с титаном для высокотемпературных нагревателей',
+  'ХН78Т':          'жаропрочный никелевый сплав для авиационной и ракетной техники',
+  '36НХТЮ':         'прецизионный сплав с заданными упругими характеристиками',
+  '40КХНМ':         'прецизионный магнитомягкий сплав для приборостроения',
+  '12Х18Н9СМР':     'аустенитная сталь с улучшенной обрабатываемостью резанием',
+  'Х15Ю5':          'фехралевый сплав для нагревательных элементов средней температуры',
+  'Х20Н80-Н':       'нихромовый сплав нагартованный с повышенной прочностью',
+  '27КХ':           'прецизионный сплав для постоянных магнитов',
+  '29НК':           'прецизионный сплав с заданным коэффициентом теплового расширения',
+};
+
+function getGradeShortDesc(mark) {
+  if (!mark) return '';
+  return GRADE_SHORT_DESCS[mark] || 'специальный сплав для промышленного применения';
+}
 
 // Known placeholder strings that should be treated as absent.
 const PLACEHOLDERS = new Set(['сам впишу', 'placeholder', 'todo', 'tbd', '-']);
@@ -164,18 +193,24 @@ function buildProductSEO(product, siteName) {
   const h1 = realVal(product.seo_h1) || realVal(product.h1) ||
     join(['Лента', mark, dims, state, gost]);
 
-  // Title: "Лента {Марка} {Толщина}×{Ширина} — цена за кг, доставка"
-  const baseTitle = join(['Лента', mark, dims ? dims.replace(' мм', '') : '']);
+  // Title: "Лента {Марка} {Толщина}×{Ширина} мм — цена, купить | lenta-stalnaja.ru"
+  const baseTitle = join(['Лента', mark, dims || '']);
   const title = realVal(product.seo_title) ||
-    `${baseTitle} — цена за кг, доставка`;
+    `${baseTitle} — цена, купить | lenta-stalnaja.ru`;
 
-  // Description: "Купить ленту {Марка} {Толщина}×{Ширина} мм ({Состояние}, {Поверхность}), {ГОСТ}. Расчёт за 15 минут, доставка по РФ."
-  const qualifiers = [state, surface].filter(Boolean).join(', ');
-  const descParts = [`Купить ленту ${join([mark, dims])}`.trim()];
-  if (qualifiers) descParts[0] += ` (${qualifiers})`;
-  if (gost)       descParts[0] += `, ${gost}`;
-  descParts[0] += '.';
-  descParts.push('Расчёт за 15 минут, доставка по РФ.');
+  // Description: "Лента стальная {Марка}, толщина {Толщина} мм, ширина {Ширина} мм. ..."
+  const descParts = [];
+  if (mark && thickness && width) {
+    descParts.push(`Лента стальная ${mark}, толщина ${thickness} мм, ширина ${width} мм. Наличие на складе, доставка по России. Цена по запросу. Тел: 8-800-100-08-74.`);
+  } else {
+    const qualifiers = [state, surface].filter(Boolean).join(', ');
+    const dp = [`Купить ленту ${join([mark, dims])}`.trim()];
+    if (qualifiers) dp[0] += ` (${qualifiers})`;
+    if (gost)       dp[0] += `, ${gost}`;
+    dp[0] += '.';
+    dp.push('Доставка по РФ.');
+    descParts.push(dp.join(' '));
+  }
   const metaDescription = realVal(product.seo_description) || descParts.join(' ');
 
   return { title, h1, metaDescription };
@@ -194,13 +229,13 @@ function buildGradeSEO(grade, siteName) {
   const h1 = realVal(grade.seo_h1) ||
     join(['Лента', mark]);
 
-  // Title: "Лента {Марка} — размеры, ГОСТ, цена за кг"
+  // Title: "Лента {Марка} купить — размеры, ГОСТ, цена за кг | lenta-stalnaja.ru"
   const title = realVal(grade.seo_title) ||
-    `Лента ${mark} — размеры, ГОСТ, цена за кг`;
+    `Лента ${mark} купить — размеры, ГОСТ, цена за кг | lenta-stalnaja.ru`;
 
-  // Description: "Лента {Марка}: подбор толщины и ширины, ГОСТ, доставка по РФ. Быстрый расчёт за 15 минут."
+  // Description: "Стальная лента марки {Марка} — полный каталог размеров. ..."
   const metaDescription = realVal(grade.seo_description) ||
-    `Лента ${mark}: подбор толщины и ширины, ГОСТ, доставка по РФ. Быстрый расчёт за 15 минут.`;
+    `Стальная лента марки ${mark} — полный каталог размеров. Нарезка под заказ, доставка по РФ. Цена по запросу. Тел: 8-800-100-08-74.`;
 
   return { title, h1, metaDescription };
 }
@@ -218,13 +253,13 @@ function buildGroupSEO(group, siteName) {
   const h1 = realVal(group.seo_h1) ||
     `Лента по назначению: ${groupName}`;
 
-  // Title: "Лента {Группа} — каталог марок и размеров, доставка | Каталог"
+  // Title: "Лента {Группа} — каталог марок и размеров, доставка | lenta-stalnaja.ru"
   const title = realVal(group.seo_title) ||
     `Лента ${groupName} — каталог марок и размеров, доставка ${SITE_SUFFIX}`;
 
-  // Description: "Лента {Группа}: подбор марки и размеров под задачу. …"
+  // Description: "Стальная лента: {Группа}. Все марки и типоразмеры в наличии. ..."
   const metaDescription = realVal(group.seo_description) ||
-    `Лента ${groupName}: подбор марки и размеров под задачу. Документы и ГОСТ, расчёт за 15 минут, доставка по РФ.`;
+    `Стальная лента: ${groupName}. Все марки и типоразмеры в наличии. Нарезка под заказ, доставка по России. Тел: 8-800-100-08-74.`;
 
   return { title, h1, metaDescription };
 }
@@ -241,4 +276,4 @@ function buildCategorySEO(siteName) {
   return { title, h1, metaDescription };
 }
 
-module.exports = { buildProductSEO, buildProductShortText, buildGradeSEO, buildGroupSEO, buildCategorySEO };
+module.exports = { buildProductSEO, buildProductShortText, buildGradeSEO, buildGroupSEO, buildCategorySEO, getGradeShortDesc };
