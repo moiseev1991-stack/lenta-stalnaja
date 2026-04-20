@@ -7,9 +7,11 @@ const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc } = require('../helpers/seoTemplates');
 
 // Returns the DB setting value, or fallback when empty or mojibake-garbled.
+// U+00C0-U+00FF = Latin letters (À-ÿ) that appear when UTF-8 Cyrillic is misread as Latin-1.
+// We do NOT flag U+0080-U+00BF because that range includes valid Russian punctuation: «»·×÷ etc.
 function isMojibake(s) {
   if (!s || s.length < 4) return false;
-  if (/[\u0080-\u00FF]/.test(s)) return true;
+  if (/[\u00C0-\u00FF]/.test(s)) return true;
   const pc = (s.match(/[РС]/g) || []).length;
   return pc / s.length > 0.25;
 }
