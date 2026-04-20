@@ -202,7 +202,12 @@ async function gradePage(req, res, next) {
       h1Candidates: [gradeSeo.h1, grade.name],
     });
     const faqItems = (() => {
-      try { return JSON.parse(grade.faq_json || '[]'); } catch (_) { return []; }
+      try {
+        const raw = grade.faq_json;
+        // mysql2 v3 auto-parses JSON columns to JS objects — handle both cases
+        if (Array.isArray(raw)) return raw;
+        return JSON.parse(raw || '[]');
+      } catch (_) { return []; }
     })();
     base(res, {
       _template: 'catalog/lenta/grade.html',
@@ -254,7 +259,12 @@ async function groupPage(req, res, next) {
       h1Candidates: [groupSeo.h1, group.name],
     });
     const faqItems = (() => {
-      try { return JSON.parse(group.faq_json || '[]'); } catch (_) { return []; }
+      try {
+        const raw = group.faq_json;
+        // mysql2 v3 auto-parses JSON columns to JS objects — handle both cases
+        if (Array.isArray(raw)) return raw;
+        return JSON.parse(raw || '[]');
+      } catch (_) { return []; }
     })();
     base(res, {
       _template: 'catalog/lenta/group.html',
