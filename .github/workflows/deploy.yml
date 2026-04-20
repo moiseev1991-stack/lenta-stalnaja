@@ -2,7 +2,7 @@ name: Deploy to SpaceWeb via SSH
 
 # Triggers:
 #   - every push to main branch
-#   - manual run from GitHub → Actions → "Run workflow"
+#   - manual run from GitHub тЖТ Actions тЖТ "Run workflow"
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST || secrets.FTP_HOST }}
           username: ${{ secrets.SSH_USER || secrets.FTP_USER }}
-          # Accepts SSH_PASSWORD / FTP_PASSWORD / SSH_KEY — whichever is set
+          # Accepts SSH_PASSWORD / FTP_PASSWORD / SSH_KEY тАФ whichever is set
           password: ${{ secrets.SSH_PASSWORD || secrets.FTP_PASSWORD }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
@@ -35,6 +35,9 @@ jobs:
 
             echo "==> npm ci"
             npm ci --omit=dev
+
+            echo "==> import SEO texts"
+            node scripts/import_seo_texts.js || echo "SEO import skipped (non-fatal)"
 
             echo "==> restart"
             # pkill -x matches exact process name "node", never matches this bash script
