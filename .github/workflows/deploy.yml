@@ -36,6 +36,9 @@ jobs:
             echo "==> npm ci"
             npm ci --omit=dev
 
+            echo "==> run DB migrations"
+            node -e "require('./src/db/mysql_migrate').runMysqlMigrations().then(()=>{ console.log('migrations ok'); process.exit(0); }).catch(e=>{ console.error('migration error:', e.message); process.exit(0); })"
+
             echo "==> import SEO texts"
             node scripts/import_seo_texts.js || echo "SEO import skipped (non-fatal)"
 
