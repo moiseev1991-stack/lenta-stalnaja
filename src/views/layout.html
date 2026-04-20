@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="yandex-verification" content="8ffe9fcddb692a9f" />
   <title>{% block title %}{{ (title | default(siteName)) | safeSiteName }}{% endblock %}</title>
   <!-- DEPLOY_CHECK_GLOBAL: git_sha={{ deployGitSha or 'unknown' }} boot_at={{ deployBootAt or 'unknown' }} -->
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
