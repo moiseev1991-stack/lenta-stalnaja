@@ -91,6 +91,10 @@ router.get('/import', controller.importForm);
 router.post('/import', csvUpload.single('file'), a(controller.handleImport));
 router.get('/export', a(controller.exportData));
 
+// ─── SEO текст-импорт из text/*.md ───────────────────────────────────────────
+router.get('/import-seo', controller.importSeoForm);
+router.post('/import-seo', a(controller.importSeoRun));
+
 // ─── Settings pages ───────────────────────────────────────────────────────────
 router.get('/main-page', a(controller.mainPageForm));
 router.post('/main-page', a(controller.saveMainPage));

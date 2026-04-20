@@ -627,6 +627,38 @@ async function deploy(req, res) {
   }
 }
 
+// ─── Импорт SEO-текстов из text/*.md ────────────────────────────────────────
+
+function importSeoForm(req, res) {
+  res.render('admin/import-seo.html', { message: null, error: null, log: null });
+}
+
+async function importSeoRun(req, res) {
+  const { execSync } = require('child_process');
+  const repoDir = process.env.DEPLOY_REPO_DIR || process.cwd();
+  const scriptPath = require('path').join(repoDir, 'scripts', 'import_seo_texts.js');
+  try {
+    const out = execSync(`node "${scriptPath}"`, {
+      encoding: 'utf8',
+      cwd: repoDir,
+      timeout: 60000,
+      env: { ...process.env },
+    });
+    res.render('admin/import-seo.html', {
+      message: 'Импорт выполнен успешно.',
+      error: null,
+      log: (out || '').trim(),
+    });
+  } catch (e) {
+    const log = [e.stdout, e.stderr].filter(Boolean).join('\n').trim() || e.message;
+    res.render('admin/import-seo.html', {
+      message: null,
+      error: 'Ошибка при импорте: ' + (e.message || String(e)).substring(0, 300),
+      log: log.substring(0, 3000),
+    });
+  }
+}
+
 module.exports = {
   dashboard,
   loginForm, login, logout,
@@ -641,4 +673,5 @@ module.exports = {
   dbRestoreForm, dbRestore,
   fixSettingsEncoding,
   deployForm, deploy,
+  importSeoForm, importSeoRun,
 };

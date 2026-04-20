@@ -1,0 +1,42 @@
+{% extends "admin/layout.html" %}
+{% block title %}Импорт SEO-текстов — Админка{% endblock %}
+{% block content %}
+<div class="adm-page-header">
+  <h1 class="adm-page-title">Импорт SEO-текстов</h1>
+</div>
+
+<div class="adm-card">
+  <p class="adm-text">
+    Читает все <code>.md</code>-файлы из папки <code>text/</code> и загружает SEO-тексты
+    (заголовки, описания, H1, вводный текст, статьи, FAQ) в таблицы <code>grades</code>,
+    <code>groups</code> и настройки главной страницы.
+  </p>
+  <p class="adm-text" style="color: var(--adm-muted, #666); font-size: 0.875rem;">
+    Сейчас в папке <code>text/</code>: 12 файлов (homepage + 6 категорий + 5 марок).
+    Импорт идёт ~5–10 сек.
+  </p>
+
+  {% if message %}
+  <div class="adm-alert adm-alert-success">{{ message }}</div>
+  {% if log %}
+  <pre class="adm-pre" style="margin-top: 0.5rem; font-size: 0.85rem; overflow: auto; max-height: 300px; background: #f4f4f4; border: 1px solid #ddd; padding: 0.75rem; border-radius: 4px;">{{ log }}</pre>
+  {% endif %}
+  {% endif %}
+
+  {% if error %}
+  <div class="adm-alert adm-alert-error">{{ error }}</div>
+  {% if log %}
+  <pre class="adm-pre" style="margin-top: 0.5rem; font-size: 0.85rem; overflow: auto; max-height: 300px; background: #fff3f3; border: 1px solid #ffcccc; padding: 0.75rem; border-radius: 4px;">{{ log }}</pre>
+  {% endif %}
+  {% endif %}
+
+  <form method="post" action="/admin/import-seo" style="margin-top: 1.25rem;">
+    <button type="submit" class="adm-btn adm-btn-green"
+            onclick="return confirm('Запустить импорт SEO-текстов из text/*.md? Существующие данные будут перезаписаны.')">
+      Запустить импорт SEO-текстов
+    </button>
+  </form>
+
+  <p class="adm-back-link"><a href="/admin">← В админку</a></p>
+</div>
+{% endblock %}
