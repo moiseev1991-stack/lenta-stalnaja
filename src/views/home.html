@@ -2,9 +2,19 @@
 {% from "partials/product_card.html" import product_card %}
 {% block head %}
   <meta name="google-site-verification" content="5A_b_zD8rwK_UWvojV9V5RO3O5Z8NQNvt-OGQS12J0E" />
+  {% if homeFaqItems and homeFaqItems.length %}
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for item in homeFaqItems %}{% if not loop.first %},{% endif %}{"@type":"Question","name":{{ item.question | json | safe }},"acceptedAnswer":{"@type":"Answer","text":{{ item.answer | json | safe }}}}{% endfor %}]}
+  </script>
+  {% endif %}
 {% endblock %}
 {% block content %}
 <!-- DEPLOY_CHECK: git_sha={{ deployGitSha or 'unknown' }} boot_at={{ deployBootAt or 'unknown' }} -->
+
+{% if homeIntro %}
+<p class="lead home-intro">{{ homeIntro | safe }}</p>
+{% endif %}
+
 <section id="catalog">
   <h2 class="section-title">{% if hasActiveFilters %}Результаты поиска{% else %}Популярные товары{% endif %}</h2>
   
@@ -114,10 +124,23 @@
   </div>
 </section>
 
-{% if homeIntro or homeHtml %}
+{% if homeHtml %}
 <section class="page-article content">
-  {% if homeIntro %}<p class="lead">{{ homeIntro | safe }}</p>{% endif %}
-  {% if homeHtml %}{{ homeHtml | safe }}{% endif %}
+  {{ homeHtml | safe }}
+</section>
+{% endif %}
+
+{% if homeFaqItems and homeFaqItems.length %}
+<section class="faq-section content">
+  <h2>Частые вопросы</h2>
+  <div class="faq-list">
+    {% for item in homeFaqItems %}
+    <details class="faq-item">
+      <summary>{{ item.question }}</summary>
+      <p>{{ item.answer | safe }}</p>
+    </details>
+    {% endfor %}
+  </div>
 </section>
 {% endif %}
 

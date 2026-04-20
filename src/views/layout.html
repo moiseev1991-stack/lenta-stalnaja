@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"Organization","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","logo":"https://lenta-stalnaja.ru/img/logo-icon.png","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"}}
   </script>
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"},"geo":{"@type":"GeoCoordinates","latitude":56.263,"longitude":43.970},"openingHours":"Mo-Fr 09:00-18:00","priceRange":"$$"}
+{"@context":"https://schema.org","@type":"LocalBusiness","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское шоссе, 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"},"geo":{"@type":"GeoCoordinates","latitude":56.2822,"longitude":43.9806},"openingHours":"Mo-Fr 09:00-18:00","priceRange":"$$"}
   </script>
   {% if breadcrumbs and breadcrumbs.length %}
   <script type="application/ld+json">
@@ -223,12 +223,13 @@
     <div class="container">
     {% if breadcrumbs and breadcrumbs.length %}
     <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <a href="/">Главная</a>
       {% for b in breadcrumbs %}
+        <span class="sep">/</span>
         {% if loop.last %}
           <span>{{ b.name }}</span>
         {% else %}
           <a href="{{ b.url }}">{{ b.name }}</a>
-          <span class="sep">/</span>
         {% endif %}
       {% endfor %}
     </nav>

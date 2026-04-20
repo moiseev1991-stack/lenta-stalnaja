@@ -24,16 +24,14 @@
 
 <h1>{{ h1 }}</h1>
 
-{# Принадлежность к группе (назначению) #}
-{% if grade.group_name %}
-<p class="grade-badge-line">
-  <a href="/{{ grade.group_slug }}/" class="badge badge-primary">{{ grade.group_name }}</a>
-</p>
-{% endif %}
-
 {# Краткое вводное описание #}
 {% if grade.intro %}
 <p class="lead">{{ grade.intro }}</p>
+{% endif %}
+
+{# Ключевые характеристики — таблица KEY_SPECS (перед каталогом) #}
+{% if grade.key_specs_html %}
+<section class="key-specs-section content">{{ grade.key_specs_html | safe }}</section>
 {% endif %}
 
 {# Каталог товаров с фильтрами #}
@@ -158,12 +156,14 @@
 {% if faqItems and faqItems.length %}
 <section class="faq-section content">
   <h2>Частые вопросы</h2>
-  <dl class="faq-list">
+  <div class="faq-list">
     {% for item in faqItems %}
-    <dt class="faq-question">{{ item.question }}</dt>
-    <dd class="faq-answer">{{ item.answer | safe }}</dd>
+    <details class="faq-item">
+      <summary>{{ item.question }}</summary>
+      <p>{{ item.answer | safe }}</p>
+    </details>
     {% endfor %}
-  </dl>
+  </div>
 </section>
 {% endif %}
 

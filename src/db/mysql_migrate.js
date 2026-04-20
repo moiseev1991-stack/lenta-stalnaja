@@ -159,6 +159,8 @@ async function runMysqlMigrations() {
     `ALTER TABLE grades ADD COLUMN faq_json JSON NULL`,
     `ALTER TABLE \`groups\` ADD COLUMN faq_json JSON NULL`,
     `ALTER TABLE settings MODIFY COLUMN value LONGTEXT`,
+    `ALTER TABLE grades ADD COLUMN key_specs_html LONGTEXT NULL`,
+    `ALTER TABLE \`groups\` ADD COLUMN key_specs_html LONGTEXT NULL`,
   ];
 
   for (const sql of alterCols) {
@@ -236,7 +238,7 @@ async function runMysqlMigrations() {
   const defaultSettings = [
     ['site_name', SN],
     ['home_title', SN],
-    ['home_h1', '\u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u043c\u0435\u0442\u0430\u043b\u043b\u043e\u043f\u0440\u043e\u043a\u0430\u0442\u0430'],
+    ['home_h1', '\u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u0441\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043b\u0435\u043d\u0442\u044b \u2014 \u0431\u043e\u043b\u0435\u0435 7000 \u0442\u0438\u043f\u043e\u0440\u0430\u0437\u043c\u0435\u0440\u043e\u0432 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438'],
     [
       'home_meta_description',
       '\u041d\u0435\u0440\u0436\u0430\u0432\u0435\u044e\u0449\u0430\u044f \u0438 \u043a\u043e\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u043e\u043d\u043d\u0430\u044f \u043b\u0435\u043d\u0442\u0430 \u043f\u043e \u0413\u041e\u0421\u0422. \u041d\u0430\u043b\u0438\u0447\u0438\u0435 \u043d\u0430 \u0441\u043a\u043b\u0430\u0434\u0435, \u0440\u0435\u0437\u043a\u0430 \u0432 \u0440\u0430\u0437\u043c\u0435\u0440, \u0434\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u043f\u043e \u0420\u043e\u0441\u0441\u0438\u0438.',

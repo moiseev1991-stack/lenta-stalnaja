@@ -184,12 +184,14 @@
 {% if faqItems and faqItems.length %}
 <section class="faq-section content">
   <h2>Частые вопросы</h2>
-  <dl class="faq-list">
+  <div class="faq-list">
     {% for item in faqItems %}
-    <dt class="faq-question">{{ item.question }}</dt>
-    <dd class="faq-answer">{{ item.answer | safe }}</dd>
+    <details class="faq-item">
+      <summary>{{ item.question }}</summary>
+      <p>{{ item.answer | safe }}</p>
+    </details>
     {% endfor %}
-  </dl>
+  </div>
 </section>
 {% endif %}
 

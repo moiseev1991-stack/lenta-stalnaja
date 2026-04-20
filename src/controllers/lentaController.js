@@ -212,6 +212,9 @@ async function gradePage(req, res, next) {
       canonical:       config.siteUrl + pageUrl,
       robots: withFilters ? 'noindex,follow' : undefined,
       breadcrumbs: [
+        ...(grade.group_name && grade.group_slug
+          ? [{ name: grade.group_name, url: '/' + grade.group_slug + '/' }]
+          : []),
         { name: grade.name, url: pageUrl },
       ],
       grade, relatedGrades, faqItems,

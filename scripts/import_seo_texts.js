@@ -21,7 +21,7 @@ const path = require('path');
 const pool = require('../src/db/mysql');
 const MarkdownIt = require('markdown-it');
 
-const md = new MarkdownIt({ html: true, typographer: true, breaks: false });
+const md = new MarkdownIt({ html: true, typographer: false, breaks: false });
 
 // Patch: add CSS class to generated tables
 const originalTable = md.renderer.rules.table_open || function(tokens, idx, options, env, self) {
@@ -61,7 +61,7 @@ function parseUrl(content) {
 function parseSections(content) {
   const sections = new Map();
   // Match "## WORD_WITH_UNDERSCORES" headers (uppercase, may have trailing comment)
-  const headerRe = /^## ([A-Z_]+)(?:[^#\n]*)$/gm;
+  const headerRe = /^## ([A-Z0-9_]+)(?:[^#\n]*)$/gm;
   const matches = [];
   let m;
   while ((m = headerRe.exec(content)) !== null) {
@@ -134,6 +134,7 @@ async function updateHomepageSettings(fields) {
     seo_h1:          'home_h1',
     intro:           'home_intro',
     article_text:    'home_main_text',
+    faq_json:        'home_faq_json',
   };
   for (const [field, key] of Object.entries(mapping)) {
     if (fields[field] == null) continue;
@@ -163,20 +164,21 @@ async function processFile(filePath) {
   const mainText       = sections.get('MAIN_TEXT')        || '';
   const faqRaw         = sections.get('FAQ')              || '';
 
-  // KEY_SPECS + MAIN_TEXT combined into article_text HTML
-  const combinedMd = [keySpecs, mainText].filter(Boolean).join('\n\n');
-  const articleHtml = toHtml(combinedMd);
+  // KEY_SPECS → stored separately; MAIN_TEXT → article_text only
+  const keySpecsHtml = toHtml(keySpecs);
+  const mainTextHtml = toHtml(mainText);
 
   const faqItems = parseFaq(faqRaw);
   const faqJson  = faqItems.length ? JSON.stringify(faqItems) : null;
 
   const fields = {};
-  if (seoTitle)       fields.seo_title       = seoTitle;
-  if (seoDescription) fields.seo_description = seoDescription;
-  if (h1)             fields.seo_h1          = h1;
-  if (introText)      fields.intro           = introText;
-  if (articleHtml)  { fields.article_text    = articleHtml; fields.article_format = 'html'; }
-  if (faqJson)        fields.faq_json        = faqJson;
+  if (seoTitle)        fields.seo_title       = seoTitle;
+  if (seoDescription)  fields.seo_description = seoDescription;
+  if (h1)              fields.seo_h1          = h1;
+  if (introText)       fields.intro           = introText;
+  if (keySpecsHtml)  { fields.key_specs_html  = keySpecsHtml; }
+  if (mainTextHtml)  { fields.article_text    = mainTextHtml; fields.article_format = 'html'; }
+  if (faqJson)         fields.faq_json        = faqJson;
 
   if (Object.keys(fields).length === 0) {
     console.warn(`  [SKIP] No data parsed from ${path.basename(filePath)}`);
