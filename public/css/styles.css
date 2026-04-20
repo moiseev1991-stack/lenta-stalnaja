@@ -826,6 +826,17 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
   .content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
+/* Specs / grades table (used outside .content wrapper) */
+.specs-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+.specs-table th, .specs-table td { border: 1px solid var(--border); padding: 0.45rem 0.7rem; text-align: left; vertical-align: top; }
+.specs-table th { background: var(--surface); font-weight: 600; }
+.specs-table tr:nth-child(even) td { background: var(--bg); }
+.specs-table a { color: var(--primary); text-decoration: none; }
+.specs-table a:hover { text-decoration: underline; }
+@media (max-width: 768px) {
+  .specs-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
 /* Article blocks on grade/group pages and homepage text block */
 .page-article {
   margin-top: 2.5rem;

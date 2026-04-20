@@ -80,11 +80,12 @@ async function home(req, res, next) {
         : `${k}=${encodeURIComponent(v)}`)
       .join('&');
 
-    const [homeTitle, homeH1, homeMetaDesc, homeHtml, categories] = await Promise.all([
+    const [homeTitle, homeH1, homeMetaDesc, homeIntro, homeHtml, categories] = await Promise.all([
       getSetting('home_title', 'Лента стальная купить оптом — все марки, доставка по России | lenta-stalnaja.ru'),
       getSetting('home_h1', 'Каталог металлопроката'),
       getSetting('home_meta_description', 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: 8-800-100-08-74.'),
-      getSetting('home_html', ''),
+      getSetting('home_intro', ''),
+      getSetting('home_main_text', ''),
       catalog.getRootCategories(),
     ]);
 
@@ -93,6 +94,7 @@ async function home(req, res, next) {
       h1:    homeH1,
       metaDescription: homeMetaDesc,
       canonical: config.siteUrl + '/',
+      homeIntro,
       homeHtml,
       breadcrumbs: [],
       categories,
