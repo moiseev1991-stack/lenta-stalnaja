@@ -156,6 +156,8 @@ async function runMysqlMigrations() {
     `ALTER TABLE \`groups\` ADD COLUMN article_text LONGTEXT NULL`,
     `ALTER TABLE \`groups\` ADD COLUMN article_format VARCHAR(16) DEFAULT 'html'`,
     `ALTER TABLE \`groups\` ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1`,
+    `ALTER TABLE grades ADD COLUMN faq_json JSON NULL`,
+    `ALTER TABLE \`groups\` ADD COLUMN faq_json JSON NULL`,
   ];
 
   for (const sql of alterCols) {

@@ -434,6 +434,7 @@ async function categoryPage(req, res, next) {
       title: category.seo_title || category.name + ' | ' + config.siteName,
       h1:    category.seo_h1   || category.name,
       metaDescription: category.seo_description || undefined,
+      canonical: config.siteUrl + req.path,
       breadcrumbs, category,
       categoryPath: pathParts.join('/'),
       subcategories,
@@ -530,39 +531,30 @@ async function sitemapXml(req, res, next) {
 }
 
 function robotsTxt(req, res) {
-  const sitemap = 'Sitemap: ' + config.siteUrl + '/sitemap.xml';
+  const sitemapLine = 'Sitemap: ' + config.siteUrl + '/sitemap.xml';
+  const utmParams   = 'utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&gclid&fbclid';
   const filterParams = 'thickness&width&surface&state&standard&mark&q';
   res.type('text/plain');
   res.send(
-    '# All bots\n' +
     'User-agent: *\n' +
     'Disallow: /admin/\n' +
+    'Disallow: /cart/\n' +
+    'Disallow: /order/\n' +
     'Disallow: /search/\n' +
-    'Disallow: /download/\n' +
-    'Disallow: /*?\n' +
+    'Disallow: /*?*\n' +
+    'Disallow: /uploads/temp/\n' +
+    'Allow: /uploads/products/\n' +
     '\n' +
-    '# Google\n' +
-    'User-agent: Googlebot\n' +
+    'User-agent: Yandex\n' +
     'Disallow: /admin/\n' +
+    'Disallow: /cart/\n' +
+    'Disallow: /order/\n' +
     'Disallow: /search/\n' +
-    'Disallow: /download/\n' +
-    'Disallow: /*?\n' +
+    'Disallow: /*?*\n' +
+    'Clean-param: ' + utmParams + '&' + filterParams + '\n' +
     '\n' +
-    '# Yandex — Clean-param is the correct way to handle filter duplicates\n' +
-    'User-agent: YandexBot\n' +
-    'Disallow: /admin/\n' +
-    'Disallow: /search/\n' +
-    'Disallow: /download/\n' +
-    'Clean-param: ' + filterParams + '\n' +
-    '\n' +
-    '# Bing\n' +
-    'User-agent: Bingbot\n' +
-    'Disallow: /admin/\n' +
-    'Disallow: /search/\n' +
-    'Disallow: /download/\n' +
-    'Disallow: /*?\n' +
-    '\n' +
-    sitemap
+    sitemapLine + '\n' +
+    'Host: lenta-stalnaja.ru'
   );
 }
 

@@ -85,33 +85,33 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // Grade pages
+  // Grade pages (марки) — priority 0.9
   try {
-    const [grades] = await pool.query('SELECT slug, created_at FROM grades ORDER BY slug');
+    const [grades] = await pool.query('SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM grades ORDER BY slug');
     grades.forEach(g => {
       urls.push({
         loc: buildLoc(base, g.slug),
         changefreq: 'weekly',
-        priority: 0.8,
-        lastmod: toLastmod(g.created_at) || today,
+        priority: 0.9,
+        lastmod: toLastmod(g.lastmod_at) || today,
       });
     });
   } catch (_) {}
 
-  // Group pages
+  // Group pages (назначения) — priority 0.8
   try {
-    const [groups] = await pool.query('SELECT slug, created_at FROM `groups` ORDER BY slug');
+    const [groups] = await pool.query('SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM `groups` ORDER BY slug');
     groups.forEach(g => {
       urls.push({
         loc: buildLoc(base, g.slug),
         changefreq: 'weekly',
-        priority: 0.9,
-        lastmod: toLastmod(g.created_at) || today,
+        priority: 0.8,
+        lastmod: toLastmod(g.lastmod_at) || today,
       });
     });
   } catch (_) {}
 
-  // Product pages
+  // Product pages — priority 0.7
   try {
     const [products] = await pool.query(`
       SELECT p.slug, p.updated_at, gr.slug AS grade_slug
@@ -123,7 +123,7 @@ async function getSitemapUrls() {
       urls.push({
         loc: buildLoc(base, p.grade_slug, p.slug),
         changefreq: 'monthly',
-        priority: 0.5,
+        priority: 0.7,
         lastmod: toLastmod(p.updated_at) || today,
       });
     });

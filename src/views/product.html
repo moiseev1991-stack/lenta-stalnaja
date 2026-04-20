@@ -58,6 +58,8 @@
             {% if product.surface %}<tr><th>Поверхность</th><td>{{ product.surface }}</td></tr>{% endif %}
             {% if product.state %}<tr><th>Состояние</th><td>{{ product.state }}</td></tr>{% endif %}
             {% if product.standard %}<tr><th>ГОСТ</th><td>{{ product.standard }}</td></tr>{% endif %}
+            {% if product.full_gost_name and product.full_gost_name != product.standard %}<tr><th>Полное наименование</th><td>{{ product.full_gost_name }}</td></tr>{% endif %}
+            {% if product.spring_props %}<tr><th>Механические свойства</th><td>{{ product.spring_props }}</td></tr>{% endif %}
             {% if product.sku_code %}<tr><th>Артикул</th><td>{{ product.sku_code }}</td></tr>{% endif %}
           </tbody>
         </table>
@@ -72,6 +74,9 @@
   <section class="product-description-block content product-card">
     <h2 class="section-title">Описание товара</h2>
     {{ productDescriptionHtml | safe }}
+    {% if product.short_text_html %}
+    <div class="product-short-text">{{ product.short_text_html | safe }}</div>
+    {% endif %}
     <a href="{{ gradePageUrl }}" class="text-link">Все размеры {{ product.mark or 'этой марки' }}</a>
   </section>
 
@@ -170,6 +175,15 @@
       </ul>
     </div>
     {% endif %}
+  </section>
+
+  <section class="product-documents product-card">
+    <h2 class="section-title">Документы</h2>
+    <ul class="documents-list">
+      <li><a href="/certificates/" class="text-link">Сертификаты качества</a></li>
+      {% if product.standard %}<li><span>ГОСТ {{ product.standard }}</span></li>{% endif %}
+      <li><a href="/contacts/#lead" class="text-link">Запросить паспорт качества</a></li>
+    </ul>
   </section>
 
   {% if similarProducts and similarProducts.length %}

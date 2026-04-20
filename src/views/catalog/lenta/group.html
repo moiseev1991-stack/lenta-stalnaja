@@ -1,5 +1,17 @@
 {% extends "layout.html" %}
 {% from "partials/product_card.html" import product_card %}
+{% block head %}
+{% if products and products.length %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":{{ h1 | json | safe }},"numberOfItems":{{ total }},"itemListElement":[{% for p in products %}{% if loop.index <= 20 %}{% if not loop.first %},{% endif %}{"@type":"ListItem","position":{{ loop.index }},"url":{{ (siteUrl ~ '/' ~ p.grade_slug ~ '/' ~ p.slug ~ '/') | json | safe }},"name":{{ (p.name | normalizeName) | json | safe }}}{% endif %}{% endfor %}]}
+</script>
+{% endif %}
+{% if faqItems and faqItems.length %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for item in faqItems %}{% if not loop.first %},{% endif %}{"@type":"Question","name":{{ item.question | json | safe }},"acceptedAnswer":{"@type":"Answer","text":{{ item.answer | json | safe }}}}{% endfor %}]}
+</script>
+{% endif %}
+{% endblock %}
 {% block content %}
 {% if isAdmin %}
 <div class="admin-edit-bar">
@@ -9,31 +21,48 @@
   </a>
 </div>
 {% endif %}
+
 <h1>{{ h1 }}</h1>
+
+{# Вводный текст и таблица марок — ДО каталога #}
 {% if group.intro %}
-<p class="lead">{{ group.intro }}</p>
+<div class="group-intro content">
+  <p class="lead">{{ group.intro | safe }}</p>
+</div>
 {% endif %}
 
-{% if topGrades and topGrades.length %}
+{% if gradesInGroup and gradesInGroup.length %}
 <section class="grades-in-group">
-  <h2 class="section-title">Марки в группе</h2>
-  <ul class="grade-grid grade-grid--compact">
-    {% for gr in topGrades %}
-    <li>
-      <a href="/{{ gr.slug }}/" class="grade-card grade-card--small">
-        <span class="grade-name">{{ gr.name }}</span>
-        <span class="grade-count">{{ gr.product_count }} поз.</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% if gradesInGroup.length > 8 %}
-  <p class="grades-more"><a href="/?group={{ group.slug }}" class="btn btn-ghost btn-sm">Все марки группы ({{ gradesInGroup.length }})</a></p>
-  {% endif %}
+  <h2 class="section-title">Марки {{ group.name | lower }}</h2>
+  <div class="table-responsive">
+    <table class="specs-table grades-table">
+      <thead>
+        <tr>
+          <th>Марка</th>
+          <th>ГОСТ</th>
+          <th>Аналог AISI</th>
+          <th>Типоразмеров</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for gr in gradesInGroup %}
+        <tr>
+          <td><strong>{{ gr.name }}</strong></td>
+          <td>{{ gr.gost or '—' }}</td>
+          <td>{{ gr.aisi_analog or '—' }}</td>
+          <td>{{ gr.product_count or '—' }}</td>
+          <td><a href="/{{ gr.slug }}/" class="btn btn-ghost btn-sm">Перейти</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endif %}
 
-<div class="catalog-layout">
+{# Каталог товаров #}
+<div class="catalog-layout" id="products">
   <aside class="catalog-sidebar">
     <button type="button" class="filters-toggle btn btn-outline" onclick="this.parentElement.classList.toggle('open')">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
@@ -103,7 +132,7 @@
   </aside>
 
   <section class="catalog-main products-section">
-    <h2 class="section-title">Товары</h2>
+    <h2 class="section-title">Каталог товаров</h2>
     {% if total == 0 %}
     <p class="no-products">Товары не найдены.</p>
     {% else %}
@@ -130,23 +159,39 @@
     </nav>
     {% endif %}
     {% endif %}
-    {% if seoArticle and seoArticle.html %}
-    <section class="page-article content">
-      {{ seoArticle.html | safe }}
-    </section>
-    {% elif group.article_text %}
-    <section class="page-article content">
-      {% if group.article_title %}<h2>{{ group.article_title }}</h2>{% endif %}
-      {% if group.article_format == 'html' %}
-        {{ group.article_text | safe }}
-      {% else %}
-        {% for line in group.article_text.split('\n') %}
-          {% if line.trim() %}<p>{{ line }}</p>{% endif %}
-        {% endfor %}
-      {% endif %}
-    </section>
-    {% endif %}
   </section>
 </div>
+
+{# SEO-статья НИЖЕ каталога #}
+{% if seoArticle and seoArticle.html %}
+<section class="page-article content">
+  {{ seoArticle.html | safe }}
+</section>
+{% elif group.article_text %}
+<section class="page-article content">
+  {% if group.article_title %}<h2>{{ group.article_title }}</h2>{% endif %}
+  {% if group.article_format == 'html' %}
+    {{ group.article_text | safe }}
+  {% else %}
+    {% for line in group.article_text.split('\n') %}
+      {% if line.trim() %}<p>{{ line }}</p>{% endif %}
+    {% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+
+{# FAQ-блок #}
+{% if faqItems and faqItems.length %}
+<section class="faq-section content">
+  <h2>Частые вопросы</h2>
+  <dl class="faq-list">
+    {% for item in faqItems %}
+    <dt class="faq-question">{{ item.question }}</dt>
+    <dd class="faq-answer">{{ item.answer | safe }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
+
 {% include "partials/lead_section.html" %}
 {% endblock %}

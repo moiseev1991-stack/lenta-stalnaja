@@ -185,8 +185,13 @@ async function gradePage(req, res, next) {
 
     const filters      = parseFilters(req.query);
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const result       = await lenta.getProductsByGrade(grade.name, filters, page);
-    const filterValues = await lenta.getFilterValuesByGrade(grade.name);
+    const [result, filterValues, relatedGrades] = await Promise.all([
+      lenta.getProductsByGrade(grade.name, filters, page),
+      lenta.getFilterValuesByGrade(grade.name),
+      grade.group_id ? lenta.getGradesByGroup(grade.group_id).then(
+        rows => rows.filter(r => r.id !== grade.id).slice(0, 6)
+      ) : Promise.resolve([]),
+    ]);
     const withFilters  = hasFilters(filters);
     const q = { ...req.query }; delete q.page;
     const gradeSeo = buildGradeSEO(grade, config.siteName);
@@ -196,6 +201,9 @@ async function gradePage(req, res, next) {
       filenameCandidates: [`Лента ${grade.name}`],
       h1Candidates: [gradeSeo.h1, grade.name],
     });
+    const faqItems = (() => {
+      try { return JSON.parse(grade.faq_json || '[]'); } catch (_) { return []; }
+    })();
     base(res, {
       _template: 'catalog/lenta/grade.html',
       title:           gradeSeo.title,
@@ -206,7 +214,7 @@ async function gradePage(req, res, next) {
       breadcrumbs: [
         { name: grade.name, url: pageUrl },
       ],
-      grade,
+      grade, relatedGrades, faqItems,
       products:   result.products,
       total:      result.total,
       page:       result.page,
@@ -242,6 +250,9 @@ async function groupPage(req, res, next) {
       filenameCandidates: [`Лента по назначению - ${group.name}`, `Лента по назначению — ${group.name}`],
       h1Candidates: [groupSeo.h1, group.name],
     });
+    const faqItems = (() => {
+      try { return JSON.parse(group.faq_json || '[]'); } catch (_) { return []; }
+    })();
     base(res, {
       _template: 'catalog/lenta/group.html',
       title:           groupSeo.title,
@@ -253,6 +264,7 @@ async function groupPage(req, res, next) {
         { name: group.name, url: pageUrl },
       ],
       group, gradesInGroup, topGrades: gradesInGroup.slice(0, 8),
+      faqItems,
       products:   result.products,
       total:      result.total,
       page:       result.page,
