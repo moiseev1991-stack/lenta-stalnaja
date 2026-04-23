@@ -41,6 +41,18 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 </head>
 <body>
+  <!-- Region bar -->
+  <div class="region-bar" id="regionBar">
+    <div class="container">
+      <span class="region-bar__label">Ваш регион:</span>
+      <div class="region-bar__cities">
+        <button class="region-btn" data-region="nn">Нижний Новгород</button>
+        <button class="region-btn" data-region="msk">Москва</button>
+        <button class="region-btn" data-region="spb">Санкт-Петербург</button>
+      </div>
+      <span class="region-bar__address" id="regionBarAddress"></span>
+    </div>
+  </div>
   <header class="header">
     <div class="container">
       <a href="/" class="logo">
@@ -87,7 +99,7 @@
         <a href="/contacts/">Контакты</a>
       </nav>
       <div class="header-contacts">
-        <a href="tel:+78001000874" class="header-contacts__phone">+7 (800) 100-08-74</a>
+        <a href="tel:+78312119618" class="header-contacts__phone" id="headerPhone">+7 (831) 211-96-18</a>
         <a href="mailto:corp-metalinvest01265@yandex.ru" class="header-contacts__email">corp-metalinvest01265@yandex.ru</a>
       </div>
       <div class="header-cta">
@@ -125,7 +137,7 @@
       <a href="/contacts/">Контакты</a>
     </nav>
     <div class="mobile-menu-contacts">
-      <a href="tel:+78001000874" class="mobile-menu-contacts__phone">+7 (800) 100-08-74</a>
+      <a href="tel:+78312119618" class="mobile-menu-contacts__phone" id="mobileHeaderPhone">+7 (831) 211-96-18</a>
       <a href="mailto:corp-metalinvest01265@yandex.ru" class="mobile-menu-contacts__email">corp-metalinvest01265@yandex.ru</a>
     </div>
     <div class="mobile-menu-cta">
@@ -238,21 +250,25 @@
     </div>
     <section class="map-section">
       <div class="container">
+        <div class="map-section__tabs" id="mapSectionTabs">
+          <button class="map-tab" data-region="nn">Нижний Новгород</button>
+          <button class="map-tab" data-region="msk">Москва</button>
+          <button class="map-tab" data-region="spb">Санкт-Петербург</button>
+        </div>
         <div class="map-section__layout">
           <div class="map-section__info">
             <h2 class="map-section__title">Как нас найти</h2>
-            <p class="map-section__address">
-              Нижний Новгород,<br>Московское ш., 320Б, корп. 1
-            </p>
+            <p class="map-section__address" id="mapAddress">Нижний Новгород,<br>Московское ш., 52, корп. 4</p>
             <ul class="map-section__details">
-              <li>+7 (800) 100-08-74</li>
+              <li><a href="tel:+78312119618" class="map-section__phone-link" id="mapPhone">+7 (831) 211-96-18</a></li>
               <li>пн–пт 9:00–18:00</li>
             </ul>
-            <a href="/contacts/" class="btn btn-primary btn-sm">Написать нам</a>
+            <a href="https://yandex.com/maps/-/CPGAeGkz" class="btn btn-primary btn-sm map-section__directions" id="mapDirectionsBtn" target="_blank" rel="noopener">Построить маршрут →</a>
+            <a href="/contacts/" class="btn btn-outline btn-sm" style="margin-top:0.5rem">Написать нам</a>
           </div>
           <div class="map-section__map">
-            <iframe
-              src="https://yandex.ru/map-widget/v1/?ll=43.831032%2C56.306230&z=16&pt=43.831032%2C56.306230,pm2rdl&l=map"
+            <iframe id="mapIframe"
+              src="https://yandex.ru/map-widget/v1/-/CPGAeGkz"
               width="100%" height="360" frameborder="0" allowfullscreen
               title="Схема проезда"></iframe>
           </div>
@@ -285,9 +301,9 @@
       </div>
       {% endif %}
       <p>&copy; Лента стальная — каталог металлопроката</p>
-      <p class="footer-address">Нижний Новгород, Московское ш., 320Б, корп. 1</p>
+      <p class="footer-address" id="footerAddress">Нижний Новгород, Московское ш., 52, корп. 4</p>
       <div class="footer-contacts">
-        <a href="tel:+78001000874" class="footer-contacts__phone">+7 (800) 100-08-74</a>
+        <a href="tel:+78312119618" class="footer-contacts__phone" id="footerPhone">+7 (831) 211-96-18</a>
         <a href="mailto:corp-metalinvest01265@yandex.ru" class="footer-contacts__email">corp-metalinvest01265@yandex.ru</a>
       </div>
       <nav>
@@ -377,5 +393,119 @@
   </script>
   <script src="/js/hero-collage.js" defer></script>
   {% block body_end %}{% endblock %}
+  <script>
+  (function() {
+    var REGIONS = {
+      nn: {
+        name: 'Нижний Новгород',
+        addressShort: 'Московское ш., 52, корп. 4',
+        addressFull: 'Нижний Новгород,<br>Московское ш., 52, корп. 4',
+        addressText: 'Нижний Новгород, Московское ш., 52, корп. 4',
+        phone: '+7 (831) 211-96-18',
+        phoneTel: '+78312119618',
+        mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeGkz',
+        mapsLink: 'https://yandex.com/maps/-/CPGAeGkz'
+      },
+      msk: {
+        name: 'Москва',
+        addressShort: 'Рябиновая ул., 26, стр. 2',
+        addressFull: 'Москва,<br>Рябиновая ул., 26, стр. 2',
+        addressText: 'Москва, Рябиновая ул., 26, стр. 2',
+        phone: '+7 (495) 023-88-60',
+        phoneTel: '+74950238860',
+        mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeLY1',
+        mapsLink: 'https://yandex.com/maps/-/CPGAeLY1'
+      },
+      spb: {
+        name: 'Санкт-Петербург',
+        addressShort: 'ул. Центральная, 1, лит. А',
+        addressFull: 'Санкт-Петербург,<br>ул. Центральная, 1, лит. А (Металлострой)',
+        addressText: 'Санкт-Петербург, ул. Центральная, 1, лит. А',
+        phone: '+7 (812) 426-56-37',
+        phoneTel: '+78124265637',
+        mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAiVJ7',
+        mapsLink: 'https://yandex.com/maps/-/CPGAiVJ7'
+      }
+    };
+
+    function applyRegion(key) {
+      var r = REGIONS[key];
+      if (!r) return;
+
+      // Region bar
+      document.querySelectorAll('.region-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.region === key);
+      });
+      var barAddr = document.getElementById('regionBarAddress');
+      if (barAddr) barAddr.textContent = r.addressShort;
+
+      // Header phone
+      var hp = document.getElementById('headerPhone');
+      if (hp) { hp.href = 'tel:' + r.phoneTel; hp.textContent = r.phone; }
+      var mhp = document.getElementById('mobileHeaderPhone');
+      if (mhp) { mhp.href = 'tel:' + r.phoneTel; mhp.textContent = r.phone; }
+
+      // Map section tabs
+      document.querySelectorAll('#mapSectionTabs .map-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.region === key);
+      });
+      var mapAddr = document.getElementById('mapAddress');
+      if (mapAddr) mapAddr.innerHTML = r.addressFull;
+      var mapPhone = document.getElementById('mapPhone');
+      if (mapPhone) { mapPhone.href = 'tel:' + r.phoneTel; mapPhone.textContent = r.phone; }
+      var mapIframe = document.getElementById('mapIframe');
+      if (mapIframe && mapIframe.dataset.loaded !== key) {
+        mapIframe.src = r.mapWidget;
+        mapIframe.dataset.loaded = key;
+      }
+      var mapDir = document.getElementById('mapDirectionsBtn');
+      if (mapDir) mapDir.href = r.mapsLink;
+
+      // Footer
+      var fa = document.getElementById('footerAddress');
+      if (fa) fa.textContent = r.addressText;
+      var fp = document.getElementById('footerPhone');
+      if (fp) { fp.href = 'tel:' + r.phoneTel; fp.textContent = r.phone; }
+
+      // Contacts page panels (if present)
+      document.querySelectorAll('.contacts-region-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.region === key);
+      });
+      document.querySelectorAll('.contacts-region-panel').forEach(function(panel) {
+        panel.classList.toggle('active', panel.dataset.region === key);
+      });
+
+      try { localStorage.setItem('region', key); } catch(e) {}
+    }
+
+    function initRegion() {
+      var saved = 'nn';
+      try { saved = localStorage.getItem('region') || 'nn'; } catch(e) {}
+      if (!REGIONS[saved]) saved = 'nn';
+      applyRegion(saved);
+
+      // Region bar buttons
+      document.querySelectorAll('.region-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { applyRegion(btn.dataset.region); });
+      });
+
+      // Map section tabs
+      document.querySelectorAll('#mapSectionTabs .map-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() { applyRegion(btn.dataset.region); });
+      });
+
+      // Contacts page tabs (if present)
+      document.querySelectorAll('.contacts-region-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() { applyRegion(btn.dataset.region); });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initRegion);
+    } else {
+      initRegion();
+    }
+  })();
+  </script>
 </body>
 </html>

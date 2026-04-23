@@ -2,10 +2,72 @@
 {% block content %}
 <div class="page-content">
   <h1>{{ h1 }}</h1>
-  
+
+  <h2 style="font-size:1.1rem;margin:0 0 1rem;">Самовывоз и отгрузка</h2>
+
+  <div class="contacts-regions">
+    <div class="contacts-regions__tabs">
+      <button class="contacts-region-tab" data-region="nn">Нижний Новгород</button>
+      <button class="contacts-region-tab" data-region="msk">Москва</button>
+      <button class="contacts-region-tab" data-region="spb">Санкт-Петербург</button>
+    </div>
+
+    <!-- НН -->
+    <div class="contacts-region-panel" data-region="nn">
+      <div class="contacts-region-info">
+        <h3>Адрес</h3>
+        <p class="region-address">Нижний Новгород, Московское ш., 52, корп. 4</p>
+        <a href="tel:+78312119618" class="region-phone-link">+7 (831) 211-96-18</a>
+        <p class="region-hours">пн–пт 9:00–18:00</p>
+        <a href="https://yandex.com/maps/-/CPGAeGkz" class="region-directions" target="_blank" rel="noopener">
+          Построить маршрут →
+        </a>
+      </div>
+      <div class="contacts-region-map">
+        <iframe src="https://yandex.ru/map-widget/v1/-/CPGAeGkz"
+          width="100%" height="320" frameborder="0" allowfullscreen
+          title="Нижний Новгород — схема проезда" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- МСК -->
+    <div class="contacts-region-panel" data-region="msk">
+      <div class="contacts-region-info">
+        <h3>Адрес</h3>
+        <p class="region-address">Москва, Рябиновая ул., 26, стр. 2</p>
+        <a href="tel:+74950238860" class="region-phone-link">+7 (495) 023-88-60</a>
+        <p class="region-hours">пн–пт 9:00–18:00</p>
+        <a href="https://yandex.com/maps/-/CPGAeLY1" class="region-directions" target="_blank" rel="noopener">
+          Построить маршрут →
+        </a>
+      </div>
+      <div class="contacts-region-map">
+        <iframe src="https://yandex.ru/map-widget/v1/-/CPGAeLY1"
+          width="100%" height="320" frameborder="0" allowfullscreen
+          title="Москва — схема проезда" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- СПБ -->
+    <div class="contacts-region-panel" data-region="spb">
+      <div class="contacts-region-info">
+        <h3>Адрес</h3>
+        <p class="region-address">Санкт-Петербург, ул. Центральная, 1, лит. А (Металлострой)</p>
+        <a href="tel:+78124265637" class="region-phone-link">+7 (812) 426-56-37</a>
+        <p class="region-hours">пн–пт 9:00–18:00</p>
+        <a href="https://yandex.com/maps/-/CPGAiVJ7" class="region-directions" target="_blank" rel="noopener">
+          Построить маршрут →
+        </a>
+      </div>
+      <div class="contacts-region-map">
+        <iframe src="https://yandex.ru/map-widget/v1/-/CPGAiVJ7"
+          width="100%" height="320" frameborder="0" allowfullscreen
+          title="Санкт-Петербург — схема проезда" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="margin-bottom: 1.5rem;">
-    <p><strong>Адрес:</strong> Нижний Новгород, Московское ш., 320Б, корп. 1</p>
-    <p><strong>Телефон:</strong> <a href="tel:+78001000874">+7 (800) 100-08-74</a></p>
     <p><strong>Email:</strong> <a href="mailto:corp-metalinvest01265@yandex.ru">corp-metalinvest01265@yandex.ru</a></p>
     <p><strong>Режим работы:</strong> пн–пт 9:00–18:00</p>
   </div>

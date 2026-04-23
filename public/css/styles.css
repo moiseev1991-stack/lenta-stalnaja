@@ -1404,6 +1404,241 @@ body.menu-open .mobile-menu { display: block; }
 }
 .product-card__admin-edit:hover { background: #d97706; color: #fff !important; }
 
+/* ── Region bar ──────────────────────────────────────────────── */
+.region-bar {
+  background: #1a3a1a;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.8125rem;
+  padding: 0.4rem 0;
+  position: relative;
+  z-index: 200;
+}
+
+.region-bar .container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.region-bar__label {
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+.region-bar__cities {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.region-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.8125rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.region-btn:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+.region-btn.active {
+  background: #2e7d32;
+  color: #fff;
+  font-weight: 500;
+}
+
+.region-bar__address {
+  margin-left: auto;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .region-bar__address { display: none; }
+  .region-bar .container { gap: 0.5rem; }
+}
+
+/* ── Map section tabs ────────────────────────────────────────── */
+.map-section__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.map-tab {
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.map-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.map-tab.active {
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: #fff;
+}
+
+.map-section__phone-link {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.map-section__phone-link:hover { text-decoration: underline; }
+
+.map-section__directions {
+  display: inline-block;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* ── Contacts region block ───────────────────────────────────── */
+.contacts-regions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.contacts-regions__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.contacts-region-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.contacts-region-tab:hover { color: var(--text); background: var(--bg); }
+
+.contacts-region-tab.active {
+  color: #2e7d32;
+  border-bottom-color: #2e7d32;
+  background: var(--surface);
+}
+
+.contacts-region-panel {
+  display: none;
+}
+
+.contacts-region-panel.active {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 0;
+}
+
+.contacts-region-info {
+  padding: 1.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.contacts-region-info h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+.contacts-region-info .region-address {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.contacts-region-info .region-phone-link {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 0.25rem;
+  text-decoration: none;
+}
+
+.contacts-region-info .region-phone-link:hover { text-decoration: underline; }
+
+.contacts-region-info .region-hours {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+}
+
+.contacts-region-info .region-directions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.contacts-region-info .region-directions:hover { background: #1b5e20; text-decoration: none; }
+
+.contacts-region-map {
+  line-height: 0;
+}
+
+.contacts-region-map iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: none;
+}
+
+@media (max-width: 640px) {
+  .contacts-region-panel.active {
+    grid-template-columns: 1fr;
+  }
+  .contacts-region-info {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .contacts-regions__tabs { flex-wrap: wrap; }
+  .contacts-region-tab { flex: none; }
+}
+
 /* ── Map section ─────────────────────────────────────────────── */
 .map-section {
   background: var(--surface);
