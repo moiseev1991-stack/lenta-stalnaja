@@ -23,6 +23,27 @@ function buildLoc(baseUrl, ...segments) {
   }
 }
 
+// Slug'и, которые соответствуют редиректам / служебным / 404 роутам.
+// Они НЕ должны попадать в sitemap, даже если БД содержит запись с таким slug:
+//   - lenta, catalog, group, product, list — 301-редиректы или 404 в routes/public.js
+//   - admin, search, sitemap, robots.txt, download, lead — служебные
+// Валидные статические страницы (about/contacts/…) в этот список НЕ входят —
+// они уже добавлены явно в начале списка urls.
+const RESERVED_TOP_LEVEL_SLUGS = new Set([
+  'lenta', 'catalog', 'group', 'product', 'list',
+  'admin', 'search', 'sitemap', 'sitemap.xml', 'robots.txt',
+  'download', 'lead',
+]);
+
+function isReservedTopLevelLoc(loc) {
+  if (!loc) return false;
+  try {
+    const segs = new URL(loc).pathname.split('/').filter(Boolean);
+    if (segs.length !== 1) return false;
+    return RESERVED_TOP_LEVEL_SLUGS.has(segs[0].toLowerCase());
+  } catch (_) { return false; }
+}
+
 function finalizeUrls(urls, fallbackLastmod) {
   const seen = new Set();
   return urls.filter((u) => {
@@ -30,6 +51,7 @@ function finalizeUrls(urls, fallbackLastmod) {
     if (seen.has(u.loc)) return false;
     if (u.loc.length > 2048) return false;
     if (!/^https?:\/\//.test(u.loc)) return false;
+    if (isReservedTopLevelLoc(u.loc)) return false;
     seen.add(u.loc);
     if (!u.lastmod) u.lastmod = fallbackLastmod;
     return true;

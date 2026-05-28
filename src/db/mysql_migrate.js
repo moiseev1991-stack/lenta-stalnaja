@@ -2,15 +2,14 @@ const pool = require('./mysql');
 const bcrypt = require('bcryptjs');
 const config = require('../config');
 
-// Detect Cyrillic UTF-8 bytes misread as Windows-1251 ("mojibake").
-// Two signals:
-//   1. Latin-1 supplement chars U+0080-U+00FF mixed in (e.g. °, ¾, ») —
-//      these are 0xBx/0xCx low-bytes of Cyrillic UTF-8 sequences.
-//   2. Р or С makes up >25 % of all chars — in mojibake every Cyrillic
-//      char becomes "Р[x]" or "С[x]"; real Russian text has <5 % Р/С.
+// Detect Cyrillic UTF-8 bytes misread as Latin-1 / Windows-1251 ("mojibake").
+// Real mojibake has a specific signature: cyrillic UTF-8 starts with bytes
+// 0xD0/0xD1, which read as Latin-1 become "Ð"/"Ñ" followed by
+// another Latin-1 byte. So we look for the PAIR, not any single Latin-1 char
+// (× ° ² ³ are legitimate in titles like "0.5×100 мм").
 function isMojibake(s) {
   if (!s || s.length < 4) return false;
-  if (/[-ÿ]/.test(s)) return true;
+  if (/[ÐÑ][-ÿ]/.test(s)) return true;
   const pc = (s.match(/[РС]/g) || []).length;
   return pc / s.length > 0.25;
 }
@@ -170,7 +169,9 @@ async function runMysqlMigrations() {
 
   // ── SEO: update home title and meta description ───────────────────────────
   try {
-    const HOME_TITLE = 'Лента стальная купить оптом — все марки, доставка по России | lenta-stalnaja.ru';
+    // 60 символов — оптимальный размер для SERP без обрезки.
+    // Бренд дублируется в JSON-LD WebSite/Organization (см. layout.html).
+    const HOME_TITLE = 'Лента стальная купить оптом — все марки, доставка по России';
     const HOME_DESC  = 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: 8-800-100-08-74.';
     await pool.query(
       'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
@@ -179,6 +180,35 @@ async function runMysqlMigrations() {
     await pool.query(
       'INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
       ['home_meta_description', HOME_DESC, HOME_DESC]
+    );
+
+    // Дефолтный FAQ для главной (рендерится как FAQPage JSON-LD + видимый блок).
+    // Пишется ТОЛЬКО если ключа ещё нет (INSERT IGNORE) — не перезаписывает ручную правку.
+    const HOME_FAQ = JSON.stringify([
+      {
+        question: 'Какие марки стальной ленты есть в наличии?',
+        answer:  'В каталоге представлены все основные марки: коррозионностойкие (12Х18Н10Т, 08Х18Н10, 20Х13, 10Х17Н13М3Т), рессорно-пружинные (65Г), нихромовые (Х20Н80, Х15Н60), фехралевые (Х23Ю5, Х23Ю5Т), жаропрочные (ХН78Т) и прецизионные сплавы (36НХТЮ, 40КХНМ, 29НК и др.). Всего более 7000 типоразмеров.',
+      },
+      {
+        question: 'Делаете ли вы нарезку ленты в нужный размер?',
+        answer:  'Да, нарезаем ленту в любой размер по толщине и ширине от 1 рулона. Срок изготовления — 1–3 рабочих дня в зависимости от объёма заказа. Точность реза соответствует требованиям ГОСТ.',
+      },
+      {
+        question: 'Как осуществляется доставка по России?',
+        answer:  'Отправляем транспортными компаниями (ПЭК, Деловые Линии, ТК Кит, СДЭК) во все регионы РФ. Срок доставки — от 1 до 10 дней в зависимости от региона. Также возможен самовывоз со склада в Нижнем Новгороде (Московское ш., 320Б).',
+      },
+      {
+        question: 'Как рассчитать стоимость заказа и оформить покупку?',
+        answer:  'Позвоните по телефону 8-800-100-08-74 (бесплатно по РФ) или оставьте заявку на сайте — менеджер рассчитает стоимость в течение 15 минут. Работаем как с юридическими лицами (безналичный расчёт с НДС и без), так и с физическими лицами.',
+      },
+      {
+        question: 'Какие ГОСТы и нормативы поддерживаются?',
+        answer:  'Поставляем ленту по ГОСТ 4986-79 (нержавеющая), ГОСТ 2283-79 (пружинная), ГОСТ 12766.1-90 и 12766.2-90 (для сплавов с высоким электросопротивлением), ГОСТ 10994-74 (прецизионные сплавы). По запросу предоставляем сертификаты соответствия.',
+      },
+    ]);
+    await pool.query(
+      'INSERT IGNORE INTO settings (`key`, value) VALUES (?, ?)',
+      ['home_faq_json', HOME_FAQ]
     );
   } catch (_) {}
 

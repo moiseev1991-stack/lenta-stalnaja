@@ -106,15 +106,14 @@ const lentaService = require('./services/lenta');
 const FALLBACK_SITE_NAME =
   '\u041b\u0435\u043d\u0442\u0430 \u0441\u0442\u0430\u043b\u044c\u043d\u0430\u044f \u2014 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \u043c\u0435\u0442\u0430\u043b\u043b\u043e\u043f\u0440\u043e\u043a\u0430\u0442\u0430';
 
-// Detect Cyrillic UTF-8 bytes misread as Windows-1251 ("mojibake").
-// Two signals:
-//   1. Latin-1 supplement chars U+0080-U+00FF mixed in (e.g. °, ¾, ») —
-//      these are 0xBx/0xCx low-bytes of Cyrillic UTF-8 sequences.
-//   2. Р or С makes up >25 % of all chars — in mojibake every Cyrillic
-//      char becomes "Р[x]" or "С[x]"; real Russian text has <5 % Р/С.
+// Detect Cyrillic UTF-8 bytes misread as Latin-1 / Windows-1251 ("mojibake").
+// Real mojibake has a specific signature: cyrillic UTF-8 starts with bytes
+// 0xD0/0xD1, which read as Latin-1 become "Ð"/"Ñ" followed by
+// another Latin-1 byte. So we look for the PAIR, not any single Latin-1 char
+// (× ° ² ³ are legitimate in titles like "0.5×100 мм").
 function isMojibake(s) {
   if (!s || s.length < 4) return false;
-  if (/[-ÿ]/.test(s)) return true;
+  if (/[ÐÑ][-ÿ]/.test(s)) return true;
   const pc = (s.match(/[РС]/g) || []).length;
   return pc / s.length > 0.25;
 }
@@ -269,6 +268,17 @@ app.use(async (req, res, next) => {
     res.locals.isAdmin    = !!(req.session && req.session.adminUserId);
     next();
   }
+});
+
+// Любая страница с UTM / рекламными трекерами должна быть noindex,follow,
+// иначе плодятся дубли в индексе. Контроллеры могут перезаписать res.locals.robots
+// если ставят свой (например, у фильтрованных страниц уже стоит noindex,follow).
+const TRACKER_PARAMS = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid','fbclid','yclid','ymclid','msclkid','mc_cid','mc_eid','from','ref'];
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) return next();
+  const hasTracker = TRACKER_PARAMS.some(p => Object.prototype.hasOwnProperty.call(req.query, p));
+  if (hasTracker) res.locals.robots = 'noindex,follow';
+  next();
 });
 
 app.use('/', require('./routes/public'));

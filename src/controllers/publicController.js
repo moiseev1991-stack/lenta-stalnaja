@@ -6,12 +6,14 @@ const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc } = require('../helpers/seoTemplates');
 
-// Returns the DB setting value, or fallback when empty or mojibake-garbled.
-// U+00C0-U+00FF = Latin letters (À-ÿ) that appear when UTF-8 Cyrillic is misread as Latin-1.
-// We do NOT flag U+0080-U+00BF because that range includes valid Russian punctuation: «»·×÷ etc.
+// Detect Cyrillic UTF-8 bytes misread as Latin-1 / Windows-1251 ("mojibake").
+// Real mojibake has a specific signature: cyrillic UTF-8 starts with bytes
+// 0xD0/0xD1, which read as Latin-1 become "Ð"/"Ñ" followed by
+// another Latin-1 byte. So we look for the PAIR, not any single Latin-1 char
+// (× ° ² ³ are legitimate in titles like "0.5×100 мм").
 function isMojibake(s) {
   if (!s || s.length < 4) return false;
-  if (/[\u00C0-\u00FF]/.test(s)) return true;
+  if (/[ÐÑ][-ÿ]/.test(s)) return true;
   const pc = (s.match(/[РС]/g) || []).length;
   return pc / s.length > 0.25;
 }
@@ -83,7 +85,7 @@ async function home(req, res, next) {
       .join('&');
 
     const [homeTitle, homeH1, homeMetaDesc, homeIntro, homeHtml, homeFaqRaw, categories] = await Promise.all([
-      getSetting('home_title', 'Лента стальная купить оптом — все марки, доставка по России | lenta-stalnaja.ru'),
+      getSetting('home_title', 'Лента стальная купить оптом — все марки, доставка по России'),
       getSetting('home_h1', 'Каталог стальной ленты — более 7000 типоразмеров в наличии'),
       getSetting('home_meta_description', 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: 8-800-100-08-74.'),
       getSetting('home_intro', ''),
