@@ -1,14 +1,24 @@
 const pool = require('../db/mysql');
 const config = require('../config');
 
+const PRODUCTS_PER_CHUNK = 5000;
+
 function toLastmod(dateLike) {
   const date = new Date(dateLike);
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString().slice(0, 10);
 }
 
-function buildLoc(baseUrl, ...segments) {
-  const rawBase = String(baseUrl || '').trim().replace(/\/+$/, '');
+function todayLastmod() {
+  return toLastmod(new Date()) || '2026-01-01';
+}
+
+function baseUrl() {
+  return String(config.siteUrl || '').replace(/\/+$/, '');
+}
+
+function buildLoc(base, ...segments) {
+  const rawBase = String(base || '').trim().replace(/\/+$/, '');
   const normalizedBase = /^https?:\/\//i.test(rawBase) ? rawBase : ('https://' + rawBase);
   const cleanSegments = segments
     .filter(Boolean)
@@ -24,15 +34,10 @@ function buildLoc(baseUrl, ...segments) {
 }
 
 // Slug'и, которые соответствуют редиректам / служебным / 404 роутам.
-// Они НЕ должны попадать в sitemap, даже если БД содержит запись с таким slug:
-//   - lenta, catalog, group, product, list — 301-редиректы или 404 в routes/public.js
-//   - admin, search, sitemap, robots.txt, download, lead — служебные
-// Валидные статические страницы (about/contacts/…) в этот список НЕ входят —
-// они уже добавлены явно в начале списка urls.
 const RESERVED_TOP_LEVEL_SLUGS = new Set([
   'lenta', 'catalog', 'group', 'product', 'list',
   'admin', 'search', 'sitemap', 'sitemap.xml', 'robots.txt',
-  'download', 'lead',
+  'download', 'lead', 'yml.xml',
 ]);
 
 function isReservedTopLevelLoc(loc) {
@@ -58,20 +63,21 @@ function finalizeUrls(urls, fallbackLastmod) {
   });
 }
 
-async function getSitemapUrls() {
-  const base  = config.siteUrl;
-  const today = toLastmod(new Date()) || '2026-01-01';
+// ── URL slices ────────────────────────────────────────────────────────────────
+
+async function getStaticUrls() {
+  const base  = baseUrl();
+  const today = todayLastmod();
   const urls = [
-    { loc: buildLoc(base),               changefreq: 'weekly',  priority: 1.0, lastmod: today },
-    { loc: buildLoc(base, 'about'),      changefreq: 'monthly', priority: 0.5, lastmod: today },
-    { loc: buildLoc(base, 'contacts'),   changefreq: 'monthly', priority: 0.5, lastmod: today },
-    { loc: buildLoc(base, 'delivery'),   changefreq: 'monthly', priority: 0.5, lastmod: today },
-    { loc: buildLoc(base, 'payment'),    changefreq: 'monthly', priority: 0.5, lastmod: today },
-    { loc: buildLoc(base, 'faq'),        changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base),                 changefreq: 'weekly',  priority: 1.0, lastmod: today },
+    { loc: buildLoc(base, 'about'),        changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'contacts'),     changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'delivery'),     changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'payment'),      changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'faq'),          changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'certificates'), changefreq: 'monthly', priority: 0.5, lastmod: today },
   ];
 
-  // MySQL: published categories
   try {
     const [categories] = await pool.query(
       'SELECT slug, updated_at FROM categories WHERE is_published = 1 ORDER BY slug'
@@ -86,7 +92,6 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // MySQL: published landing pages with robots=index
   try {
     const [landings] = await pool.query(`
       SELECT lp.slug, lp.updated_at, lp.robots, c.slug AS cat_slug
@@ -107,9 +112,17 @@ async function getSitemapUrls() {
     });
   } catch (_) {}
 
-  // Grade pages (марки) — priority 0.9
+  return finalizeUrls(urls, today);
+}
+
+async function getGradeUrls() {
+  const base  = baseUrl();
+  const today = todayLastmod();
+  const urls = [];
   try {
-    const [grades] = await pool.query('SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM grades ORDER BY slug');
+    const [grades] = await pool.query(
+      'SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM grades ORDER BY slug'
+    );
     grades.forEach(g => {
       urls.push({
         loc: buildLoc(base, g.slug),
@@ -119,10 +132,17 @@ async function getSitemapUrls() {
       });
     });
   } catch (_) {}
+  return finalizeUrls(urls, today);
+}
 
-  // Group pages (назначения) — priority 0.8
+async function getGroupUrls() {
+  const base  = baseUrl();
+  const today = todayLastmod();
+  const urls = [];
   try {
-    const [groups] = await pool.query('SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM `groups` ORDER BY slug');
+    const [groups] = await pool.query(
+      'SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM `groups` ORDER BY slug'
+    );
     groups.forEach(g => {
       urls.push({
         loc: buildLoc(base, g.slug),
@@ -132,15 +152,34 @@ async function getSitemapUrls() {
       });
     });
   } catch (_) {}
+  return finalizeUrls(urls, today);
+}
 
-  // Product pages — priority 0.7
+async function getProductCount() {
+  try {
+    const [[row]] = await pool.query(`
+      SELECT COUNT(*) AS c
+      FROM products p
+      JOIN grades gr ON p.grade_id = gr.id
+      WHERE gr.slug IS NOT NULL AND gr.slug != ''
+    `);
+    return Number(row.c) || 0;
+  } catch (_) { return 0; }
+}
+
+async function getProductUrls(offset = 0, limit = PRODUCTS_PER_CHUNK) {
+  const base  = baseUrl();
+  const today = todayLastmod();
+  const urls = [];
   try {
     const [products] = await pool.query(`
       SELECT p.slug, p.updated_at, gr.slug AS grade_slug
       FROM products p
       JOIN grades gr ON p.grade_id = gr.id
+      WHERE gr.slug IS NOT NULL AND gr.slug != ''
       ORDER BY gr.slug, p.slug
-    `);
+      LIMIT ? OFFSET ?
+    `, [Number(limit), Number(offset)]);
     products.forEach(p => {
       urls.push({
         loc: buildLoc(base, p.grade_slug, p.slug),
@@ -150,8 +189,39 @@ async function getSitemapUrls() {
       });
     });
   } catch (_) {}
-
   return finalizeUrls(urls, today);
+}
+
+// ── Sitemap index ─────────────────────────────────────────────────────────────
+
+async function getSitemapIndex() {
+  const base  = baseUrl();
+  const today = todayLastmod();
+  const productCount  = await getProductCount();
+  const productChunks = Math.max(1, Math.ceil(productCount / PRODUCTS_PER_CHUNK));
+  const items = [
+    { loc: base + '/sitemap-static.xml', lastmod: today },
+    { loc: base + '/sitemap-grades.xml', lastmod: today },
+    { loc: base + '/sitemap-groups.xml', lastmod: today },
+  ];
+  for (let i = 1; i <= productChunks; i++) {
+    items.push({ loc: base + '/sitemap-products-' + i + '.xml', lastmod: today });
+  }
+  return items;
+}
+
+// ── Legacy aggregator (still used for /sitemap/ HTML page) ────────────────────
+
+async function getSitemapUrls() {
+  const [staticU, gradeU, groupU, prodCount] = await Promise.all([
+    getStaticUrls(), getGradeUrls(), getGroupUrls(), getProductCount(),
+  ]);
+  const chunks = Math.max(1, Math.ceil(prodCount / PRODUCTS_PER_CHUNK));
+  const productSlices = await Promise.all(
+    Array.from({ length: chunks }, (_, i) => getProductUrls(i * PRODUCTS_PER_CHUNK, PRODUCTS_PER_CHUNK))
+  );
+  const all = [...staticU, ...gradeU, ...groupU, ...productSlices.flat()];
+  return finalizeUrls(all, todayLastmod());
 }
 
 async function getSitemapHtmlLinks() {
@@ -159,4 +229,14 @@ async function getSitemapHtmlLinks() {
   return urls.map(u => ({ url: u.loc, label: u.loc.replace(config.siteUrl, '') || '/' }));
 }
 
-module.exports = { getSitemapUrls, getSitemapHtmlLinks };
+module.exports = {
+  PRODUCTS_PER_CHUNK,
+  getSitemapUrls,
+  getSitemapHtmlLinks,
+  getSitemapIndex,
+  getStaticUrls,
+  getGradeUrls,
+  getGroupUrls,
+  getProductCount,
+  getProductUrls,
+};

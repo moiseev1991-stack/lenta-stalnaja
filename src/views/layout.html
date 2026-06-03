@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="yandex-verification" content="8ffe9fcddb692a9f" />
+  <meta name="geo.region" content="RU-NIZ">
+  <meta name="geo.placename" content="Нижний Новгород">
+  <meta name="geo.position" content="56.2822;43.9806">
+  <meta name="ICBM" content="56.2822, 43.9806">
   <title>{% block title %}{{ (title | default(siteName)) | safeSiteName }}{% endblock %}</title>
   <!-- DEPLOY_CHECK_GLOBAL: git_sha={{ deployGitSha or 'unknown' }} boot_at={{ deployBootAt or 'unknown' }} -->
   {% if metaDescription %}<meta name="description" content="{{ metaDescription }}">{% endif %}
@@ -11,19 +15,24 @@
   {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
   <meta property="og:site_name" content="Лента стальная — каталог металлопроката">
   <meta property="og:type" content="{{ ogType | default('website') }}">
+  <meta property="og:locale" content="ru_RU">
   <meta property="og:title" content="{{ (title | default(siteName)) | safeSiteName }}">
   {% if metaDescription %}<meta property="og:description" content="{{ metaDescription }}">{% endif %}
   {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
   {% if ogImage %}<meta property="og:image" content="{{ ogImage }}">{% endif %}
+  {% if canonical %}<link rel="alternate" hreflang="ru" href="{{ canonical }}">{% endif %}
+  {% if canonical %}<link rel="alternate" hreflang="x-default" href="{{ canonical }}">{% endif %}
+  {% if showFullOrgSchema %}
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://lenta-stalnaja.ru/search/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
+{"@context":"https://schema.org","@type":"WebSite","@id":"https://lenta-stalnaja.ru/#website","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://lenta-stalnaja.ru/search/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
   </script>
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","logo":"https://lenta-stalnaja.ru/img/logo-icon.png","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"}}
+{"@context":"https://schema.org","@type":"Organization","@id":"https://lenta-stalnaja.ru/#organization","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","logo":"https://lenta-stalnaja.ru/img/logo-icon.png","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"}}
   </script>
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское шоссе, 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"},"geo":{"@type":"GeoCoordinates","latitude":56.2822,"longitude":43.9806},"openingHours":"Mo-Fr 09:00-18:00","priceRange":"$$"}
+{"@context":"https://schema.org","@type":"LocalBusiness","@id":"https://lenta-stalnaja.ru/#localbusiness","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское шоссе, 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"},"geo":{"@type":"GeoCoordinates","latitude":56.2822,"longitude":43.9806},"openingHours":"Mo-Fr 09:00-18:00","priceRange":"$$"}
   </script>
+  {% endif %}
   {% if breadcrumbs and breadcrumbs.length %}
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":{{ (siteUrl ~ "/") | json | safe }}}{% for b in breadcrumbs %},{"@type":"ListItem","position":{{ loop.index + 1 }},"name":{{ b.name | json | safe }},"item":{{ (siteUrl ~ b.url) | json | safe }}}{% endfor %}]}
@@ -39,6 +48,20 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109623356', 'ym');
+
+      ym(109623356, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/109623356" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </head>
 <body>
   <!-- Region bar -->

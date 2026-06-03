@@ -36,6 +36,16 @@ function getGradeShortDesc(mark) {
   return GRADE_SHORT_DESCS[mark] || 'специальный сплав для промышленного применения';
 }
 
+// mysql2 returns DECIMAL columns as strings ("10.000" / "0.0150"), which leak
+// into <title> and meta description as "0.015×10.000 мм". Coerce through Number
+// so JS strips trailing zeros to the shortest unambiguous form.
+function fmtMm(n) {
+  if (n == null || n === '') return '';
+  const num = Number(n);
+  if (!Number.isFinite(num)) return '';
+  return String(num);
+}
+
 // Known placeholder strings that should be treated as absent.
 const PLACEHOLDERS = new Set(['сам впишу', 'placeholder', 'todo', 'tbd', '-']);
 
@@ -128,8 +138,8 @@ function buildStateClause(state) {
  */
 function buildProductShortText(product) {
   const mark      = product.mark || '';
-  const thickness = product.thickness_mm != null ? String(product.thickness_mm) : '';
-  const width     = product.width_mm     != null ? String(product.width_mm)     : '';
+  const thickness = fmtMm(product.thickness_mm);
+  const width     = fmtMm(product.width_mm);
   const surface   = product.surface || '';
   const dims      = thickness && width ? `${thickness}×${width} мм` : (thickness || width ? `${thickness || width} мм` : '');
   const state = product.state    || '';
@@ -182,8 +192,8 @@ function buildProductShortText(product) {
  */
 function buildProductSEO(product, siteName) {
   const mark      = product.mark      || '';
-  const thickness = product.thickness_mm != null ? String(product.thickness_mm) : '';
-  const width     = product.width_mm     != null ? String(product.width_mm)     : '';
+  const thickness = fmtMm(product.thickness_mm);
+  const width     = fmtMm(product.width_mm);
   const dims      = thickness && width ? `${thickness}×${width} мм` : (thickness || width ? `${thickness || width} мм` : '');
   const state     = product.state    || '';
   const surface   = product.surface  || '';
@@ -276,4 +286,4 @@ function buildCategorySEO(siteName) {
   return { title, h1, metaDescription };
 }
 
-module.exports = { buildProductSEO, buildProductShortText, buildGradeSEO, buildGroupSEO, buildCategorySEO, getGradeShortDesc };
+module.exports = { buildProductSEO, buildProductShortText, buildGradeSEO, buildGroupSEO, buildCategorySEO, getGradeShortDesc, fmtMm };

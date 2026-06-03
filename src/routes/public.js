@@ -33,6 +33,11 @@ router.get('/certificates/', controller.certificates);
 router.get('/search/', controller.search);
 router.get('/sitemap/', controller.sitemapHtml);
 router.get('/sitemap.xml', controller.sitemapXml);
+router.get('/sitemap-static.xml', controller.sitemapStatic);
+router.get('/sitemap-grades.xml', controller.sitemapGrades);
+router.get('/sitemap-groups.xml', controller.sitemapGroups);
+router.get('/sitemap-products-:chunk(\\d+).xml', controller.sitemapProducts);
+router.get('/yml.xml', controller.ymlFeed);
 router.get('/robots.txt', controller.robotsTxt);
 router.post('/lead', controller.submitLead);
 

@@ -2,9 +2,10 @@ const config          = require('../config');
 const catalog         = require('../services/catalog');
 const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
+const ymlService      = require('../services/yml');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
-const { buildProductSEO, buildProductShortText, getGradeShortDesc } = require('../helpers/seoTemplates');
+const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
 
 // Detect Cyrillic UTF-8 bytes misread as Latin-1 / Windows-1251 ("mojibake").
 // Real mojibake has a specific signature: cyrillic UTF-8 starts with bytes
@@ -205,8 +206,8 @@ function escapeHtml(str) {
 
 function buildCompactProductDescription(product) {
   const mark = product.mark || '';
-  const thickness = product.thickness_mm != null ? `${product.thickness_mm}` : '';
-  const width = product.width_mm != null ? `${product.width_mm}` : '';
+  const thickness = fmtMm(product.thickness_mm);
+  const width = fmtMm(product.width_mm);
   const gradeShortDesc = getGradeShortDesc(mark);
 
   const parts = [];
@@ -535,7 +536,44 @@ async function sitemapHtml(req, res, next) {
 
 async function sitemapXml(req, res, next) {
   try {
-    const urls = await sitemapService.getSitemapUrls();
+    const sitemaps = await sitemapService.getSitemapIndex();
+    res.type('application/xml');
+    res.render('sitemap-index.xml.njk', { sitemaps });
+  } catch (err) { next(err); }
+}
+
+function makeChunkHandler(loader) {
+  return async function (req, res, next) {
+    try {
+      const urls = await loader(req);
+      res.type('application/xml');
+      res.render('sitemap.xml.njk', { urls, siteUrl: config.siteUrl });
+    } catch (err) { next(err); }
+  };
+}
+
+const sitemapStatic   = makeChunkHandler(() => sitemapService.getStaticUrls());
+const sitemapGrades   = makeChunkHandler(() => sitemapService.getGradeUrls());
+const sitemapGroups   = makeChunkHandler(() => sitemapService.getGroupUrls());
+
+async function ymlFeed(req, res, next) {
+  try {
+    const xml = await ymlService.buildYmlFeed();
+    res.type('application/xml');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(xml);
+  } catch (err) { next(err); }
+}
+
+async function sitemapProducts(req, res, next) {
+  try {
+    const chunkIdx = parseInt(req.params.chunk, 10);
+    if (!Number.isInteger(chunkIdx) || chunkIdx < 1) return next();
+    const total  = await sitemapService.getProductCount();
+    const chunks = Math.max(1, Math.ceil(total / sitemapService.PRODUCTS_PER_CHUNK));
+    if (chunkIdx > chunks) return next();
+    const offset = (chunkIdx - 1) * sitemapService.PRODUCTS_PER_CHUNK;
+    const urls = await sitemapService.getProductUrls(offset, sitemapService.PRODUCTS_PER_CHUNK);
     res.type('application/xml');
     res.render('sitemap.xml.njk', { urls, siteUrl: config.siteUrl });
   } catch (err) { next(err); }
@@ -594,5 +632,7 @@ module.exports = {
   genericCatalogPage, productBySlugPage,
   about, contacts, delivery, payment, faq, certificates,
   search, sitemapHtml, sitemapXml, robotsTxt, submitLead,
+  sitemapStatic, sitemapGrades, sitemapGroups, sitemapProducts,
+  ymlFeed,
   parseFilters, hasFilters, renderPage,
 };

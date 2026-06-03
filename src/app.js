@@ -198,9 +198,11 @@ function fixMojibakeInHtml(body) {
   if (typeof body !== 'string') return body;
   let out = body;
   const deployMarker = `<!-- DEPLOY_CHECK_RUNTIME: git_sha=${config.deployGitSha || 'unknown'} boot_at=${config.deployBootAt || 'unknown'} -->`;
-  if (!out.includes('DEPLOY_CHECK_RUNTIME:')) {
-    if (out.includes('</head>')) out = out.replace('</head>', `  ${deployMarker}\n</head>`);
-    else out = `${deployMarker}\n${out}`;
+  // Inject deploy marker ONLY into HTML — XML (sitemap, yml) and plain text
+  // (robots.txt) are corrupted by a leading HTML comment: an XML declaration
+  // must be at byte 0, and robots.txt parsers treat the comment as content.
+  if (out.includes('</head>') && !out.includes('DEPLOY_CHECK_RUNTIME:')) {
+    out = out.replace('</head>', `  ${deployMarker}\n</head>`);
   }
   if (out.includes(MOJIBAKE_SITE)) {
     out = out.split(MOJIBAKE_SITE).join(FALLBACK_SITE_NAME);
@@ -242,8 +244,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Show full Organization/LocalBusiness/WebSite JSON-LD only on entry pages
+// where Yandex/Google look for company info. On other pages this saves
+// ~3 KB per response and avoids "Org repeated 9000 times" signal.
+const FULL_ORG_SCHEMA_PATHS = new Set(['/', '/contacts/', '/about/']);
+
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/admin')) return next();
+  res.locals.showFullOrgSchema = FULL_ORG_SCHEMA_PATHS.has(req.path);
   try {
     const [menuGrades, menuGroups] = await Promise.all([
       lentaService.getAllGrades(),

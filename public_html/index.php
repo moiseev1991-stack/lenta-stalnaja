@@ -495,6 +495,14 @@ curl_setopt_array($ch, [
     CURLOPT_UNIX_SOCKET_PATH => NODE_SOCKET,  // bypass network namespace isolation
 ]);
 
+// HEAD requests must tell cURL "no body expected" — otherwise cURL waits
+// for body bytes that Node (per RFC 7231) will never send and times out → 503.
+// Yandex/Google bots probe URLs with HEAD before full crawl, so this single
+// option determines whether they can index the catalog at all.
+if ($method === 'HEAD') {
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+}
+
 // Forward request body (POST / PUT / PATCH)
 $isMultipart = false;
 if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
