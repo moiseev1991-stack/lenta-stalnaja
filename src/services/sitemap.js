@@ -115,43 +115,49 @@ async function getStaticUrls() {
   return finalizeUrls(urls, today);
 }
 
+// Robust against stale schema: if updated_at column is missing,
+// fall back to slug-only query so the sub-sitemap is never silently empty.
+async function querySlugsWithLastmod(table) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT slug, updated_at AS lastmod_at FROM ${table} ORDER BY slug`
+    );
+    return rows;
+  } catch (err) {
+    console.error(`[sitemap] ${table} updated_at query failed: ${err.code || ''} ${err.message}`);
+    try {
+      const [rows] = await pool.query(`SELECT slug, NULL AS lastmod_at FROM ${table} ORDER BY slug`);
+      return rows;
+    } catch (err2) {
+      console.error(`[sitemap] ${table} slug-only query failed: ${err2.code || ''} ${err2.message}`);
+      return [];
+    }
+  }
+}
+
 async function getGradeUrls() {
   const base  = baseUrl();
   const today = todayLastmod();
-  const urls = [];
-  try {
-    const [grades] = await pool.query(
-      'SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM grades ORDER BY slug'
-    );
-    grades.forEach(g => {
-      urls.push({
-        loc: buildLoc(base, g.slug),
-        changefreq: 'weekly',
-        priority: 0.9,
-        lastmod: toLastmod(g.lastmod_at) || today,
-      });
-    });
-  } catch (_) {}
+  const grades = await querySlugsWithLastmod('grades');
+  const urls = grades.map(g => ({
+    loc: buildLoc(base, g.slug),
+    changefreq: 'weekly',
+    priority: 0.9,
+    lastmod: toLastmod(g.lastmod_at) || today,
+  }));
   return finalizeUrls(urls, today);
 }
 
 async function getGroupUrls() {
   const base  = baseUrl();
   const today = todayLastmod();
-  const urls = [];
-  try {
-    const [groups] = await pool.query(
-      'SELECT slug, COALESCE(updated_at, created_at) AS lastmod_at FROM `groups` ORDER BY slug'
-    );
-    groups.forEach(g => {
-      urls.push({
-        loc: buildLoc(base, g.slug),
-        changefreq: 'weekly',
-        priority: 0.8,
-        lastmod: toLastmod(g.lastmod_at) || today,
-      });
-    });
-  } catch (_) {}
+  const groups = await querySlugsWithLastmod('`groups`');
+  const urls = groups.map(g => ({
+    loc: buildLoc(base, g.slug),
+    changefreq: 'weekly',
+    priority: 0.8,
+    lastmod: toLastmod(g.lastmod_at) || today,
+  }));
   return finalizeUrls(urls, today);
 }
 

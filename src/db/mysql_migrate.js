@@ -160,6 +160,10 @@ async function runMysqlMigrations() {
     `ALTER TABLE settings MODIFY COLUMN value LONGTEXT`,
     `ALTER TABLE grades ADD COLUMN key_specs_html LONGTEXT NULL`,
     `ALTER TABLE \`groups\` ADD COLUMN key_specs_html LONGTEXT NULL`,
+    // Sitemap reads COALESCE(updated_at, created_at) from these tables;
+    // missing column silently empties sitemap-grades.xml / sitemap-groups.xml.
+    `ALTER TABLE grades ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+    `ALTER TABLE \`groups\` ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
   ];
 
   for (const sql of alterCols) {
