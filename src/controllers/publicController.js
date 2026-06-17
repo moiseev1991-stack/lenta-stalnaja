@@ -506,6 +506,9 @@ function delivery(req, res)     { staticPage(req, res, 'static/delivery.html', '
 function payment(req, res)      { staticPage(req, res, 'static/payment.html',  'Оплата',            'Оплата',            'Способы оплаты металлопроката: безналичный расчёт для юридических лиц, оплата по счёту. Работаем с НДС.'); }
 function faq(req, res)          { staticPage(req, res, 'static/faq.html',      'Вопросы и ответы',  'Вопросы и ответы',  'Ответы на часто задаваемые вопросы о металлической ленте: подбор марки, расчёт веса, минимальный заказ, сроки.'); }
 function certificates(req, res) { staticPage(req, res, 'static/certificates.html','Сертификаты',    'Сертификаты',       'Сертификаты качества на металлическую ленту: ГОСТ, протоколы испытаний. Документы предоставляются с каждой партией.'); }
+function privacy(req, res)      { staticPage(req, res, 'static/privacy.html',  'Политика конфиденциальности', 'Политика обработки персональных данных', 'Политика обработки персональных данных ИП Галанов А. О. в соответствии с 152-ФЗ: цели, сроки, права пользователя.'); }
+function cookies(req, res)      { staticPage(req, res, 'static/cookies.html',  'Cookies',           'Политика в отношении файлов cookie', 'Какие файлы cookie использует сайт lenta-stalnaja.ru, как ими управлять и отказаться.'); }
+function terms(req, res)        { staticPage(req, res, 'static/terms.html',    'Пользовательское соглашение', 'Пользовательское соглашение', 'Правила использования сайта lenta-stalnaja.ru — права и обязанности сторон, интеллектуальная собственность, ответственность.'); }
 
 function contacts(req, res) {
   renderPage(res, 'static/contacts.html', {
@@ -613,8 +616,9 @@ async function submitLead(req, res) {
   const name    = (req.body.name    || '').trim();
   const phone   = (req.body.phone   || '').trim();
   const message = (req.body.message || '').trim();
+  const consent = !!req.body.consent;
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
-  if (!name || !phone) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
+  if (!name || !phone || !consent) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
   try {
     await pool.query(
       'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
@@ -631,6 +635,7 @@ module.exports = {
   home, catalogRoot, categoryPage, landingPage, productPage, oldProductRedirect,
   genericCatalogPage, productBySlugPage,
   about, contacts, delivery, payment, faq, certificates,
+  privacy, cookies, terms,
   search, sitemapHtml, sitemapXml, robotsTxt, submitLead,
   sitemapStatic, sitemapGrades, sitemapGroups, sitemapProducts,
   ymlFeed,

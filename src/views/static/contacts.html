@@ -72,6 +72,20 @@
     <p><strong>Режим работы:</strong> пн–пт 9:00–18:00</p>
   </div>
 
+  <div class="card legal-card" id="requisites">
+    <h2 style="font-size:1.1rem;margin:0 0 0.75rem;">Реквизиты</h2>
+    <dl class="requisites-list">
+      <dt>Наименование:</dt>     <dd>ИП Галанов Антон Олегович</dd>
+      <dt>ИНН:</dt>              <dd>526016545409</dd>
+      <dt>Адрес регистрации:</dt><dd>607650, Россия, Нижегородская обл., Кстовский р-н, д. Студенец, ул. Центральная, д. 11</dd>
+      <dt>Расчётный счёт:</dt>   <dd>40802810920000907140</dd>
+      <dt>Банк:</dt>             <dd>ООО «Банк Точка»</dd>
+      <dt>БИК:</dt>              <dd>044525104</dd>
+      <dt>Корр. счёт:</dt>       <dd>30101810745374525104</dd>
+      <dt>E-mail:</dt>           <dd><a href="mailto:corp-metalinvest01265@yandex.ru">corp-metalinvest01265@yandex.ru</a></dd>
+    </dl>
+  </div>
+
   <div class="lead-form-compact" id="lead">
     <h3>Оставить заявку</h3>
     {% if leadStatus == 'ok' %}
@@ -94,6 +108,10 @@
         <label>Комментарий</label>
         <textarea name="message" class="input" rows="3"></textarea>
       </div>
+      <label class="form-consent">
+        <input type="checkbox" name="consent" required checked>
+        <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a> и <a href="/terms/" target="_blank">условиями использования сайта</a>.</span>
+      </label>
       <button type="submit" class="btn btn-primary">Отправить</button>
     </form>
   </div>

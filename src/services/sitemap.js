@@ -76,6 +76,9 @@ async function getStaticUrls() {
     { loc: buildLoc(base, 'payment'),      changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'faq'),          changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'certificates'), changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'privacy'),      changefreq: 'yearly',  priority: 0.3, lastmod: today },
+    { loc: buildLoc(base, 'cookies'),      changefreq: 'yearly',  priority: 0.3, lastmod: today },
+    { loc: buildLoc(base, 'terms'),        changefreq: 'yearly',  priority: 0.3, lastmod: today },
   ];
 
   try {

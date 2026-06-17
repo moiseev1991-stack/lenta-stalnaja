@@ -27,7 +27,7 @@
 {"@context":"https://schema.org","@type":"WebSite","@id":"https://lenta-stalnaja.ru/#website","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://lenta-stalnaja.ru/search/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
   </script>
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","@id":"https://lenta-stalnaja.ru/#organization","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","logo":"https://lenta-stalnaja.ru/img/logo-icon.png","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"}}
+{"@context":"https://schema.org","@type":"Organization","@id":"https://lenta-stalnaja.ru/#organization","name":"Лента стальная — каталог металлопроката","legalName":"Индивидуальный предприниматель Галанов Антон Олегович","taxID":"526016545409","vatID":"526016545409","url":"https://lenta-stalnaja.ru","logo":"https://lenta-stalnaja.ru/img/logo-icon.png","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское ш., 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"}}
   </script>
   <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"LocalBusiness","@id":"https://lenta-stalnaja.ru/#localbusiness","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru","telephone":"+7-800-100-08-74","email":"corp-metalinvest01265@yandex.ru","address":{"@type":"PostalAddress","streetAddress":"Московское шоссе, 320Б, корп. 1","addressLocality":"Нижний Новгород","addressRegion":"Нижегородская область","addressCountry":"RU"},"geo":{"@type":"GeoCoordinates","latitude":56.2822,"longitude":43.9806},"openingHours":"Mo-Fr 09:00-18:00","priceRange":"$$"}
@@ -324,19 +324,35 @@
       </div>
       {% endif %}
       <p>&copy; Лента стальная — каталог металлопроката</p>
+      <p class="footer-legal">ИП Галанов Антон Олегович · ИНН 526016545409</p>
       <p class="footer-address" id="footerAddress">Нижний Новгород, Московское ш., 52, корп. 4</p>
       <div class="footer-contacts">
         <a href="tel:+78312119618" class="footer-contacts__phone" id="footerPhone">+7 (831) 211-96-18</a>
         <a href="mailto:corp-metalinvest01265@yandex.ru" class="footer-contacts__email">corp-metalinvest01265@yandex.ru</a>
       </div>
-      <nav>
-        <a href="/about/">О компании</a> · 
-        <a href="/delivery/">Доставка</a> · 
-        <a href="/payment/">Оплата</a> · 
+      <nav class="footer-nav">
+        <a href="/about/">О компании</a> ·
+        <a href="/delivery/">Доставка</a> ·
+        <a href="/payment/">Оплата</a> ·
+        <a href="/contacts/#requisites">Реквизиты</a> ·
         <a href="/sitemap/">Карта сайта</a>
+      </nav>
+      <nav class="footer-legal-nav">
+        <a href="/privacy/">Политика конфиденциальности</a> ·
+        <a href="/cookies/">Cookies</a> ·
+        <a href="/terms/">Пользовательское соглашение</a>
       </nav>
     </div>
   </footer>
+  <div class="cookie-banner" id="cookieBanner" hidden>
+    <div class="container cookie-banner__inner">
+      <p class="cookie-banner__text">
+        Мы используем cookies, чтобы сайт работал корректно и помогал решать ваши задачи. Продолжая пользоваться сайтом, вы соглашаетесь с
+        <a href="/cookies/">политикой cookies</a> и <a href="/privacy/">обработкой персональных данных</a>.
+      </p>
+      <button type="button" class="btn btn-primary btn-sm" id="cookieBannerAccept">Принять</button>
+    </div>
+  </div>
   <script>
   (function() {
     function filterList(input, list) {
@@ -527,6 +543,31 @@
       document.addEventListener('DOMContentLoaded', initRegion);
     } else {
       initRegion();
+    }
+  })();
+  </script>
+  <script>
+  (function() {
+    function initCookieBanner() {
+      var KEY = 'cookieConsent';
+      var banner = document.getElementById('cookieBanner');
+      var btn = document.getElementById('cookieBannerAccept');
+      if (!banner || !btn) return;
+      try {
+        if (localStorage.getItem(KEY) === 'accepted') return;
+      } catch(e) {}
+      banner.hidden = false;
+      banner.classList.add('is-visible');
+      btn.addEventListener('click', function() {
+        try { localStorage.setItem(KEY, 'accepted'); } catch(e) {}
+        banner.classList.remove('is-visible');
+        banner.hidden = true;
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCookieBanner);
+    } else {
+      initCookieBanner();
     }
   })();
   </script>

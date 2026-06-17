@@ -108,6 +108,20 @@
 
 ### Последние выполненные изменения (журнал)
 
+- **2026-06-17** — Юридические страницы и реквизиты ИП.
+  - **Задача:** Разместить на сайте реквизиты ИП Галанов А. О. и добавить обязательные страницы по 152-ФЗ (политика конфиденциальности, cookies, пользовательское соглашение).
+  - **Что изменено:**
+    - Новые страницы `src/views/static/privacy.html`, `cookies.html`, `terms.html`.
+    - `src/controllers/publicController.js` — функции `privacy/cookies/terms`, валидация чекбокса `consent` в `submitLead`.
+    - `src/routes/public.js` — роуты `/privacy/`, `/cookies/`, `/terms/`.
+    - `src/services/sitemap.js` — три новых URL в `getStaticUrls()`.
+    - `src/views/layout.html` — в footer строка с «ИП Галанов А. О. · ИНН», блок ссылок на legal-страницы, cookie-banner + JS; в Organization JSON-LD добавлены `legalName/taxID/vatID`.
+    - `src/views/static/contacts.html` — карточка `requisites` со всеми реквизитами (р/с, банк, БИК, к/с); чекбокс согласия в форме заявки.
+    - `src/views/static/about.html` — абзац о юридической информации со ссылкой на `/contacts/#requisites`; чекбокс согласия в форме.
+    - `src/views/static/delivery.html`, `payment.html` — чекбокс согласия в формах.
+    - `public/css/styles.css` — стили `footer-legal/footer-legal-nav`, `legal-page`, `legal-card`, `requisites-list`, `form-consent`, `cookie-banner`.
+  - **Что проверить:** `/privacy/`, `/cookies/`, `/terms/` — 200, оформление; `/contacts/#requisites` — карточка с р/с 40802810920000907140, БИК 044525104, к/с 30101810745374525104; footer на всех страницах содержит блок legal-ссылок; cookie-banner появляется в первый визит и пропадает после «Принять» (localStorage `cookieConsent=accepted`); попытка отправить заявку без согласия → редирект `?lead=error`.
+
 - **2026-03-09** — Импорт SEO-статей в все разделы каталога.
   - **Задача:** Вставить текстовые статьи из папки `text/` на все страницы разделов (марки, группы, главная) — между блоком товаров и `lead-section`.
   - **Что изменено:**
