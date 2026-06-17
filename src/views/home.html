@@ -4,7 +4,12 @@
   <meta name="google-site-verification" content="5A_b_zD8rwK_UWvojV9V5RO3O5Z8NQNvt-OGQS12J0E" />
   {% if homeFaqItems and homeFaqItems.length %}
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for item in homeFaqItems %}{% if not loop.first %},{% endif %}{"@type":"Question","name":{{ item.question | json | safe }},"acceptedAnswer":{"@type":"Answer","text":{{ item.answer | json | safe }}}}{% endfor %}]}
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for item in homeFaqItems %}{% if not loop.first %},{% endif %}{"@type":"Question","name":{{ item.question | json | safe }},"acceptedAnswer":{"@type":"Answer","text":{{ item.answer | json | safe }}}}{% endfor %}],"speakable":{"@type":"SpeakableSpecification","cssSelector":[".faq-section h2",".faq-question",".faq-answer"]}}
+  </script>
+  {% endif %}
+  {% if homeHtml or homeIntro %}
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":{{ (h1 or 'Каталог стальной ленты') | json | safe }},"description":{{ (metaDescription or homeIntro or '') | json | safe }},"mainEntityOfPage":{"@type":"WebPage","@id":"https://lenta-stalnaja.ru/"},"author":{"@id":"https://lenta-stalnaja.ru/#organization"},"publisher":{"@id":"https://lenta-stalnaja.ru/#organization"},"inLanguage":"ru-RU"}
   </script>
   {% endif %}
 {% endblock %}

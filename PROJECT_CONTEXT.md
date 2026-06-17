@@ -108,6 +108,20 @@
 
 ### Последние выполненные изменения (журнал)
 
+- **2026-06-17** — Quick-wins под AI/LLM поиск (Yandex Neuro, ChatGPT, Perplexity).
+  - **Задача:** Повысить шансы попасть в выдачу AI-движков через стандартизированную микроразметку и llms.txt.
+  - **Что изменено:**
+    - `src/services/llms.js` (новый) — динамическая сборка `/llms.txt` и `/llms-full.txt` по стандарту llmstxt.org: краткое описание, ключевые страницы, топ марок и групп по `product_count`, реквизиты для AI.
+    - `src/controllers/publicController.js` — handlers `llmsTxt`/`llmsFullTxt`, в `robots.txt` добавлена строка `Llms-Txt:`.
+    - `src/routes/public.js` — `/llms.txt`, `/llms-full.txt`.
+    - `src/views/layout.html` — Organization JSON-LD: `areaServed` (страна + 3 города), `contactPoint[]` с тремя региональными телефонами и часами работы, `legalName/taxID/vatID` уже были; LocalBusiness получил `openingHoursSpecification` и `areaServed`.
+    - `src/views/catalog/lenta/grade.html`, `group.html`, `home.html` — добавлена Article JSON-LD при наличии `article_text`/`homeHtml`, к FAQPage добавлен `speakable` (CSS-селекторы для voice/AI).
+  - **Что проверить (на проде):**
+    - `https://lenta-stalnaja.ru/llms.txt` — 200, markdown с описанием и списком марок/групп;
+    - `https://lenta-stalnaja.ru/robots.txt` — содержит `Llms-Txt: ...`;
+    - Главная страница: в HTML найти `contactPoint`, `areaServed`, `SpeakableSpecification`, `"@type":"Article"`;
+    - Schema validator (validator.schema.org / search.google.com/test/rich-results) — без ошибок.
+
 - **2026-06-17** — Юридические страницы и реквизиты ИП.
   - **Задача:** Разместить на сайте реквизиты ИП Галанов А. О. и добавить обязательные страницы по 152-ФЗ (политика конфиденциальности, cookies, пользовательское соглашение).
   - **Что изменено:**

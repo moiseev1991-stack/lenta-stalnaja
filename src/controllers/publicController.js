@@ -3,6 +3,7 @@ const catalog         = require('../services/catalog');
 const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
 const ymlService      = require('../services/yml');
+const llmsService     = require('../services/llms');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -582,6 +583,24 @@ async function sitemapProducts(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function llmsTxt(req, res, next) {
+  try {
+    const body = await llmsService.buildLlmsTxt();
+    res.type('text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(body);
+  } catch (err) { next(err); }
+}
+
+async function llmsFullTxt(req, res, next) {
+  try {
+    const body = await llmsService.buildLlmsFullTxt();
+    res.type('text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(body);
+  } catch (err) { next(err); }
+}
+
 function robotsTxt(req, res) {
   const sitemapLine = 'Sitemap: ' + config.siteUrl + '/sitemap.xml';
   const utmParams   = 'utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&gclid&fbclid';
@@ -606,7 +625,10 @@ function robotsTxt(req, res) {
     'Clean-param: ' + utmParams + '&' + filterParams + '\n' +
     '\n' +
     sitemapLine + '\n' +
-    'Host: lenta-stalnaja.ru'
+    'Host: lenta-stalnaja.ru\n' +
+    '\n' +
+    '# AI / LLM index — https://llmstxt.org/\n' +
+    'Llms-Txt: ' + config.siteUrl + '/llms.txt\n'
   );
 }
 
@@ -636,6 +658,7 @@ module.exports = {
   genericCatalogPage, productBySlugPage,
   about, contacts, delivery, payment, faq, certificates,
   privacy, cookies, terms,
+  llmsTxt, llmsFullTxt,
   search, sitemapHtml, sitemapXml, robotsTxt, submitLead,
   sitemapStatic, sitemapGrades, sitemapGroups, sitemapProducts,
   ymlFeed,

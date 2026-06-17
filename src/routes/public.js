@@ -41,6 +41,8 @@ router.get('/sitemap-grades.xml', controller.sitemapGrades);
 router.get('/sitemap-groups.xml', controller.sitemapGroups);
 router.get('/sitemap-products-:chunk(\\d+).xml', controller.sitemapProducts);
 router.get('/yml.xml', controller.ymlFeed);
+router.get('/llms.txt', controller.llmsTxt);
+router.get('/llms-full.txt', controller.llmsFullTxt);
 router.get('/robots.txt', controller.robotsTxt);
 router.post('/lead', controller.submitLead);
 
