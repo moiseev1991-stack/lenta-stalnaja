@@ -58,28 +58,25 @@
         </div>
       </div>
 
-      <div class="calc__schema" aria-label="Схема ленты">
-        <svg id="calc-schema-svg" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-          <!-- Изометрическая полоса. Полигоны + размерные линии полностью перерисовываются из JS. -->
-          <g id="calc-schema-body">
-            <polygon class="calc__schema-strip-top"   points="0,0 0,0 0,0 0,0" />
-            <polygon class="calc__schema-strip-front" points="0,0 0,0 0,0 0,0" />
-            <polygon class="calc__schema-strip-side"  points="0,0 0,0 0,0 0,0" />
-          </g>
-
-          <line class="calc__schema-dim" id="calc-schema-len-line"  x1="0" y1="0" x2="0" y2="0"/>
-          <line class="calc__schema-dim" id="calc-schema-len-tick1" x1="0" y1="0" x2="0" y2="0"/>
-          <line class="calc__schema-dim" id="calc-schema-len-tick2" x1="0" y1="0" x2="0" y2="0"/>
-          <text class="calc__schema-label" text-anchor="middle" id="calc-schema-length">L = 10 м</text>
-
-          <line class="calc__schema-dim" id="calc-schema-w-line" x1="0" y1="0" x2="0" y2="0"/>
-          <text class="calc__schema-label" id="calc-schema-width">b = 100 мм</text>
-
-          <line class="calc__schema-dim" id="calc-schema-h-line"  x1="0" y1="0" x2="0" y2="0"/>
-          <line class="calc__schema-dim" id="calc-schema-h-tick1" x1="0" y1="0" x2="0" y2="0"/>
-          <line class="calc__schema-dim" id="calc-schema-h-tick2" x1="0" y1="0" x2="0" y2="0"/>
-          <text class="calc__schema-label" text-anchor="end" id="calc-schema-thickness">h = 0,5 мм</text>
-        </svg>
+      <div class="material-card" id="material-card" data-group="austenitic" aria-live="polite">
+        <div class="material-card__icon" id="material-card-icon" aria-hidden="true">
+          <!-- иконка обновляется из JS -->
+        </div>
+        <div class="material-card__body">
+          <div class="material-card__eyebrow" id="material-card-eyebrow">Выбранный материал</div>
+          <div class="material-card__title" id="material-card-title">Аустенитные нержавеющие</div>
+          <div class="material-card__desc" id="material-card-desc">Пищевая промышленность, химия, медтехника, архитектура, декор.</div>
+          <div class="material-card__meta">
+            <div class="material-card__meta-item">
+              <span class="material-card__meta-label">Плотность</span>
+              <span class="material-card__meta-value" id="material-card-density">7,90 г/см³</span>
+            </div>
+            <div class="material-card__meta-item">
+              <span class="material-card__meta-label">Марки в каталоге</span>
+              <span class="material-card__meta-value" id="material-card-marks">12Х18Н10Т, 08Х18Н10 …</span>
+            </div>
+          </div>
+        </div>
       </div>
     </form>
 
@@ -146,82 +143,83 @@
   var elPerM2 = root.querySelector('[data-calc-per-m2]');
   var elDensity = root.querySelector('[data-calc-density-display]');
 
-  // Схема (SVG).
-  var polyTop   = document.querySelector('#calc-schema-body .calc__schema-strip-top');
-  var polyFront = document.querySelector('#calc-schema-body .calc__schema-strip-front');
-  var polySide  = document.querySelector('#calc-schema-body .calc__schema-strip-side');
-  var lenLine  = document.getElementById('calc-schema-len-line');
-  var lenTick1 = document.getElementById('calc-schema-len-tick1');
-  var lenTick2 = document.getElementById('calc-schema-len-tick2');
-  var schemaLenLabel = document.getElementById('calc-schema-length');
-  var wLine  = document.getElementById('calc-schema-w-line');
-  var schemaWLabel = document.getElementById('calc-schema-width');
-  var hLine  = document.getElementById('calc-schema-h-line');
-  var hTick1 = document.getElementById('calc-schema-h-tick1');
-  var hTick2 = document.getElementById('calc-schema-h-tick2');
-  var schemaHLabel = document.getElementById('calc-schema-thickness');
+  // Карточка «Выбранный материал» — реагирует на группу сплавов и марку.
+  var mCard    = document.getElementById('material-card');
+  var mIcon    = document.getElementById('material-card-icon');
+  var mTitle   = document.getElementById('material-card-title');
+  var mDesc    = document.getElementById('material-card-desc');
+  var mDensity = document.getElementById('material-card-density');
+  var mMarks   = document.getElementById('material-card-marks');
+  var mEyebrow = document.getElementById('material-card-eyebrow');
 
-  function fmtDim(n) {
-    if (!isFinite(n) || n <= 0) return '0';
-    return n.toLocaleString('ru-RU', { maximumFractionDigits: 3 });
-  }
+  // Мета-информация по группам сплавов — область применения + иконка (SVG-путь).
+  // Ключи совпадают с key из GRADE_GROUPS в src/data/gosts.js.
+  var GROUP_META = {
+    austenitic: {
+      title: 'Аустенитные нержавеющие',
+      desc: 'Универсальные коррозионно-стойкие. Пищевая промышленность, химия, медтехника, архитектура, декор.',
+      marks: '12Х18Н10Т, 08Х18Н10, 08Х18Н10Т, 10Х17Н13М3Т',
+      icon: '<circle cx="24" cy="24" r="18" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/><path d="M18 24l4 4 8-10" stroke="#1d4ed8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    },
+    martensitic: {
+      title: 'Мартенситные нержавеющие',
+      desc: 'Высокая твёрдость после закалки. Лезвия, ножи, пружины, инструмент, метизы, скальпели.',
+      marks: '20Х13, 30Х13, 40Х13',
+      icon: '<path d="M8 34 L28 14 L34 14 L38 18 L38 24 L18 44 Z" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round"/><path d="M12 30 L30 12" stroke="#1d4ed8" stroke-width="1.5"/>'
+    },
+    spring: {
+      title: 'Углеродистые пружинные',
+      desc: 'Упругость и прочность после закалки. Пружины сжатия/растяжения, бандажные ленты, штамповка.',
+      marks: '65Г, 60С2А',
+      icon: '<path d="M8 24c0-4 4-4 4 0s4 4 4 0 4-4 4 0 4 4 4 0 4-4 4 0 4 4 4 0" stroke="#1d4ed8" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M8 32c0-4 4-4 4 0s4 4 4 0 4-4 4 0 4 4 4 0 4-4 4 0 4 4 4 0" stroke="#1d4ed8" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.5"/>'
+    },
+    nichrome: {
+      title: 'Нихромы (нагреватели)',
+      desc: 'Высокое электросопротивление. Спирали ТЭНов, промышленные и лабораторные печи, электроприборы.',
+      marks: 'Х20Н80, Х20Н80-Н, Х15Н60, ХН78Т',
+      icon: '<path d="M12 12c8 0 8 8 16 8s8-8 16-8M12 20c8 0 8 8 16 8s8-8 16-8M12 28c8 0 8 8 16 8s8-8 16-8" stroke="#dc2626" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+    },
+    fechral: {
+      title: 'Фехрали (нагреватели)',
+      desc: 'Высокотемпературные нагреватели до 1400 °C. Промышленные печи, керамика, металлургия.',
+      marks: 'Х23Ю5, Х23Ю5Т, Х15Ю5',
+      icon: '<path d="M24 8v6M24 34v6M8 24h6M34 24h6M13 13l4 4M31 31l4 4M13 35l4-4M31 17l4-4" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="24" r="7" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>'
+    },
+    precision: {
+      title: 'Прецизионные сплавы',
+      desc: 'Заданные упругие, магнитные и тепловые свойства. Часы, приборостроение, электроника, датчики.',
+      marks: '36НХТЮ, 40КХНМ, 29НК, 27КХ, 17ХНГТ (ЭИ814)',
+      icon: '<circle cx="24" cy="24" r="14" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/><circle cx="24" cy="24" r="4" fill="#1d4ed8"/><g stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"><line x1="24" y1="6" x2="24" y2="12"/><line x1="24" y1="36" x2="24" y2="42"/><line x1="6" y1="24" x2="12" y2="24"/><line x1="36" y1="24" x2="42" y2="24"/></g>'
+    },
+    custom: {
+      title: 'Произвольный материал',
+      desc: 'Ручной ввод плотности. Используйте для сплавов, которых нет в списке.',
+      marks: '—',
+      icon: '<rect x="8" y="14" width="32" height="6" rx="3" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/><circle cx="20" cy="17" r="6" fill="#1d4ed8"/><rect x="8" y="28" width="32" height="6" rx="3" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/><circle cx="32" cy="31" r="6" fill="#1d4ed8"/>'
+    }
+  };
 
-  // Обёртка над setAttribute — терпит null (если элемент не найден).
-  function setA(el, name, val) { if (el) el.setAttribute(name, val); }
+  function updateMaterialCard(rho) {
+    if (!mCard) return;
+    var groupKey = groupSel.value || 'austenitic';
+    var meta = GROUP_META[groupKey] || GROUP_META.custom;
+    var markVal = markSel.value;
 
-  function updateSchema(h, b, Lm, rho) {
-    if (schemaLenLabel) schemaLenLabel.textContent = 'L = ' + fmtDim(Lm) + ' м';
-    if (schemaWLabel)   schemaWLabel.textContent   = 'b = ' + fmtDim(b) + ' мм';
-    if (schemaHLabel)   schemaHLabel.textContent   = 'h = ' + fmtDim(h) + ' мм';
+    if (mIcon) mIcon.innerHTML = '<svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">' + meta.icon + '</svg>';
+    mCard.setAttribute('data-group', groupKey);
 
-    // ViewBox 500x220. Полосу центрируем горизонтально и оставляем поля
-    // под подписи: слева ~80px для «h = ...», снизу ~40px для «L = ...»,
-    // сверху+справа ~40px для «b = ...».
-    // Шкалы масштаба выбраны так, чтобы даже 0.01 мм / 500 мм / 0.5 м не
-    // вырождали полосу в точку, а 2.5 мм / 400 мм / 500 м не вылазили.
-    var xLenPx  = 100 + 200 * Math.min(1, Math.log10(Math.max(Lm, 0.1) + 1) / 2.7); // 0.5→~40 px, 10→~160 px, 100→~200 px
-    xLenPx = Math.max(60, Math.min(260, xLenPx));
-    var yThPx   = 6 + 40 * Math.min(1, Math.sqrt(Math.max(h, 0.01) / 2.5));         // 0.01→~9, 0.5→~24, 2.5→~46
-    yThPx = Math.max(4, Math.min(50, yThPx));
-    var wSkewPx = 16 + 60 * Math.min(1, Math.sqrt(Math.max(b, 1) / 500));           // 4мм→~22, 100→~42, 400→~70
-    wSkewPx = Math.max(16, Math.min(70, wSkewPx));
-    var xSkewPx = wSkewPx;
-    var ySkewPx = wSkewPx * 0.6;
-
-    var x0 = 100;
-    var y0 = 110;
-    var x1 = x0 + xLenPx;
-    var yTop = y0 - yThPx / 2;
-    var yBot = y0 + yThPx / 2;
-
-    setA(polyTop,   'points',
-      x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
-      (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
-      (x0 + xSkewPx) + ',' + (yTop - ySkewPx));
-    setA(polyFront, 'points',
-      x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
-      x1 + ',' + yBot + ' ' + x0 + ',' + yBot);
-    setA(polySide,  'points',
-      x1 + ',' + yTop + ' ' + (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
-      (x1 + xSkewPx) + ',' + (yBot - ySkewPx) + ' ' + x1 + ',' + yBot);
-
-    // Длина — снизу под передней гранью
-    var lenY = yBot + 22;
-    setA(lenLine,  'x1', x0); setA(lenLine,  'x2', x1); setA(lenLine,  'y1', lenY); setA(lenLine,  'y2', lenY);
-    setA(lenTick1, 'x1', x0); setA(lenTick1, 'x2', x0); setA(lenTick1, 'y1', lenY - 5); setA(lenTick1, 'y2', lenY + 5);
-    setA(lenTick2, 'x1', x1); setA(lenTick2, 'x2', x1); setA(lenTick2, 'y1', lenY - 5); setA(lenTick2, 'y2', lenY + 5);
-    setA(schemaLenLabel, 'x', (x0 + x1) / 2); setA(schemaLenLabel, 'y', lenY + 18);
-
-    // Ширина — скошенная линия справа
-    setA(wLine, 'x1', x1 + 6); setA(wLine, 'y1', yTop + 2);
-    setA(wLine, 'x2', x1 + xSkewPx + 6); setA(wLine, 'y2', yTop - ySkewPx + 2);
-    setA(schemaWLabel, 'x', x1 + xSkewPx + 12); setA(schemaWLabel, 'y', yTop - ySkewPx + 6);
-
-    // Толщина — слева
-    setA(hLine,  'x1', x0 - 14); setA(hLine,  'x2', x0 - 14); setA(hLine,  'y1', yTop); setA(hLine,  'y2', yBot);
-    setA(hTick1, 'x1', x0 - 19); setA(hTick1, 'x2', x0 - 4); setA(hTick1, 'y1', yTop); setA(hTick1, 'y2', yTop);
-    setA(hTick2, 'x1', x0 - 19); setA(hTick2, 'x2', x0 - 4); setA(hTick2, 'y1', yBot); setA(hTick2, 'y2', yBot);
-    setA(schemaHLabel, 'x', x0 - 25); setA(schemaHLabel, 'y', (yTop + yBot) / 2 + 5);
+    if (markVal) {
+      if (mEyebrow) mEyebrow.textContent = 'Выбранная марка';
+      if (mTitle)   mTitle.textContent   = markVal;
+      if (mDesc)    mDesc.textContent    = meta.desc;
+      if (mMarks)   mMarks.textContent   = meta.title;
+    } else {
+      if (mEyebrow) mEyebrow.textContent = 'Выбранный материал';
+      if (mTitle)   mTitle.textContent   = meta.title;
+      if (mDesc)    mDesc.textContent    = meta.desc;
+      if (mMarks)   mMarks.textContent   = meta.marks;
+    }
+    if (mDensity) mDensity.textContent = rho.toFixed(2).replace('.', ',') + ' г/см³';
   }
 
   function fmt(n) {
@@ -271,7 +269,7 @@
     elPerM2.textContent = fmt(perM2);
     elDensity.textContent = rho.toFixed(2).replace('.', ',');
 
-    updateSchema(h, b, Lm, rho);
+    updateMaterialCard(rho);
   }
 
   groupSel.addEventListener('change', function() {

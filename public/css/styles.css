@@ -1771,23 +1771,62 @@ body.menu-open .mobile-menu { display: block; }
   margin-top: 0.25rem;
 }
 
-/* Схема-инфографика ленты */
-.calc__schema {
+/* Карточка «Выбранный материал» — реагирует на группу сплавов и марку */
+.material-card {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  gap: 1rem;
   margin: 1rem 0 1.25rem;
-  padding: 0.75rem;
-  background: repeating-linear-gradient(45deg, #f8fafc 0 8px, #eff6ff 8px 16px);
-  border: 1px dashed var(--border);
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--primary);
   border-radius: var(--radius-md);
+  transition: border-color 0.2s;
 }
-.calc__schema svg { max-width: 500px; width: 100%; height: auto; display: block; }
-.calc__schema-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; fill: var(--primary-700); font-weight: 700; }
-.calc__schema-dim { stroke: var(--primary); stroke-width: 1.2; fill: none; }
-.calc__schema-strip-top { fill: #dbeafe; stroke: var(--primary-700); stroke-width: 1.2; }
-.calc__schema-strip-side { fill: #93c5fd; stroke: var(--primary-700); stroke-width: 1.2; }
-.calc__schema-strip-front { fill: #60a5fa; stroke: var(--primary-700); stroke-width: 1.2; }
+.material-card[data-group="nichrome"]  { border-left-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%); border-color: #fecaca; }
+.material-card[data-group="fechral"]   { border-left-color: #ea580c; background: linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%); border-color: #fed7aa; }
+.material-card[data-group="spring"]    { border-left-color: #ca8a04; background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); border-color: #fde68a; }
+.material-card[data-group="precision"] { border-left-color: #7c3aed; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+.material-card[data-group="martensitic"] { border-left-color: #475569; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-color: #cbd5e1; }
+.material-card[data-group="custom"]    { border-left-color: #6b7280; background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); border-color: #e5e7eb; }
+.material-card__icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.material-card__icon svg { width: 40px; height: 40px; }
+.material-card__body { flex: 1; min-width: 0; }
+.material-card__eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+.material-card__title { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; }
+.material-card__desc { font-size: 0.9rem; color: var(--text); line-height: 1.45; margin-bottom: 0.65rem; }
+.material-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+}
+.material-card__meta-item { display: flex; flex-direction: column; gap: 0.1rem; }
+.material-card__meta-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.material-card__meta-value { font-size: 0.92rem; font-weight: 600; color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+@media (max-width: 640px) {
+  .material-card { flex-direction: column; padding: 1rem; }
+  .material-card__meta { flex-direction: column; gap: 0.5rem; }
+}
 .calc__label { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
 .calc__input {
   padding: 0.65rem 0.85rem;
