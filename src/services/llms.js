@@ -45,7 +45,9 @@ async function buildLlmsTxt() {
 
   try {
     const [groups] = await pool.query(
-      "SELECT name, slug FROM `groups` WHERE slug IS NOT NULL AND slug != '' ORDER BY product_count DESC LIMIT 25"
+      "SELECT g.name, g.slug, (SELECT COUNT(*) FROM products p WHERE p.group_id = g.id) AS product_count " +
+      "FROM `groups` g WHERE g.slug IS NOT NULL AND g.slug != '' " +
+      "ORDER BY product_count DESC, g.name ASC LIMIT 25"
     );
     if (groups.length) {
       lines.push('## Лента по назначению');
@@ -53,11 +55,13 @@ async function buildLlmsTxt() {
       groups.forEach(g => lines.push(bullet(`Лента ${g.name.toLowerCase()}`, '/' + g.slug + '/')));
       lines.push('');
     }
-  } catch (_) {}
+  } catch (e) { console.error('[llms] groups query failed:', e.message); }
 
   try {
     const [grades] = await pool.query(
-      "SELECT name, slug FROM grades WHERE slug IS NOT NULL AND slug != '' ORDER BY product_count DESC LIMIT 50"
+      "SELECT gr.name, gr.slug, (SELECT COUNT(*) FROM products p WHERE p.grade_id = gr.id) AS product_count " +
+      "FROM grades gr WHERE gr.slug IS NOT NULL AND gr.slug != '' " +
+      "ORDER BY product_count DESC, gr.name ASC LIMIT 50"
     );
     if (grades.length) {
       lines.push('## Марки стали');
@@ -65,7 +69,7 @@ async function buildLlmsTxt() {
       grades.forEach(g => lines.push(bullet(`Лента ${g.name}`, '/' + g.slug + '/')));
       lines.push('');
     }
-  } catch (_) {}
+  } catch (e) { console.error('[llms] grades query failed:', e.message); }
 
   lines.push('## Юридическая информация');
   lines.push('');
@@ -77,8 +81,10 @@ async function buildLlmsTxt() {
   lines.push('- Оператор: ИП Галанов Антон Олегович');
   lines.push('- ИНН: 526016545409');
   lines.push('- Адрес регистрации: 607650, Россия, Нижегородская обл., Кстовский р-н, д. Студенец, ул. Центральная, д. 11');
-  lines.push('- E-mail: corp-metalinvest01265@yandex.ru');
-  lines.push('- Регионы отгрузки: Нижний Новгород (+7 831 211-96-18), Москва (+7 495 023-88-60), Санкт-Петербург (+7 812 426-56-37)');
+  lines.push('- E-mail (общий): info@lenta-stalnaja.ru');
+  lines.push('- E-mail (заказы): orders@lenta-stalnaja.ru');
+  lines.push('- Телефон: 8-800-100-08-74 (бесплатно по России)');
+  lines.push('- Регионы отгрузки: Нижний Новгород, Москва, Санкт-Петербург');
   lines.push('- Режим работы: пн–пт 9:00–18:00 МСК');
   lines.push('');
 

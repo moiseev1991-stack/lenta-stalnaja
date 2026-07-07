@@ -108,6 +108,25 @@
 
 ### Последние выполненные изменения (журнал)
 
+- **2026-07-07** — Единый телефон 8-800 и доменные email (задачи 1.1–1.2 из SEO-аудита).
+  - **Задача:** Убрать разнобой в телефонах (три региональных номера) и на yandex-почту `corp-metalinvest01265@yandex.ru`. Аудитор указал, что «metalinvest» в адресе создаёт риск по товарному знаку.
+  - **Что изменено:**
+    - `src/views/layout.html` — шапка, мобильное меню, футер, карта: везде `8-800-100-08-74` и `info@lenta-stalnaja.ru`. Из объекта `REGIONS` и функции `applyRegion` удалены поля `phone`/`phoneTel` — переключатель регионов теперь меняет только адрес, карту и «Построить маршрут». JSON-LD Organization: 3 региональных `contactPoint` свёрнуты в 2 (`customer support` + `sales`) с 8-800 и email `info@`/`orders@`. JSON-LD LocalBusiness: `telephone`/`email` обновлены.
+    - `src/views/static/contacts.html` — все три региональных телефона (НН/МСК/СПБ) → 8-800. Общий блок теперь показывает оба email (`info@` — общие вопросы, `orders@` — заказы). В реквизитах ИП — `info@`.
+    - `src/views/static/terms.html`, `privacy.html`, `cookies.html` — юридические email → `info@lenta-stalnaja.ru`.
+    - `src/controllers/publicController.js` — `COMPANY_CONTACTS.email` (карточка товара, блок «Контакты и быстрый заказ») → `orders@lenta-stalnaja.ru`.
+    - `src/services/llms.js` — вместо трёх региональных телефонов и yandex-адреса: `info@`, `orders@`, 8-800.
+  - **Что нужно проверить перед деплоем:**
+    - Ящики `info@lenta-stalnaja.ru` и `orders@lenta-stalnaja.ru` **должны быть созданы** на почтовом сервере (иначе клиенты будут писать в никуда).
+  - **Что проверить (на проде):**
+    - Шапка/футер/моб.меню/карта: везде `8-800-100-08-74` и `info@`.
+    - Карточка товара → блок «Контакты и быстрый заказ» → `orders@`.
+    - `/contacts/` → под каждым городом (НН/МСК/СПБ) телефон общий 8-800; блок с email показывает оба.
+    - `/terms/`, `/privacy/`, `/cookies/` → `info@`.
+    - `/llms.txt` → оба email + 8-800.
+    - Переключатель регионов на главной и на `/contacts/` — работает (адрес/карта меняются), телефон не меняется.
+    - Schema-валидатор — без ошибок в Organization/LocalBusiness.
+
 - **2026-06-17** — Quick-wins под AI/LLM поиск (Yandex Neuro, ChatGPT, Perplexity).
   - **Задача:** Повысить шансы попасть в выдачу AI-движков через стандартизированную микроразметку и llms.txt.
   - **Что изменено:**

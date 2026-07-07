@@ -167,8 +167,8 @@ function productCanonical(product) {
 const COMPANY_CONTACTS = {
   phone: '+7 (800) 100-08-74',
   phoneHref: 'tel:+78001000874',
-  email: 'corp-metalinvest01265@yandex.ru',
-  emailHref: 'mailto:corp-metalinvest01265@yandex.ru',
+  email: 'orders@lenta-stalnaja.ru',
+  emailHref: 'mailto:orders@lenta-stalnaja.ru',
   responseTime: 'Ответ по наличию и цене в течение 15 минут',
   workHours: 'Пн-Пт: 09:00-18:00',
 };
