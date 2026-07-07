@@ -61,40 +61,33 @@
       </div>
 
       <div class="calc__schema" aria-label="Схема ленты">
-        <svg id="calc-schema-svg" viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <!-- Изометрическая полоса: тело + подписи размеров -->
-          <g id="calc-schema-body">
-            <!-- Верхняя грань (параллелограмм: длина × ширина в изометрии) -->
-            <polygon class="calc__schema-strip-top"   points="80,90 320,90 360,60 120,60" />
-            <!-- Передняя грань (толщина × длина) -->
-            <polygon class="calc__schema-strip-front" points="80,90 320,90 320,105 80,105" />
-            <!-- Боковая грань (толщина × ширина в изометрии) -->
-            <polygon class="calc__schema-strip-side"  points="320,90 360,60 360,75 320,105" />
-          </g>
-          <!-- Размерная линия «Длина» (снизу) -->
-          <g>
-            <line class="calc__schema-dim" x1="80" y1="130" x2="320" y2="130"/>
-            <line class="calc__schema-dim" x1="80" y1="125" x2="80" y2="135"/>
-            <line class="calc__schema-dim" x1="320" y1="125" x2="320" y2="135"/>
-            <text class="calc__schema-label" x="200" y="148" text-anchor="middle" id="calc-schema-length">Длина 10 м</text>
-          </g>
-          <!-- Размерная линия «Ширина» (справа сверху) -->
-          <g>
-            <line class="calc__schema-dim" x1="365" y1="60" x2="380" y2="60"/>
-            <line class="calc__schema-dim" x1="365" y1="75" x2="380" y2="75"/>
-            <line class="calc__schema-dim" x1="372" y1="60" x2="372" y2="75"/>
-            <text class="calc__schema-label" x="385" y="72" id="calc-schema-width">b = 100 мм</text>
-          </g>
-          <!-- Размерная линия «Толщина» (слева) -->
-          <g>
-            <line class="calc__schema-dim" x1="60" y1="90" x2="75" y2="90"/>
-            <line class="calc__schema-dim" x1="60" y1="105" x2="75" y2="105"/>
-            <line class="calc__schema-dim" x1="67" y1="90" x2="67" y2="105"/>
-            <text class="calc__schema-label" x="10" y="102" id="calc-schema-thickness">h = 0,52 мм</text>
-          </g>
+        <svg id="calc-schema-svg" viewBox="0 0 460 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <!-- Марка и плотность в углу -->
-          <text class="calc__schema-label" x="10" y="20" id="calc-schema-mark">Марка: —</text>
-          <text class="calc__schema-label" x="10" y="38" id="calc-schema-rho">ρ = 7,90 г/см³</text>
+          <text class="calc__schema-title" x="10" y="18" id="calc-schema-mark">Марка: —</text>
+          <text class="calc__schema-title" x="10" y="34" id="calc-schema-rho">ρ = 7,90 г/см³</text>
+
+          <!-- Изометрическая полоса. Опорная точка (x0,y0) фиксируется в JS. -->
+          <g id="calc-schema-body">
+            <polygon class="calc__schema-strip-top"   points="100,80 320,80 360,55 140,55" />
+            <polygon class="calc__schema-strip-front" points="100,80 320,80 320,95 100,95" />
+            <polygon class="calc__schema-strip-side"  points="320,80 360,55 360,70 320,95" />
+          </g>
+
+          <!-- Размерная линия «Длина» (снизу) -->
+          <line class="calc__schema-dim" id="calc-schema-len-line" x1="100" y1="115" x2="320" y2="115"/>
+          <line class="calc__schema-dim" id="calc-schema-len-tick1" x1="100" y1="110" x2="100" y2="120"/>
+          <line class="calc__schema-dim" id="calc-schema-len-tick2" x1="320" y1="110" x2="320" y2="120"/>
+          <text class="calc__schema-label" x="210" y="134" text-anchor="middle" id="calc-schema-length">L = 10 м</text>
+
+          <!-- Размерная линия «Ширина» (правая скошенная — на «крышке») -->
+          <line class="calc__schema-dim" id="calc-schema-w-line"  x1="325" y1="82" x2="365" y2="57"/>
+          <text class="calc__schema-label" x="370" y="60" id="calc-schema-width">b = 100 мм</text>
+
+          <!-- Размерная линия «Толщина» (слева) -->
+          <line class="calc__schema-dim" id="calc-schema-h-line"  x1="87" y1="80" x2="87" y2="95"/>
+          <line class="calc__schema-dim" id="calc-schema-h-tick1" x1="82" y1="80" x2="97" y2="80"/>
+          <line class="calc__schema-dim" id="calc-schema-h-tick2" x1="82" y1="95" x2="97" y2="95"/>
+          <text class="calc__schema-label" x="10" y="91" id="calc-schema-thickness">h = 0,5 мм</text>
         </svg>
       </div>
     </form>
@@ -162,7 +155,7 @@
   var elPerM2 = root.querySelector('[data-calc-per-m2]');
   var elDensity = root.querySelector('[data-calc-density-display]');
 
-  // Схема (SVG). Полигоны меняем через изменение пропорций.
+  // Схема (SVG).
   var schemaBody = document.getElementById('calc-schema-body');
   var schemaLenLabel = document.getElementById('calc-schema-length');
   var schemaWLabel = document.getElementById('calc-schema-width');
@@ -172,53 +165,81 @@
   var polyTop = schemaBody ? schemaBody.querySelector('.calc__schema-strip-top') : null;
   var polyFront = schemaBody ? schemaBody.querySelector('.calc__schema-strip-front') : null;
   var polySide = schemaBody ? schemaBody.querySelector('.calc__schema-strip-side') : null;
+  var lenLine = document.getElementById('calc-schema-len-line');
+  var lenTick1 = document.getElementById('calc-schema-len-tick1');
+  var lenTick2 = document.getElementById('calc-schema-len-tick2');
+  var wLine = document.getElementById('calc-schema-w-line');
+  var hLine = document.getElementById('calc-schema-h-line');
+  var hTick1 = document.getElementById('calc-schema-h-tick1');
+  var hTick2 = document.getElementById('calc-schema-h-tick2');
+
+  // Убираем trailing zeros: 0.5 -> "0,5", 100 -> "100", 0.015 -> "0,015".
+  function fmtDim(n) {
+    if (!isFinite(n) || n <= 0) return '0';
+    return n.toLocaleString('ru-RU', { maximumFractionDigits: 3 });
+  }
 
   function updateSchema(h, b, Lm, rho) {
-    if (schemaLenLabel) schemaLenLabel.textContent = 'L = ' + fmt(Lm) + ' м';
-    if (schemaWLabel)  schemaWLabel.textContent  = 'b = ' + fmt(b) + ' мм';
-    if (schemaHLabel)  schemaHLabel.textContent  = 'h = ' + fmt(h) + ' мм';
+    if (schemaLenLabel) schemaLenLabel.textContent = 'L = ' + fmtDim(Lm) + ' м';
+    if (schemaWLabel)  schemaWLabel.textContent  = 'b = ' + fmtDim(b) + ' мм';
+    if (schemaHLabel)  schemaHLabel.textContent  = 'h = ' + fmtDim(h) + ' мм';
     if (schemaRho)     schemaRho.textContent     = 'ρ = ' + rho.toFixed(2).replace('.', ',') + ' г/см³';
     var markVal = markSel.value;
     if (schemaMark) schemaMark.textContent = markVal ? 'Марка: ' + markVal : 'Марка: —';
 
     if (!polyTop || !polyFront || !polySide) return;
-    // Пропорции: длина по X — логарифмическая шкала, толщина по Y — квадратный корень.
-    // Иначе экстремальные значения (лента 0,01 мм × 0,5 м) вырождают SVG в точку.
-    var xLenPx  = Math.max(80, Math.min(240, 60 + 40 * Math.log10(Math.max(Lm, 0.1) * 10)));
-    var yThPx   = Math.max(4,  Math.min(50,  4 + Math.sqrt(Math.max(h, 0.01)) * 20));
-    var wSkewPx = Math.max(20, Math.min(60,  10 + Math.sqrt(Math.max(b, 1)) * 3));  // «глубина» изометрии
-    // Опорная точка — левый нижний угол «переднего» края в (80, 90 + yThPx/2)
-    var x0 = 80;
-    var y0 = 100;
+    // Пропорции: log/√ шкалы — иначе экстремумы вырождают SVG. Опорная — (100,88).
+    var xLenPx  = Math.max(140, Math.min(220, 100 + 30 * Math.log10(Math.max(Lm, 0.1) * 10)));
+    var yThPx   = Math.max(6,   Math.min(28,  6 + Math.sqrt(Math.max(h, 0.01)) * 10));
+    var wSkewPx = Math.max(20,  Math.min(40,  10 + Math.sqrt(Math.max(b, 1)) * 2));
+    var xSkewPx = wSkewPx;
+    var ySkewPx = wSkewPx * 0.65;
+
+    var x0 = 100;
+    var y0 = 88;
     var x1 = x0 + xLenPx;
-    var yTopFrontY = y0 - yThPx / 2;
-    var yBotFrontY = y0 + yThPx / 2;
-    var xSkew = wSkewPx;
-    var ySkew = wSkewPx * 0.7;
-    // Top: параллелограмм, лежит на верху передней грани и уходит «вглубь» по скосу.
+    var yTop = y0 - yThPx / 2;
+    var yBot = y0 + yThPx / 2;
+
+    // Полосы
     polyTop.setAttribute('points',
-      x0 + ',' + yTopFrontY + ' ' +
-      x1 + ',' + yTopFrontY + ' ' +
-      (x1 + xSkew) + ',' + (yTopFrontY - ySkew) + ' ' +
-      (x0 + xSkew) + ',' + (yTopFrontY - ySkew));
+      x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
+      (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
+      (x0 + xSkewPx) + ',' + (yTop - ySkewPx));
     polyFront.setAttribute('points',
-      x0 + ',' + yTopFrontY + ' ' +
-      x1 + ',' + yTopFrontY + ' ' +
-      x1 + ',' + yBotFrontY + ' ' +
-      x0 + ',' + yBotFrontY);
+      x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
+      x1 + ',' + yBot + ' ' + x0 + ',' + yBot);
     polySide.setAttribute('points',
-      x1 + ',' + yTopFrontY + ' ' +
-      (x1 + xSkew) + ',' + (yTopFrontY - ySkew) + ' ' +
-      (x1 + xSkew) + ',' + (yBotFrontY - ySkew) + ' ' +
-      x1 + ',' + yBotFrontY);
+      x1 + ',' + yTop + ' ' + (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
+      (x1 + xSkewPx) + ',' + (yBot - ySkewPx) + ' ' + x1 + ',' + yBot);
+
+    // Размерная линия «Длина» (снизу под передней гранью)
+    var lenY = yBot + 20;
+    if (lenLine)  { lenLine.setAttribute('x1', x0); lenLine.setAttribute('x2', x1); lenLine.setAttribute('y1', lenY); lenLine.setAttribute('y2', lenY); }
+    if (lenTick1) { lenTick1.setAttribute('x1', x0); lenTick1.setAttribute('x2', x0); lenTick1.setAttribute('y1', lenY - 5); lenTick1.setAttribute('y2', lenY + 5); }
+    if (lenTick2) { lenTick2.setAttribute('x1', x1); lenTick2.setAttribute('x2', x1); lenTick2.setAttribute('y1', lenY - 5); lenTick2.setAttribute('y2', lenY + 5); }
+    if (schemaLenLabel) { schemaLenLabel.setAttribute('x', (x0 + x1) / 2); schemaLenLabel.setAttribute('y', lenY + 18); }
+
+    // «Ширина» — скошенная линия справа
+    if (wLine) {
+      wLine.setAttribute('x1', x1 + 5); wLine.setAttribute('y1', yTop + 2);
+      wLine.setAttribute('x2', x1 + xSkewPx + 5); wLine.setAttribute('y2', yTop - ySkewPx + 2);
+    }
+    if (schemaWLabel) { schemaWLabel.setAttribute('x', x1 + xSkewPx + 10); schemaWLabel.setAttribute('y', yTop - ySkewPx + 5); }
+
+    // «Толщина» — слева
+    if (hLine)  { hLine.setAttribute('x1', x0 - 13); hLine.setAttribute('x2', x0 - 13); hLine.setAttribute('y1', yTop); hLine.setAttribute('y2', yBot); }
+    if (hTick1) { hTick1.setAttribute('x1', x0 - 18); hTick1.setAttribute('x2', x0 - 3); hTick1.setAttribute('y1', yTop); hTick1.setAttribute('y2', yTop); }
+    if (hTick2) { hTick2.setAttribute('x1', x0 - 18); hTick2.setAttribute('x2', x0 - 3); hTick2.setAttribute('y1', yBot); hTick2.setAttribute('y2', yBot); }
+    if (schemaHLabel) { schemaHLabel.setAttribute('y', (yTop + yBot) / 2 + 4); }
   }
 
   function fmt(n) {
     if (!isFinite(n) || n <= 0) return '0';
-    if (n < 0.01) return n.toFixed(4).replace('.', ',');
-    if (n < 1) return n.toFixed(3).replace('.', ',');
-    if (n < 100) return n.toFixed(2).replace('.', ',');
-    return Math.round(n).toLocaleString('ru-RU');
+    if (n < 0.001) return n.toExponential(2).replace('.', ',');
+    // Убираем trailing zeros. 3.7388 -> "3,74"; 0.5 -> "0,5"; 100 -> "100"
+    var digits = n < 0.01 ? 4 : n < 0.1 ? 3 : n < 100 ? 2 : 0;
+    return n.toLocaleString('ru-RU', { maximumFractionDigits: digits });
   }
 
   function getDensity() {

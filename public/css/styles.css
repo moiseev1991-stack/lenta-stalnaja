@@ -140,13 +140,14 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
   flex-shrink: 0;
 }
 .logo img { display: block; width: 36px; height: 36px; border-radius: 6px; }
-.nav { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+.nav { display: flex; align-items: center; gap: 0.1rem; flex-wrap: wrap; }
 .nav a {
   color: #94a3b8;
-  font-size: 0.875rem;
-  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.45rem;
   border-radius: var(--radius-sm);
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .nav a:hover { color: #fff; background: rgba(255,255,255,0.08); text-decoration: none; }
 .nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
@@ -944,12 +945,13 @@ body.admin { background: #e2e8f0; }
   background: none;
   border: none;
   color: #94a3b8;
-  font-size: 0.875rem;
-  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.45rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .nav-drop-toggle:hover { color: #fff; background: rgba(255,255,255,0.08); }
 .nav-drop.open .nav-drop-toggle { color: #fff; background: rgba(255,255,255,0.12); }
@@ -1774,18 +1776,18 @@ body.menu-open .mobile-menu { display: block; }
   justify-content: center;
   align-items: center;
   margin: 1rem 0 1.25rem;
-  padding: 1rem;
+  padding: 0.75rem;
   background: repeating-linear-gradient(45deg, #f8fafc 0 8px, #eff6ff 8px 16px);
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  min-height: 220px;
 }
-.calc__schema svg { max-width: 100%; height: auto; }
-.calc__schema-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.82rem; fill: var(--primary-700); font-weight: 600; }
+.calc__schema svg { max-width: 460px; width: 100%; height: auto; display: block; }
+.calc__schema-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; fill: var(--primary-700); font-weight: 600; }
+.calc__schema-title { font-size: 11px; fill: var(--muted); font-weight: 500; }
 .calc__schema-dim { stroke: var(--primary); stroke-width: 1; fill: none; }
-.calc__schema-strip-top { fill: #dbeafe; stroke: var(--primary-700); stroke-width: 1.5; }
-.calc__schema-strip-side { fill: #93c5fd; stroke: var(--primary-700); stroke-width: 1.5; }
-.calc__schema-strip-front { fill: #60a5fa; stroke: var(--primary-700); stroke-width: 1.5; }
+.calc__schema-strip-top { fill: #dbeafe; stroke: var(--primary-700); stroke-width: 1.2; }
+.calc__schema-strip-side { fill: #93c5fd; stroke: var(--primary-700); stroke-width: 1.2; }
+.calc__schema-strip-front { fill: #60a5fa; stroke: var(--primary-700); stroke-width: 1.2; }
 .calc__label { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
 .calc__input {
   padding: 0.65rem 0.85rem;
