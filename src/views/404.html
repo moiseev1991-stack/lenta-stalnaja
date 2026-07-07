@@ -1,22 +1,53 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Страница не найдена — Лента стальная</title>
-  <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
-  <header class="header">
-    <div class="container">
-      <a href="/" class="logo">Лента стальная — каталог металлопроката</a>
-      <nav class="nav"><a href="/">Главная</a> <a href="/">Каталог</a></nav>
+{% extends "layout.html" %}
+{% block title %}404 — Страница не найдена{% endblock %}
+{% block content %}
+<div class="page-content page-404">
+  <div class="page-404__icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  </div>
+  <h1>404 — Страница не найдена</h1>
+  <p class="page-404__lead">Похоже, такой страницы у нас нет. Возможно, вы перешли по устаревшей ссылке или ошиблись в адресе.</p>
+
+  <div class="page-404__actions">
+    <a href="/" class="btn btn-primary btn-lg">На главную</a>
+    <a href="/contacts/#lead" class="btn btn-secondary btn-lg">Оставить заявку</a>
+  </div>
+
+  {% if menuGrades and menuGrades.length %}
+  <section class="page-404__section">
+    <h2>Популярные марки стали</h2>
+    <div class="page-404__chips">
+      {% for gr in menuGrades %}
+      {% if loop.index <= 12 %}
+      <a href="/{{ gr.slug }}/" class="chip">{{ gr.name }} ({{ gr.product_count }})</a>
+      {% endif %}
+      {% endfor %}
     </div>
-  </header>
-  <main class="main">
-    <h1>404 — Страница не найдена</h1>
-    <p><a href="/">Вернуться на главную</a></p>
-  </main>
-</body>
-</html>
+  </section>
+  {% endif %}
+
+  {% if menuGroups and menuGroups.length %}
+  <section class="page-404__section">
+    <h2>По назначению</h2>
+    <div class="page-404__chips">
+      {% for g in menuGroups %}
+      <a href="/{{ g.slug }}/" class="chip">{{ g.name }} ({{ g.product_count }})</a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="page-404__section page-404__contact">
+    <h2>Не нашли нужное?</h2>
+    <p>Позвоните нам — подберём марку и размер под вашу задачу за 15 минут.</p>
+    <p>
+      <a href="tel:+78001000874" class="page-404__phone"><strong>8-800-100-08-74</strong></a>
+      · <a href="mailto:orders@lenta-stalnaja.ru">orders@lenta-stalnaja.ru</a>
+    </p>
+  </section>
+</div>
+{% endblock %}
