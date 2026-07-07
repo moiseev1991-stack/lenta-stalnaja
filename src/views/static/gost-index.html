@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"ГОСТы на стальную ленту","url":{{ canonical | json | safe }},"numberOfItems":{{ gosts | length }},"itemListElement":[{% for g in gosts %}{% if not loop.first %},{% endif %}{"@type":"ListItem","position":{{ loop.index }},"url":{{ (siteUrl ~ '/gost/' ~ g.slug ~ '/') | json | safe }},"name":{{ g.shortTitle | json | safe }}}{% endfor %}]}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-content gost-page">
+  <h1>{{ h1 }}</h1>
+  <p class="lead">Все ГОСТы, по которым мы поставляем стальную и специальную ленту. По каждому стандарту — область применения, сортамент (диапазоны толщины и ширины), список марок из нашего каталога и ссылка на официальный текст на docs.cntd.ru.</p>
+
+  <ul class="gost-list">
+    {% for g in gosts %}
+    <li class="gost-list__item">
+      <a href="/gost/{{ g.slug }}/" class="gost-card">
+        <div class="gost-card__num">{{ g.shortTitle }}</div>
+        <div class="gost-card__title">{{ g.title }}</div>
+        <div class="gost-card__scope">{{ g.scope }}</div>
+        <div class="gost-card__meta">
+          <span>Толщина: {{ g.thicknessRange }}</span>
+          <span>Ширина: {{ g.widthRange }}</span>
+          <span>Марок в каталоге: {{ g.marks | length }}</span>
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% include "partials/lead_section.html" ignore missing %}
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="page-content gost-detail">
+  <h1>{{ h1 }}</h1>
+  <p class="lead">{{ gost.title }}</p>
+
+  <div class="gost-detail__intro">
+    <p>{{ gost.intro }}</p>
+    <p><strong>Область применения:</strong> {{ gost.scope }}</p>
+  </div>
+
+  <table class="gost-detail__specs">
+    <tbody>
+      <tr><th>Номер стандарта</th><td>{{ gost.shortTitle }}</td></tr>
+      <tr><th>Толщина</th><td>{{ gost.thicknessRange }}</td></tr>
+      <tr><th>Ширина</th><td>{{ gost.widthRange }}</td></tr>
+      <tr><th>Отделка поверхности</th><td>{{ gost.surfaces }}</td></tr>
+      <tr><th>Состояние поставки</th><td>{{ gost.conditions }}</td></tr>
+    </tbody>
+  </table>
+
+  {% if gost.marks and gost.marks.length %}
+  <h2>Марки из нашего каталога по этому ГОСТу</h2>
+  <ul class="gost-detail__marks">
+    {% for m in gost.marks %}
+    <li>{{ m }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="gost-detail__actions">
+    {% if hasPdf %}
+    <a href="{{ pdfUrl }}" class="btn btn-primary" target="_blank" rel="noopener">Скачать PDF</a>
+    {% endif %}
+    <a href="{{ gost.officialUrl }}" class="btn btn-outline" target="_blank" rel="noopener nofollow">Открыть на docs.cntd.ru</a>
+    <a href="/kalkulyator-vesa-lenty/" class="btn btn-outline">Калькулятор веса</a>
+  </div>
+
+  <div class="gost-detail__nav">
+    <a href="/gost/">← Все ГОСТы</a>
+  </div>
+
+  {% include "partials/lead_section.html" ignore missing %}
+</div>
+{% endblock %}

@@ -664,6 +664,64 @@ async function submitLead(req, res) {
   res.redirect(redirect + (redirect.includes('?') ? '&' : '?') + 'lead=ok');
 }
 
+// ── Калькулятор веса ленты + справочник ГОСТов (задача 1.6 SEO-аудита) ────
+const { GOSTS, GOSTS_BY_SLUG, GRADE_DENSITIES, GRADE_GROUPS } = require('../data/gosts');
+const fs = require('fs');
+const path = require('path');
+
+async function kalkulyatorVesaLenty(req, res) {
+  // Плотности реальных марок из БД (для селекта «Конкретная марка»).
+  const gradeOptions = Object.entries(GRADE_DENSITIES)
+    .map(([mark, density]) => ({ mark, density }))
+    .sort((a, b) => a.mark.localeCompare(b.mark, 'ru'));
+
+  res.render('static/kalkulyator-vesa-lenty.html', {
+    title: 'Калькулятор веса стальной ленты — онлайн-расчёт по толщине, ширине, длине',
+    h1: 'Калькулятор веса стальной ленты',
+    metaDescription: 'Онлайн-калькулятор веса стальной ленты: введите толщину, ширину и длину, выберите марку — получите массу рулона или отрезка. Плотности для 20 марок: 12Х18Н10Т, 65Г, Х20Н80 и других.',
+    canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + '/kalkulyator-vesa-lenty/',
+    gradeOptions,
+    gradeGroups: GRADE_GROUPS,
+    breadcrumbs: [{ name: 'Калькулятор веса ленты', url: '/kalkulyator-vesa-lenty/' }],
+  });
+}
+
+async function gostIndex(req, res) {
+  res.render('static/gost-index.html', {
+    title: 'ГОСТы на стальную ленту — справочник стандартов по всем маркам',
+    h1: 'ГОСТы на стальную ленту',
+    metaDescription: 'Справочник ГОСТов на стальную и специальную ленту: ' + GOSTS.map((g) => g.number).join(', ') + '. По каждому — область применения, сортамент, марки, ссылка на официальный текст.',
+    canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + '/gost/',
+    gosts: GOSTS,
+    breadcrumbs: [{ name: 'ГОСТы', url: '/gost/' }],
+  });
+}
+
+async function gostDetail(req, res) {
+  const slug = String(req.params.slug || '').trim();
+  const gost = GOSTS_BY_SLUG[slug];
+  if (!gost) return res.status(404).render('404.html', { siteUrl: res.locals.siteUrl });
+
+  // PDF подхватываем автоматически если он есть в public/gost/pdf/{slug}.pdf.
+  const pdfRel = `/gost/pdf/${gost.slug}.pdf`;
+  const pdfPath = path.join(__dirname, '..', '..', 'public', 'gost', 'pdf', `${gost.slug}.pdf`);
+  const hasPdf = fs.existsSync(pdfPath);
+
+  res.render('static/gost-detail.html', {
+    title: `${gost.shortTitle} — ${gost.title}`,
+    h1: `${gost.shortTitle}`,
+    metaDescription: `${gost.shortTitle}: ${gost.scope} Сортамент, области применения, марки, официальная ссылка.`,
+    canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + `/gost/${gost.slug}/`,
+    gost,
+    hasPdf,
+    pdfUrl: hasPdf ? pdfRel : null,
+    breadcrumbs: [
+      { name: 'ГОСТы', url: '/gost/' },
+      { name: gost.shortTitle, url: `/gost/${gost.slug}/` },
+    ],
+  });
+}
+
 module.exports = {
   home, catalogRoot, categoryPage, landingPage, productPage, oldProductRedirect,
   genericCatalogPage, productBySlugPage,
@@ -674,4 +732,5 @@ module.exports = {
   sitemapStatic, sitemapGrades, sitemapGroups, sitemapProducts,
   ymlFeed,
   parseFilters, hasFilters, renderPage,
+  kalkulyatorVesaLenty, gostIndex, gostDetail,
 };

@@ -79,7 +79,21 @@ async function getStaticUrls() {
     { loc: buildLoc(base, 'privacy'),      changefreq: 'yearly',  priority: 0.3, lastmod: today },
     { loc: buildLoc(base, 'cookies'),      changefreq: 'yearly',  priority: 0.3, lastmod: today },
     { loc: buildLoc(base, 'terms'),        changefreq: 'yearly',  priority: 0.3, lastmod: today },
+    { loc: buildLoc(base, 'kalkulyator-vesa-lenty'), changefreq: 'monthly', priority: 0.7, lastmod: today },
+    { loc: buildLoc(base, 'gost'),         changefreq: 'monthly', priority: 0.6, lastmod: today },
   ];
+  // Отдельные страницы ГОСТов — из статического справочника.
+  try {
+    const { GOSTS } = require('../data/gosts');
+    GOSTS.forEach(g => {
+      urls.push({
+        loc: buildLoc(base, 'gost/' + g.slug),
+        changefreq: 'yearly',
+        priority: 0.5,
+        lastmod: today,
+      });
+    });
+  } catch (_) {}
 
   try {
     const [categories] = await pool.query(

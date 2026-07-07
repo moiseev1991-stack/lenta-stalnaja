@@ -1,0 +1,193 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Калькулятор веса стальной ленты","url":{{ canonical | json | safe }},"applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"RUB"},"description":{{ metaDescription | json | safe }},"inLanguage":"ru-RU"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HowTo","name":"Как рассчитать вес стальной ленты","totalTime":"PT1M","step":[{"@type":"HowToStep","name":"Ввести размеры","text":"Толщина в мм, ширина в мм, длина в метрах."},{"@type":"HowToStep","name":"Выбрать марку или группу","text":"Плотность подставляется автоматически: 7,9 г/см³ для аустенитных, 7,7 для мартенситных, 8,4 для нихромов и т.д."},{"@type":"HowToStep","name":"Получить результат","text":"Масса одной ленты в кг, масса на метр (кг/м) и удельный вес (кг/м²)."}]}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-content calc-page">
+  <h1>{{ h1 }}</h1>
+  <p class="lead">Введите толщину, ширину и длину ленты, выберите марку стали — получите массу отрезка или рулона. Плотность подставляется автоматически для {{ gradeOptions | length }} марок из нашего каталога, для остальных сталей есть режим «Своя плотность».</p>
+
+  <div class="calc" id="calc">
+    <form class="calc__form" onsubmit="return false">
+      <div class="calc__grid">
+        <div class="calc__field">
+          <label class="calc__label" for="calc-thickness">Толщина, мм</label>
+          <input class="calc__input" id="calc-thickness" type="number" inputmode="decimal" step="0.01" min="0" value="0.5" data-calc-input>
+        </div>
+        <div class="calc__field">
+          <label class="calc__label" for="calc-width">Ширина, мм</label>
+          <input class="calc__input" id="calc-width" type="number" inputmode="decimal" step="0.1" min="0" value="100" data-calc-input>
+        </div>
+        <div class="calc__field">
+          <label class="calc__label" for="calc-length">Длина, м</label>
+          <input class="calc__input" id="calc-length" type="number" inputmode="decimal" step="0.01" min="0" value="10" data-calc-input>
+        </div>
+        <div class="calc__field">
+          <label class="calc__label" for="calc-qty">Количество, шт</label>
+          <input class="calc__input" id="calc-qty" type="number" inputmode="numeric" step="1" min="1" value="1" data-calc-input>
+        </div>
+      </div>
+
+      <div class="calc__grid calc__grid--two">
+        <div class="calc__field">
+          <label class="calc__label" for="calc-group">Группа сплавов</label>
+          <select class="calc__input" id="calc-group" data-calc-group>
+            {% for g in gradeGroups %}
+            <option value="{{ g.key }}" data-density="{{ g.density if g.density != null else '' }}">{{ g.label }}{% if g.density %} — {{ g.density }} г/см³{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="calc__field">
+          <label class="calc__label" for="calc-mark">Конкретная марка (по каталогу)</label>
+          <select class="calc__input" id="calc-mark" data-calc-mark>
+            <option value="">— из группы —</option>
+            {% for opt in gradeOptions %}
+            <option value="{{ opt.mark }}" data-density="{{ opt.density }}">{{ opt.mark }} — {{ opt.density }} г/см³</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="calc__field calc__field--density" hidden data-calc-density-row>
+        <label class="calc__label" for="calc-density-custom">Своя плотность, г/см³</label>
+        <input class="calc__input" id="calc-density-custom" type="number" inputmode="decimal" step="0.01" min="0.1" value="7.85" data-calc-density-custom>
+      </div>
+    </form>
+
+    <div class="calc__result">
+      <div class="calc__result-main">
+        <div class="calc__result-label">Масса</div>
+        <div class="calc__result-value"><span data-calc-total>0</span> <small>кг</small></div>
+      </div>
+      <dl class="calc__result-details">
+        <div><dt>На одну ленту</dt><dd><span data-calc-per-piece>0</span> кг</dd></div>
+        <div><dt>Погонная масса</dt><dd><span data-calc-per-meter>0</span> кг/м</dd></div>
+        <div><dt>Удельная масса</dt><dd><span data-calc-per-m2>0</span> кг/м²</dd></div>
+        <div><dt>Плотность</dt><dd><span data-calc-density-display>7,9</span> г/см³</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <section class="calc-info">
+    <h2>Как считает калькулятор</h2>
+    <p>Формула массы прямоугольной ленты (полосы): <strong>m = h × b × L × ρ × n</strong>, где h — толщина в мм, b — ширина в мм, L — длина в мм (метры × 1000), ρ — плотность в г/см³, n — количество отрезков. Результат в килограммах: <em>m [кг] = (h × b × L × ρ × n) / 1&nbsp;000&nbsp;000</em>.</p>
+    <p>Для рулона длину указывают такую же, как отрезка (общую длину намотки в метрах). Если известна только масса рулона, а не длина — вычислите длину по обратной формуле или уточните у менеджера по 8-800-100-08-74.</p>
+
+    <h2>Плотности сталей и сплавов</h2>
+    <p>Для каждой марки из нашего каталога плотность подставляется автоматически. Ниже — усреднённые значения по группам сплавов, которыми можно пользоваться, если нужной марки в списке нет.</p>
+    <table class="calc-densities">
+      <thead><tr><th>Группа</th><th>Марки</th><th>Плотность, г/см³</th></tr></thead>
+      <tbody>
+        <tr><td>Аустенитные нержавеющие</td><td>12Х18Н10Т, 08Х18Н10, 08Х18Н10Т, 10Х17Н13М3Т</td><td>7,9</td></tr>
+        <tr><td>Мартенситные нержавеющие</td><td>20Х13, 30Х13, 40Х13</td><td>7,7</td></tr>
+        <tr><td>Углеродистые пружинные</td><td>65Г, 60С2А</td><td>7,85</td></tr>
+        <tr><td>Нихромы (нагреватели)</td><td>Х20Н80, Х15Н60, ХН78Т</td><td>8,4</td></tr>
+        <tr><td>Фехрали (нагреватели)</td><td>Х23Ю5, Х23Ю5Т, Х15Ю5</td><td>7,19</td></tr>
+        <tr><td>Прецизионные упругие</td><td>36НХТЮ, 40КХНМ, 17ХНГТ (ЭИ814)</td><td>7,85–9,25</td></tr>
+        <tr><td>Прецизионные с заданным ТКЛР</td><td>29НК (Ковар), 27КХ</td><td>8,0–8,35</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Что важно помнить при заказе</h2>
+    <ul class="calc-notes">
+      <li><strong>Калькулятор считает теоретический вес по геометрии.</strong> Фактический вес партии может отличаться в пределах допусков по толщине и ширине, установленных ГОСТом.</li>
+      <li><strong>Плотность зависит от состояния поставки.</strong> Нагартованные ленты немного плотнее отожжённых, разница до 0,5%.</li>
+      <li><strong>Для точного расчёта партии</strong> — укажите марку, толщину и ширину при заявке, менеджер пересчитает с учётом допусков и рулонной геометрии.</li>
+    </ul>
+
+    <h2>ГОСТы, регламентирующие сортамент ленты</h2>
+    <p><a href="/gost/">Смотрите весь справочник →</a> Все стандарты, по которым мы поставляем ленту: 4986-79 (аустенитные нержавейки), 2283-79 (углеродистые), 14117-85 (упругие прецизионные), 12766 (нагреватели), 10160-75 и 14080-78 (прецизионные) и другие.</p>
+  </section>
+
+  {% include "partials/lead_section.html" ignore missing %}
+</div>
+
+<script>
+(function() {
+  var root = document.getElementById('calc');
+  if (!root) return;
+  var inputs = root.querySelectorAll('[data-calc-input]');
+  var groupSel = root.querySelector('[data-calc-group]');
+  var markSel = root.querySelector('[data-calc-mark]');
+  var densityRow = root.querySelector('[data-calc-density-row]');
+  var densityCustom = root.querySelector('[data-calc-density-custom]');
+  var elTotal = root.querySelector('[data-calc-total]');
+  var elPerPiece = root.querySelector('[data-calc-per-piece]');
+  var elPerMeter = root.querySelector('[data-calc-per-meter]');
+  var elPerM2 = root.querySelector('[data-calc-per-m2]');
+  var elDensity = root.querySelector('[data-calc-density-display]');
+
+  function fmt(n) {
+    if (!isFinite(n) || n <= 0) return '0';
+    if (n < 0.01) return n.toFixed(4).replace('.', ',');
+    if (n < 1) return n.toFixed(3).replace('.', ',');
+    if (n < 100) return n.toFixed(2).replace('.', ',');
+    return Math.round(n).toLocaleString('ru-RU');
+  }
+
+  function getDensity() {
+    // Приоритет: конкретная марка → группа → своя плотность (если группа = custom).
+    if (markSel.value) {
+      var opt = markSel.options[markSel.selectedIndex];
+      var d = parseFloat(opt.dataset.density);
+      if (isFinite(d) && d > 0) return d;
+    }
+    var gOpt = groupSel.options[groupSel.selectedIndex];
+    var gd = parseFloat(gOpt.dataset.density);
+    if (isFinite(gd) && gd > 0) return gd;
+    var custom = parseFloat(densityCustom.value);
+    return isFinite(custom) && custom > 0 ? custom : 7.85;
+  }
+
+  function toggleCustomDensity() {
+    var isCustom = groupSel.value === 'custom' && !markSel.value;
+    densityRow.hidden = !isCustom;
+  }
+
+  function recalc() {
+    var h = parseFloat(document.getElementById('calc-thickness').value) || 0;
+    var b = parseFloat(document.getElementById('calc-width').value) || 0;
+    var Lm = parseFloat(document.getElementById('calc-length').value) || 0;
+    var n = parseInt(document.getElementById('calc-qty').value, 10) || 1;
+    var rho = getDensity();
+    var L = Lm * 1000; // мм
+
+    // m [кг] = (h * b * L [мм³]) * ρ [г/см³] / 10^6
+    var mPer = (h * b * L * rho) / 1000000;
+    var mTotal = mPer * n;
+    var perMeter = Lm > 0 ? mPer / Lm : 0;
+    var perM2 = (h * rho) / 1000; // толщина мм × ρ г/см³ / 1000 = кг/м²
+
+    elTotal.textContent = fmt(mTotal);
+    elPerPiece.textContent = fmt(mPer);
+    elPerMeter.textContent = fmt(perMeter);
+    elPerM2.textContent = fmt(perM2);
+    elDensity.textContent = rho.toFixed(2).replace('.', ',');
+  }
+
+  groupSel.addEventListener('change', function() {
+    // При смене группы сбрасываем выбор конкретной марки, чтобы группа брала верх.
+    markSel.value = '';
+    toggleCustomDensity();
+    recalc();
+  });
+  markSel.addEventListener('change', function() {
+    // Если марка выбрана — синхронизируем группу для UX, но плотность берём с марки.
+    toggleCustomDensity();
+    recalc();
+  });
+  densityCustom.addEventListener('input', recalc);
+  inputs.forEach(function(el) { el.addEventListener('input', recalc); });
+
+  toggleCustomDensity();
+  recalc();
+})();
+</script>
+{% endblock %}
