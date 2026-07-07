@@ -1762,10 +1762,30 @@ body.menu-open .mobile-menu { display: block; }
 }
 .calc__grid--two { grid-template-columns: 1fr 1fr; }
 .calc__field { display: flex; flex-direction: column; gap: 0.35rem; }
+.calc__field[hidden] { display: none; }
 .calc__field--density {
   max-width: 320px;
   margin-top: 0.5rem;
 }
+
+/* Схема-инфографика ленты */
+.calc__schema {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  background: repeating-linear-gradient(45deg, #f8fafc 0 8px, #eff6ff 8px 16px);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  min-height: 220px;
+}
+.calc__schema svg { max-width: 100%; height: auto; }
+.calc__schema-label { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.82rem; fill: var(--primary-700); font-weight: 600; }
+.calc__schema-dim { stroke: var(--primary); stroke-width: 1; fill: none; }
+.calc__schema-strip-top { fill: #dbeafe; stroke: var(--primary-700); stroke-width: 1.5; }
+.calc__schema-strip-side { fill: #93c5fd; stroke: var(--primary-700); stroke-width: 1.5; }
+.calc__schema-strip-front { fill: #60a5fa; stroke: var(--primary-700); stroke-width: 1.5; }
 .calc__label { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
 .calc__input {
   padding: 0.65rem 0.85rem;
