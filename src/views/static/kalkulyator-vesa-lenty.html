@@ -33,10 +33,8 @@
           <label class="calc__label" for="calc-qty">Количество, шт</label>
           <input class="calc__input" id="calc-qty" type="number" inputmode="numeric" step="1" min="1" value="1" data-calc-input>
         </div>
-      </div>
 
-      <div class="calc__grid calc__grid--two">
-        <div class="calc__field">
+        <div class="calc__field calc__field--span2">
           <label class="calc__label" for="calc-group">Группа сплавов</label>
           <select class="calc__input" id="calc-group" data-calc-group>
             {% for g in gradeGroups %}
@@ -44,7 +42,7 @@
             {% endfor %}
           </select>
         </div>
-        <div class="calc__field">
+        <div class="calc__field calc__field--span2">
           <label class="calc__label" for="calc-mark">Конкретная марка (по каталогу)</label>
           <select class="calc__input" id="calc-mark" data-calc-mark>
             <option value="">— из группы —</option>
@@ -53,41 +51,34 @@
             {% endfor %}
           </select>
         </div>
-      </div>
 
-      <div class="calc__field calc__field--density" hidden data-calc-density-row>
-        <label class="calc__label" for="calc-density-custom">Своя плотность, г/см³</label>
-        <input class="calc__input" id="calc-density-custom" type="number" inputmode="decimal" step="0.01" min="0.1" value="7.85" data-calc-density-custom>
+        <div class="calc__field calc__field--full calc__field--density" hidden data-calc-density-row>
+          <label class="calc__label" for="calc-density-custom">Своя плотность, г/см³</label>
+          <input class="calc__input" id="calc-density-custom" type="number" inputmode="decimal" step="0.01" min="0.1" value="7.85" data-calc-density-custom>
+        </div>
       </div>
 
       <div class="calc__schema" aria-label="Схема ленты">
-        <svg id="calc-schema-svg" viewBox="0 0 460 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <!-- Марка и плотность в углу -->
-          <text class="calc__schema-title" x="10" y="18" id="calc-schema-mark">Марка: —</text>
-          <text class="calc__schema-title" x="10" y="34" id="calc-schema-rho">ρ = 7,90 г/см³</text>
-
-          <!-- Изометрическая полоса. Опорная точка (x0,y0) фиксируется в JS. -->
+        <svg id="calc-schema-svg" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+          <!-- Изометрическая полоса. Полигоны + размерные линии полностью перерисовываются из JS. -->
           <g id="calc-schema-body">
-            <polygon class="calc__schema-strip-top"   points="100,80 320,80 360,55 140,55" />
-            <polygon class="calc__schema-strip-front" points="100,80 320,80 320,95 100,95" />
-            <polygon class="calc__schema-strip-side"  points="320,80 360,55 360,70 320,95" />
+            <polygon class="calc__schema-strip-top"   points="0,0 0,0 0,0 0,0" />
+            <polygon class="calc__schema-strip-front" points="0,0 0,0 0,0 0,0" />
+            <polygon class="calc__schema-strip-side"  points="0,0 0,0 0,0 0,0" />
           </g>
 
-          <!-- Размерная линия «Длина» (снизу) -->
-          <line class="calc__schema-dim" id="calc-schema-len-line" x1="100" y1="115" x2="320" y2="115"/>
-          <line class="calc__schema-dim" id="calc-schema-len-tick1" x1="100" y1="110" x2="100" y2="120"/>
-          <line class="calc__schema-dim" id="calc-schema-len-tick2" x1="320" y1="110" x2="320" y2="120"/>
-          <text class="calc__schema-label" x="210" y="134" text-anchor="middle" id="calc-schema-length">L = 10 м</text>
+          <line class="calc__schema-dim" id="calc-schema-len-line"  x1="0" y1="0" x2="0" y2="0"/>
+          <line class="calc__schema-dim" id="calc-schema-len-tick1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="calc__schema-dim" id="calc-schema-len-tick2" x1="0" y1="0" x2="0" y2="0"/>
+          <text class="calc__schema-label" text-anchor="middle" id="calc-schema-length">L = 10 м</text>
 
-          <!-- Размерная линия «Ширина» (правая скошенная — на «крышке») -->
-          <line class="calc__schema-dim" id="calc-schema-w-line"  x1="325" y1="82" x2="365" y2="57"/>
-          <text class="calc__schema-label" x="370" y="60" id="calc-schema-width">b = 100 мм</text>
+          <line class="calc__schema-dim" id="calc-schema-w-line" x1="0" y1="0" x2="0" y2="0"/>
+          <text class="calc__schema-label" id="calc-schema-width">b = 100 мм</text>
 
-          <!-- Размерная линия «Толщина» (слева) -->
-          <line class="calc__schema-dim" id="calc-schema-h-line"  x1="87" y1="80" x2="87" y2="95"/>
-          <line class="calc__schema-dim" id="calc-schema-h-tick1" x1="82" y1="80" x2="97" y2="80"/>
-          <line class="calc__schema-dim" id="calc-schema-h-tick2" x1="82" y1="95" x2="97" y2="95"/>
-          <text class="calc__schema-label" x="10" y="91" id="calc-schema-thickness">h = 0,5 мм</text>
+          <line class="calc__schema-dim" id="calc-schema-h-line"  x1="0" y1="0" x2="0" y2="0"/>
+          <line class="calc__schema-dim" id="calc-schema-h-tick1" x1="0" y1="0" x2="0" y2="0"/>
+          <line class="calc__schema-dim" id="calc-schema-h-tick2" x1="0" y1="0" x2="0" y2="0"/>
+          <text class="calc__schema-label" text-anchor="end" id="calc-schema-thickness">h = 0,5 мм</text>
         </svg>
       </div>
     </form>
@@ -156,82 +147,81 @@
   var elDensity = root.querySelector('[data-calc-density-display]');
 
   // Схема (SVG).
-  var schemaBody = document.getElementById('calc-schema-body');
-  var schemaLenLabel = document.getElementById('calc-schema-length');
-  var schemaWLabel = document.getElementById('calc-schema-width');
-  var schemaHLabel = document.getElementById('calc-schema-thickness');
-  var schemaMark = document.getElementById('calc-schema-mark');
-  var schemaRho = document.getElementById('calc-schema-rho');
-  var polyTop = schemaBody ? schemaBody.querySelector('.calc__schema-strip-top') : null;
-  var polyFront = schemaBody ? schemaBody.querySelector('.calc__schema-strip-front') : null;
-  var polySide = schemaBody ? schemaBody.querySelector('.calc__schema-strip-side') : null;
-  var lenLine = document.getElementById('calc-schema-len-line');
+  var polyTop   = document.querySelector('#calc-schema-body .calc__schema-strip-top');
+  var polyFront = document.querySelector('#calc-schema-body .calc__schema-strip-front');
+  var polySide  = document.querySelector('#calc-schema-body .calc__schema-strip-side');
+  var lenLine  = document.getElementById('calc-schema-len-line');
   var lenTick1 = document.getElementById('calc-schema-len-tick1');
   var lenTick2 = document.getElementById('calc-schema-len-tick2');
-  var wLine = document.getElementById('calc-schema-w-line');
-  var hLine = document.getElementById('calc-schema-h-line');
+  var schemaLenLabel = document.getElementById('calc-schema-length');
+  var wLine  = document.getElementById('calc-schema-w-line');
+  var schemaWLabel = document.getElementById('calc-schema-width');
+  var hLine  = document.getElementById('calc-schema-h-line');
   var hTick1 = document.getElementById('calc-schema-h-tick1');
   var hTick2 = document.getElementById('calc-schema-h-tick2');
+  var schemaHLabel = document.getElementById('calc-schema-thickness');
 
-  // Убираем trailing zeros: 0.5 -> "0,5", 100 -> "100", 0.015 -> "0,015".
   function fmtDim(n) {
     if (!isFinite(n) || n <= 0) return '0';
     return n.toLocaleString('ru-RU', { maximumFractionDigits: 3 });
   }
 
+  // Обёртка над setAttribute — терпит null (если элемент не найден).
+  function setA(el, name, val) { if (el) el.setAttribute(name, val); }
+
   function updateSchema(h, b, Lm, rho) {
     if (schemaLenLabel) schemaLenLabel.textContent = 'L = ' + fmtDim(Lm) + ' м';
-    if (schemaWLabel)  schemaWLabel.textContent  = 'b = ' + fmtDim(b) + ' мм';
-    if (schemaHLabel)  schemaHLabel.textContent  = 'h = ' + fmtDim(h) + ' мм';
-    if (schemaRho)     schemaRho.textContent     = 'ρ = ' + rho.toFixed(2).replace('.', ',') + ' г/см³';
-    var markVal = markSel.value;
-    if (schemaMark) schemaMark.textContent = markVal ? 'Марка: ' + markVal : 'Марка: —';
+    if (schemaWLabel)   schemaWLabel.textContent   = 'b = ' + fmtDim(b) + ' мм';
+    if (schemaHLabel)   schemaHLabel.textContent   = 'h = ' + fmtDim(h) + ' мм';
 
-    if (!polyTop || !polyFront || !polySide) return;
-    // Пропорции: log/√ шкалы — иначе экстремумы вырождают SVG. Опорная — (100,88).
-    var xLenPx  = Math.max(140, Math.min(220, 100 + 30 * Math.log10(Math.max(Lm, 0.1) * 10)));
-    var yThPx   = Math.max(6,   Math.min(28,  6 + Math.sqrt(Math.max(h, 0.01)) * 10));
-    var wSkewPx = Math.max(20,  Math.min(40,  10 + Math.sqrt(Math.max(b, 1)) * 2));
+    // ViewBox 500x220. Полосу центрируем горизонтально и оставляем поля
+    // под подписи: слева ~80px для «h = ...», снизу ~40px для «L = ...»,
+    // сверху+справа ~40px для «b = ...».
+    // Шкалы масштаба выбраны так, чтобы даже 0.01 мм / 500 мм / 0.5 м не
+    // вырождали полосу в точку, а 2.5 мм / 400 мм / 500 м не вылазили.
+    var xLenPx  = 100 + 200 * Math.min(1, Math.log10(Math.max(Lm, 0.1) + 1) / 2.7); // 0.5→~40 px, 10→~160 px, 100→~200 px
+    xLenPx = Math.max(60, Math.min(260, xLenPx));
+    var yThPx   = 6 + 40 * Math.min(1, Math.sqrt(Math.max(h, 0.01) / 2.5));         // 0.01→~9, 0.5→~24, 2.5→~46
+    yThPx = Math.max(4, Math.min(50, yThPx));
+    var wSkewPx = 16 + 60 * Math.min(1, Math.sqrt(Math.max(b, 1) / 500));           // 4мм→~22, 100→~42, 400→~70
+    wSkewPx = Math.max(16, Math.min(70, wSkewPx));
     var xSkewPx = wSkewPx;
-    var ySkewPx = wSkewPx * 0.65;
+    var ySkewPx = wSkewPx * 0.6;
 
     var x0 = 100;
-    var y0 = 88;
+    var y0 = 110;
     var x1 = x0 + xLenPx;
     var yTop = y0 - yThPx / 2;
     var yBot = y0 + yThPx / 2;
 
-    // Полосы
-    polyTop.setAttribute('points',
+    setA(polyTop,   'points',
       x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
       (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
       (x0 + xSkewPx) + ',' + (yTop - ySkewPx));
-    polyFront.setAttribute('points',
+    setA(polyFront, 'points',
       x0 + ',' + yTop + ' ' + x1 + ',' + yTop + ' ' +
       x1 + ',' + yBot + ' ' + x0 + ',' + yBot);
-    polySide.setAttribute('points',
+    setA(polySide,  'points',
       x1 + ',' + yTop + ' ' + (x1 + xSkewPx) + ',' + (yTop - ySkewPx) + ' ' +
       (x1 + xSkewPx) + ',' + (yBot - ySkewPx) + ' ' + x1 + ',' + yBot);
 
-    // Размерная линия «Длина» (снизу под передней гранью)
-    var lenY = yBot + 20;
-    if (lenLine)  { lenLine.setAttribute('x1', x0); lenLine.setAttribute('x2', x1); lenLine.setAttribute('y1', lenY); lenLine.setAttribute('y2', lenY); }
-    if (lenTick1) { lenTick1.setAttribute('x1', x0); lenTick1.setAttribute('x2', x0); lenTick1.setAttribute('y1', lenY - 5); lenTick1.setAttribute('y2', lenY + 5); }
-    if (lenTick2) { lenTick2.setAttribute('x1', x1); lenTick2.setAttribute('x2', x1); lenTick2.setAttribute('y1', lenY - 5); lenTick2.setAttribute('y2', lenY + 5); }
-    if (schemaLenLabel) { schemaLenLabel.setAttribute('x', (x0 + x1) / 2); schemaLenLabel.setAttribute('y', lenY + 18); }
+    // Длина — снизу под передней гранью
+    var lenY = yBot + 22;
+    setA(lenLine,  'x1', x0); setA(lenLine,  'x2', x1); setA(lenLine,  'y1', lenY); setA(lenLine,  'y2', lenY);
+    setA(lenTick1, 'x1', x0); setA(lenTick1, 'x2', x0); setA(lenTick1, 'y1', lenY - 5); setA(lenTick1, 'y2', lenY + 5);
+    setA(lenTick2, 'x1', x1); setA(lenTick2, 'x2', x1); setA(lenTick2, 'y1', lenY - 5); setA(lenTick2, 'y2', lenY + 5);
+    setA(schemaLenLabel, 'x', (x0 + x1) / 2); setA(schemaLenLabel, 'y', lenY + 18);
 
-    // «Ширина» — скошенная линия справа
-    if (wLine) {
-      wLine.setAttribute('x1', x1 + 5); wLine.setAttribute('y1', yTop + 2);
-      wLine.setAttribute('x2', x1 + xSkewPx + 5); wLine.setAttribute('y2', yTop - ySkewPx + 2);
-    }
-    if (schemaWLabel) { schemaWLabel.setAttribute('x', x1 + xSkewPx + 10); schemaWLabel.setAttribute('y', yTop - ySkewPx + 5); }
+    // Ширина — скошенная линия справа
+    setA(wLine, 'x1', x1 + 6); setA(wLine, 'y1', yTop + 2);
+    setA(wLine, 'x2', x1 + xSkewPx + 6); setA(wLine, 'y2', yTop - ySkewPx + 2);
+    setA(schemaWLabel, 'x', x1 + xSkewPx + 12); setA(schemaWLabel, 'y', yTop - ySkewPx + 6);
 
-    // «Толщина» — слева
-    if (hLine)  { hLine.setAttribute('x1', x0 - 13); hLine.setAttribute('x2', x0 - 13); hLine.setAttribute('y1', yTop); hLine.setAttribute('y2', yBot); }
-    if (hTick1) { hTick1.setAttribute('x1', x0 - 18); hTick1.setAttribute('x2', x0 - 3); hTick1.setAttribute('y1', yTop); hTick1.setAttribute('y2', yTop); }
-    if (hTick2) { hTick2.setAttribute('x1', x0 - 18); hTick2.setAttribute('x2', x0 - 3); hTick2.setAttribute('y1', yBot); hTick2.setAttribute('y2', yBot); }
-    if (schemaHLabel) { schemaHLabel.setAttribute('y', (yTop + yBot) / 2 + 4); }
+    // Толщина — слева
+    setA(hLine,  'x1', x0 - 14); setA(hLine,  'x2', x0 - 14); setA(hLine,  'y1', yTop); setA(hLine,  'y2', yBot);
+    setA(hTick1, 'x1', x0 - 19); setA(hTick1, 'x2', x0 - 4); setA(hTick1, 'y1', yTop); setA(hTick1, 'y2', yTop);
+    setA(hTick2, 'x1', x0 - 19); setA(hTick2, 'x2', x0 - 4); setA(hTick2, 'y1', yBot); setA(hTick2, 'y2', yBot);
+    setA(schemaHLabel, 'x', x0 - 25); setA(schemaHLabel, 'y', (yTop + yBot) / 2 + 5);
   }
 
   function fmt(n) {
