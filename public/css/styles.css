@@ -1744,6 +1744,16 @@ body.menu-open .mobile-menu { display: block; }
   }
 }
 
+/* ========== HEADER CONTACT NOTE ========== */
+.header-contacts__note,
+.mobile-menu-contacts__note {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
 /* ========== GRADE ANALOG BADGE ========== */
 .grade-analog {
   display: flex;
