@@ -211,19 +211,30 @@ function buildCompactProductDescription(product) {
   const width = fmtMm(product.width_mm);
   const gradeShortDesc = getGradeShortDesc(mark);
 
+  const html = [];
+
+  // Уникальный вступительный абзац по марке (grades.intro) — снимает near-duplicate
+  // content между 486 товарами одной марки. Аудитор SEO — задача 1.7.
+  if (product.grade_intro && product.grade_intro.trim()) {
+    html.push(`<p>${escapeHtml(product.grade_intro.trim())}</p>`);
+  }
+
+  // Технический абзац о конкретном товаре (типоразмер + условия поставки).
   const parts = [];
   if (mark && thickness && width) {
     parts.push(`Лента стальная ${mark} толщиной ${thickness} мм, шириной ${width} мм.`);
   } else if (mark) {
     parts.push(`Лента стальная ${mark}.`);
   }
-  if (gradeShortDesc) {
+  if (gradeShortDesc && !product.grade_intro) {
+    // Fallback: короткое описание марки, если полного intro нет.
     parts.push(`Марка ${mark} — ${gradeShortDesc}.`);
   }
   parts.push('Поставляем нарезку под заказ, доставка по всей России.');
   parts.push('Для уточнения цены и наличия звоните: 8-800-100-08-74.');
+  html.push(`<p>${escapeHtml(parts.join(' '))}</p>`);
 
-  return `<p>${escapeHtml(parts.join(' '))}</p>`;
+  return html.join('\n');
 }
 
 function buildFaqSchema(items) {
