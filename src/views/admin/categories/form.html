@@ -63,6 +63,13 @@
     </div>
 
     <div class="adm-form-group">
+      <label class="adm-label">Зарубежный аналог</label>
+      <input type="text" name="aisi_analog" value="{{ grade.aisi_analog if grade and grade.aisi_analog else '' }}"
+             class="adm-input" placeholder="AISI 321 / Kanthal A / ≈ Inconel 600">
+      <p class="adm-hint">AISI, UNS, DIN или торговое название. Показывается в таблице характеристик товара и под H1 на странице марки. Если пусто — не выводится.</p>
+    </div>
+
+    <div class="adm-form-group">
       <label class="adm-checkbox-label">
         <input type="checkbox" name="is_active" value="1" {% if not grade or grade.is_active %}checked{% endif %}>
         Активна

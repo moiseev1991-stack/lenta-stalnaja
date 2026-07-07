@@ -164,12 +164,47 @@ async function runMysqlMigrations() {
     // missing column silently empties sitemap-grades.xml / sitemap-groups.xml.
     `ALTER TABLE grades ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
     `ALTER TABLE \`groups\` ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+    `ALTER TABLE grades ADD COLUMN aisi_analog VARCHAR(100) NULL`,
   ];
 
   for (const sql of alterCols) {
     try { await pool.query(sql); } catch (_) {}
   }
   console.log('MySQL migrations OK');
+
+  // ── Backfill: зарубежные аналоги для отечественных марок ───────────────────
+  // UPDATE ... WHERE aisi_analog IS NULL — не перезатирает ручную правку в админке.
+  const analogMapping = [
+    ['08Х18Н10',      'AISI 304'],
+    ['10Х17Н13М3Т',   'AISI 316Ti'],
+    ['12Х18Н10Т',     'AISI 321'],
+    ['12Х18Н9',       'AISI 302'],
+    ['12Х18Н9СМР',    '≈ AISI 316'],
+    ['20Х13',         'AISI 420'],
+    ['27КХ',          'Vicalloy II'],
+    ['29НК',          'ASTM F15 / Kovar'],
+    ['36НХТЮ',        'Ni-Span-C 902'],
+    ['40КХНМ',        'Havar'],
+    ['65Г',           '≈ AISI 1066'],
+    ['Х15Н60',        'Nichrome 60 / NiCr60'],
+    ['Х15Ю5',         'FeCrAl / Kanthal APM'],
+    ['Х20Н80',        'Nichrome 80 / NiCr80/20'],
+    ['Х20Н80-Н',      'Nichrome 80 (нагартованный)'],
+    ['Х23Ю5',         'Kanthal A'],
+    ['Х23Ю5Т',        'Kanthal AF'],
+    ['ХН78Т',         '≈ Inconel 600'],
+  ];
+  try {
+    for (const [name, analog] of analogMapping) {
+      await pool.query(
+        'UPDATE grades SET aisi_analog = ? WHERE name = ? AND (aisi_analog IS NULL OR aisi_analog = ?)',
+        [analog, name, '']
+      );
+    }
+    console.log('MySQL aisi_analog backfill OK');
+  } catch (e) {
+    console.warn('MySQL aisi_analog backfill skipped:', e.message);
+  }
 
   // ── SEO: update home title and meta description ───────────────────────────
   try {

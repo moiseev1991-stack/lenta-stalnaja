@@ -51,6 +51,7 @@ const BASE_SELECT = `
     gr.id   AS grade_id,
     gr.name AS grade_name,
     gr.slug AS grade_slug,
+    gr.aisi_analog AS grade_aisi_analog,
     grp.id   AS group_id_val,
     grp.name AS group_name_val,
     grp.slug AS group_slug_val

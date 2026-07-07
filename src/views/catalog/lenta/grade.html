@@ -30,6 +30,10 @@
 
 <h1>{{ h1 }}</h1>
 
+{% if grade.aisi_analog %}
+<p class="grade-analog"><strong>Отечественная марка.</strong> Зарубежный аналог: <strong>{{ grade.aisi_analog }}</strong></p>
+{% endif %}
+
 {# Краткое вводное описание #}
 {% if grade.intro %}
 <p class="lead">{{ grade.intro }}</p>

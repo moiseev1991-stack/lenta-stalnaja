@@ -125,23 +125,24 @@ async function saveCategory(req, res) {
   const article_title = body.article_title || null;
   const article_text = body.article_text || null;
   const article_format = body.article_format || 'html';
+  const aisi_analog = (body.aisi_analog || '').trim() || null;
 
   try {
     if (id) {
       await pool.query(`
         UPDATE grades SET name=?, slug=?, group_id=?, is_active=?,
           seo_h1=?, seo_title=?, seo_description=?,
-          intro=?, article_title=?, article_text=?, article_format=?
+          intro=?, article_title=?, article_text=?, article_format=?, aisi_analog=?
         WHERE id=?
       `, [name, slug, group_id, is_active, seo_h1, seo_title, seo_description,
-          intro, article_title, article_text, article_format, id]);
+          intro, article_title, article_text, article_format, aisi_analog, id]);
     } else {
       await pool.query(`
         INSERT INTO grades (name, slug, group_id, is_active, seo_h1, seo_title, seo_description,
-          intro, article_title, article_text, article_format)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          intro, article_title, article_text, article_format, aisi_analog)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [name, slug, group_id, is_active, seo_h1, seo_title, seo_description,
-          intro, article_title, article_text, article_format]);
+          intro, article_title, article_text, article_format, aisi_analog]);
     }
     res.redirect('/admin/categories');
   } catch (err) {
