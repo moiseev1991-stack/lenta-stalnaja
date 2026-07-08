@@ -7,13 +7,14 @@
 //   2. Приложение шлёт POST на https://api.indexnow.org/indexnow со списком URL.
 //   3. IndexNow-шлюз (Bing) раздаёт список всем участникам протокола, включая Яндекс.
 //
-// Ключ хранится в ENV — INDEXNOW_KEY. Если ключ не задан, сервис работает как no-op:
-// keyfile не отдаётся, pingUrls() ничего не делает. Это позволяет спокойно катить код
-// на прод и включить IndexNow позже, просто прописав переменную окружения.
+// Ключ не секрет: он публично отдаётся по /<key>.txt, любой может его прочитать.
+// Поэтому храним прямо в коде — это стабильная константа привязки к домену.
+// Через ENV можно переопределить, но по умолчанию используется значение ниже.
 
 const config = require('../config');
 
-const KEY = String(process.env.INDEXNOW_KEY || '').trim();
+const DEFAULT_KEY = 'c64a8f458c79770ef8edc8eccbc8451d';
+const KEY = String(process.env.INDEXNOW_KEY || DEFAULT_KEY).trim();
 const HOST = new URL(config.siteUrl || 'https://lenta-stalnaja.ru').host;
 
 function isEnabled() {
