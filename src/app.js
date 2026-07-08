@@ -8,6 +8,10 @@ const config = require('./config');
 
 const app = express();
 
+// Убираем X-Powered-By: Express — версия сервера не должна утекать
+// в заголовки (косметика + чуть меньше шума для сканеров).
+app.disable('x-powered-by');
+
 // Run async MySQL migrations (add new columns if needed)
 require('./db/mysql_migrate').runMysqlMigrations().catch(() => {});
 

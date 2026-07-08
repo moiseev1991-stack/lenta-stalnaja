@@ -1,4 +1,9 @@
 <?php
+// Убираем X-Powered-By: PHP/x.y.z из ответа — версия PHP не должна утекать наружу.
+// expose_php = Off в php.ini на shared-хостинге поменять нельзя, поэтому чистим руками
+// (header_remove должен идти до любого echo/exit).
+header_remove('X-Powered-By');
+
 // HTTP → HTTPS redirect (301) — не редиректить, если прокси передал X-Forwarded-Proto: https
 $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 $forwardedHttps = ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
