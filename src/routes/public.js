@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/publicController');
 const lentaController = require('../controllers/lentaController');
+const indexnow = require('../services/indexnow');
 
 router.get('/', controller.home);
 
@@ -47,6 +48,15 @@ router.get('/yml.xml', controller.ymlFeed);
 router.get('/llms.txt', controller.llmsTxt);
 router.get('/llms-full.txt', controller.llmsFullTxt);
 router.get('/robots.txt', controller.robotsTxt);
+
+// IndexNow keyfile — /<KEY>.txt. Регистрируется только если ENV задан.
+// До catch-all роутов, иначе /:slug/ его перехватит.
+if (indexnow.isEnabled()) {
+  router.get(`/${indexnow.getKey()}.txt`, (req, res) => {
+    res.type('text/plain').send(indexnow.getKeyfileText());
+  });
+}
+
 router.post('/lead', controller.submitLead);
 
 // ── 301 redirects from old /catalog/lenta/ URLs ───────────────────────────────

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const config = require('../config');
 const { buildGradeSEO, buildGroupSEO, buildProductSEO } = require('../helpers/seoTemplates');
 const csv = require('../services/csv');
+const indexnow = require('../services/indexnow');
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -219,6 +220,9 @@ async function saveGroup(req, res) {
       `, [name, slug, is_active, seo_h1, seo_title, seo_description,
           intro, article_title, article_text, article_format]);
     }
+    if (is_active && slug) {
+      indexnow.notify([`${config.siteUrl}/${slug}/`]);
+    }
     res.redirect('/admin/groups');
   } catch (err) {
     console.error('saveGroup error:', err.message);
@@ -359,6 +363,16 @@ async function saveProduct(req, res) {
           thickness_mm, width_mm, state, spring_props, surface,
           price_per_kg, in_stock, lead_time, image_filename]);
     }
+    // IndexNow: пингуем и страницу товара, и страницу марки (там появился/обновился товар).
+    try {
+      const [[grade]] = await pool.query('SELECT slug FROM grades WHERE id = ?', [grade_id]);
+      if (grade && grade.slug && slug) {
+        indexnow.notify([
+          `${config.siteUrl}/${grade.slug}/${slug}/`,
+          `${config.siteUrl}/${grade.slug}/`,
+        ]);
+      }
+    } catch (_) { /* пинг — best effort, ошибок глотаем */ }
     res.redirect('/admin/products');
   } catch (err) {
     console.error('saveProduct error:', err.message);
