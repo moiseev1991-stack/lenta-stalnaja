@@ -4,6 +4,7 @@ const config      = require('../config');
 const lenta       = require('../services/lenta');
 const markdownArticles = require('../services/markdownArticles');
 const { buildGradeSEO, buildGroupSEO, buildCategorySEO } = require('../helpers/seoTemplates');
+const { setLastModified } = require('../helpers/httpCache');
 
 const TEXT_DIR = path.join(__dirname, '../../text');
 
@@ -184,6 +185,11 @@ async function gradePage(req, res, next) {
     if (!grade) return next();
 
     const filters      = parseFilters(req.query);
+    // Last-Modified — только для чистой страницы марки, без ?filter=.
+    // На фильтрах у нас noindex,follow, кэш не нужен.
+    if (!hasFilters(filters) && grade.updated_at) {
+      if (setLastModified(req, res, grade.updated_at)) return;
+    }
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
     const [result, filterValues, relatedGrades] = await Promise.all([
       lenta.getProductsByGrade(grade.name, filters, page),
@@ -243,6 +249,9 @@ async function groupPage(req, res, next) {
     if (!group) return next();
 
     const filters      = parseFilters(req.query);
+    if (!hasFilters(filters) && group.updated_at) {
+      if (setLastModified(req, res, group.updated_at)) return;
+    }
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
     const [result, filterValues, gradesInGroup] = await Promise.all([
       lenta.getProductsByGroup(group.id, filters, page),

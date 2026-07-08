@@ -7,6 +7,7 @@ const llmsService     = require('../services/llms');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
+const { setLastModified } = require('../helpers/httpCache');
 
 // Detect Cyrillic UTF-8 bytes misread as Latin-1 / Windows-1251 ("mojibake").
 // Real mojibake has a specific signature: cyrillic UTF-8 starts with bytes
@@ -60,6 +61,24 @@ async function home(req, res, next) {
   try {
     const filters = parseFilters(req.query);
     const page    = Math.max(1, parseInt(req.query.page, 10) || 1);
+
+    // Last-Modified для главной = самое свежее из products/grades/groups.
+    // Только для чистой главной без фильтров — на страницах с ?mark=…&thickness=…
+    // мы уже отдаём noindex,follow, там кэш не нужен.
+    if (!hasFilters(filters) && page === 1) {
+      try {
+        const [[row]] = await pool.query(
+          'SELECT GREATEST(' +
+            'COALESCE((SELECT MAX(updated_at) FROM products), 0), ' +
+            'COALESCE((SELECT MAX(updated_at) FROM grades), 0), ' +
+            'COALESCE((SELECT MAX(updated_at) FROM `groups`), 0)' +
+          ') AS lastmod'
+        );
+        if (row && row.lastmod && setLastModified(req, res, row.lastmod)) return;
+      } catch (e) {
+        console.error('[home] lastmod query failed:', e.message);
+      }
+    }
 
     let filterValues, pageResult;
     try {
@@ -286,6 +305,8 @@ async function productPage(req, res, next) {
       return res.redirect(301, productCanonical(product));
     }
 
+    if (setLastModified(req, res, product.updated_at)) return;
+
     const productSeo  = buildProductSEO(product, config.siteName);
     const productName = normalizeProductName(product.name);
     const canonical   = productCanonical(product);
@@ -339,6 +360,8 @@ async function productBySlugPage(req, res, next) {
     if (product.grade_slug) {
       return res.redirect(301, productCanonical(product));
     }
+    if (setLastModified(req, res, product.updated_at)) return;
+
     const productSeo  = buildProductSEO(product, config.siteName);
     const productName = normalizeProductName(product.name);
     const canonical   = '/' + product.slug + '/';
