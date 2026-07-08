@@ -1941,7 +1941,10 @@ body.menu-open .mobile-menu { display: block; }
 }
 .gost-detail__marks li a:hover { background: #dbeafe; border-color: #93c5fd; }
 .gost-detail__marks-hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.5rem; }
-.gost-detail__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 1.75rem; }
+.gost-detail__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0.5rem; }
+.gost-detail__cntd-link { font-size: 0.85rem; color: var(--muted); margin: 0 0 1.5rem; }
+.gost-detail__cntd-link a { color: var(--muted); text-decoration: underline; }
+.gost-detail__cntd-link a:hover { color: var(--primary); }
 .gost-detail__nav { margin: 1.25rem 0; }
 .gost-detail__nav a { color: var(--muted); font-size: 0.95rem; }
 

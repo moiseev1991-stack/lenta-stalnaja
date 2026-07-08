@@ -51,15 +51,22 @@
 
   <div class="gost-detail__actions">
     {% if hasPdf %}
-    <a href="{{ pdfUrl }}" class="btn btn-primary" target="_blank" rel="noopener">
+    <a href="{{ pdfUrl }}" class="btn btn-primary" target="_blank" rel="noopener" download>
       Скачать PDF полный текст ГОСТа
     </a>
-    {% endif %}
-    <a href="{{ gost.officialUrl }}" class="btn btn-outline" target="_blank" rel="noopener nofollow">
+    <a href="/kalkulyator-vesa-lenty/" class="btn btn-outline">Калькулятор веса</a>
+    {% else %}
+    <a href="{{ gost.officialUrl }}" class="btn btn-primary" target="_blank" rel="noopener nofollow">
       Открыть на docs.cntd.ru
     </a>
     <a href="/kalkulyator-vesa-lenty/" class="btn btn-outline">Калькулятор веса</a>
+    {% endif %}
   </div>
+  {% if hasPdf %}
+  <p class="gost-detail__cntd-link">Официальный источник с изменениями:
+    <a href="{{ gost.officialUrl }}" target="_blank" rel="noopener nofollow">docs.cntd.ru</a>
+  </p>
+  {% endif %}
 
   {% if gost.fullContentHtml %}
   <nav class="gost-detail__toc" aria-label="Содержание страницы">
