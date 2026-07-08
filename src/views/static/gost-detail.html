@@ -1,5 +1,11 @@
 {% extends "layout.html" %}
 
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":{{ gost.shortTitle | json | safe }},"name":{{ gost.title | json | safe }},"description":{{ (gost.intro or gost.scope) | json | safe }},"url":{{ canonical | json | safe }},"inLanguage":"ru-RU","dependencies":{{ (gost.marks | join(', ')) | json | safe }},"proficiencyLevel":"Expert","author":{"@type":"Organization","name":"lenta-stalnaja.ru","url":"https://lenta-stalnaja.ru"},"publisher":{"@type":"Organization","name":"lenta-stalnaja.ru","url":"https://lenta-stalnaja.ru","logo":{"@type":"ImageObject","url":"https://lenta-stalnaja.ru/img/logo.svg"}},"isPartOf":{"@type":"WebSite","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru"},"about":{"@type":"Thing","name":{{ gost.shortTitle | json | safe }}}}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="page-content gost-detail">
   <h1>{{ h1 }}</h1>
@@ -13,29 +19,73 @@
   <table class="gost-detail__specs">
     <tbody>
       <tr><th>Номер стандарта</th><td>{{ gost.shortTitle }}</td></tr>
+      {% if gost.yearOfIntroduction %}
+      <tr><th>Год введения</th><td>{{ gost.yearOfIntroduction }}</td></tr>
+      {% endif %}
+      {% if gost.thicknessRange and gost.thicknessRange != '—' %}
       <tr><th>Толщина</th><td>{{ gost.thicknessRange }}</td></tr>
+      {% endif %}
+      {% if gost.widthRange and gost.widthRange != '—' %}
       <tr><th>Ширина</th><td>{{ gost.widthRange }}</td></tr>
+      {% endif %}
+      {% if gost.surfaces and gost.surfaces != '—' %}
       <tr><th>Отделка поверхности</th><td>{{ gost.surfaces }}</td></tr>
+      {% endif %}
+      {% if gost.conditions and gost.conditions != '—' %}
       <tr><th>Состояние поставки</th><td>{{ gost.conditions }}</td></tr>
+      {% endif %}
     </tbody>
   </table>
 
   {% if gost.marks and gost.marks.length %}
-  <h2>Марки из нашего каталога по этому ГОСТу</h2>
-  <ul class="gost-detail__marks">
-    {% for m in gost.marks %}
-    <li>{{ m }}</li>
-    {% endfor %}
-  </ul>
+  <div class="gost-detail__marks-block">
+    <h2 id="marks-in-catalog">Марки из нашего каталога по этому ГОСТу</h2>
+    <ul class="gost-detail__marks">
+      {% for m in gost.marks %}
+      <li><a href="/?mark={{ m }}" rel="nofollow">{{ m }}</a></li>
+      {% endfor %}
+    </ul>
+    <p class="gost-detail__marks-hint">Кликните на марку — увидите доступные типоразмеры в наличии и цены за килограмм.</p>
+  </div>
   {% endif %}
 
   <div class="gost-detail__actions">
     {% if hasPdf %}
-    <a href="{{ pdfUrl }}" class="btn btn-primary" target="_blank" rel="noopener">Скачать PDF</a>
+    <a href="{{ pdfUrl }}" class="btn btn-primary" target="_blank" rel="noopener">
+      Скачать PDF полный текст ГОСТа
+    </a>
     {% endif %}
-    <a href="{{ gost.officialUrl }}" class="btn btn-outline" target="_blank" rel="noopener nofollow">Открыть на docs.cntd.ru</a>
+    <a href="{{ gost.officialUrl }}" class="btn btn-outline" target="_blank" rel="noopener nofollow">
+      Открыть на docs.cntd.ru
+    </a>
     <a href="/kalkulyator-vesa-lenty/" class="btn btn-outline">Калькулятор веса</a>
   </div>
+
+  {% if gost.fullContentHtml %}
+  <nav class="gost-detail__toc" aria-label="Содержание страницы">
+    <div class="gost-detail__toc-title">Содержание</div>
+    <ol>
+      <li><a href="#general">Общие положения</a></li>
+      {% if '<h2 id="sortament"' in gost.fullContentHtml %}<li><a href="#sortament">Сортамент и допуски</a></li>{% endif %}
+      {% if '<h2 id="scope-detail"' in gost.fullContentHtml %}<li><a href="#scope-detail">Область применения</a></li>{% endif %}
+      {% if '<h2 id="marks"' in gost.fullContentHtml %}<li><a href="#marks">Марки и применение</a></li>{% endif %}
+      {% if '<h2 id="composition"' in gost.fullContentHtml %}<li><a href="#composition">Химический состав</a></li>{% endif %}
+      {% if '<h2 id="properties"' in gost.fullContentHtml %}<li><a href="#properties">Механические свойства</a></li>{% endif %}
+      {% if '<h2 id="heat-treatment"' in gost.fullContentHtml %}<li><a href="#heat-treatment">Термообработка</a></li>{% endif %}
+      {% if '<h2 id="control"' in gost.fullContentHtml %}<li><a href="#control">Методы контроля</a></li>{% endif %}
+      {% if '<h2 id="acceptance"' in gost.fullContentHtml %}<li><a href="#acceptance">Правила приёмки</a></li>{% endif %}
+      {% if '<h2 id="marking"' in gost.fullContentHtml %}<li><a href="#marking">Маркировка и упаковка</a></li>{% endif %}
+    </ol>
+  </nav>
+
+  <article class="gost-detail__body">
+    {{ gost.fullContentHtml | safe }}
+  </article>
+  {% endif %}
+
+  <aside class="gost-detail__disclaimer" role="note">
+    <p><strong>Ознакомительный материал.</strong> На этой странице приведён обзор содержания {{ gost.shortTitle }} для удобства подбора ленты — область применения, ключевые марки, диапазоны размеров, состояния поставки, методы контроля. Официальный полный текст стандарта с точными числовыми таблицами допусков, испытательных нагрузок и режимов, поддерживаемый актуальными изменениями и поправками, размещён на портале «Кодекс» <a href="{{ gost.officialUrl }}" target="_blank" rel="noopener nofollow">docs.cntd.ru</a> — при заказе ленты и составлении технической документации ориентируйтесь на официальный источник.</p>
+  </aside>
 
   <div class="gost-detail__nav">
     <a href="/gost/">← Все ГОСТы</a>

@@ -87,7 +87,7 @@ async function getStaticUrls() {
     const { GOSTS } = require('../data/gosts');
     GOSTS.forEach(g => {
       urls.push({
-        loc: buildLoc(base, 'gost/' + g.slug),
+        loc: buildLoc(base, 'gost', g.slug),
         changefreq: 'yearly',
         priority: 0.5,
         lastmod: today,
