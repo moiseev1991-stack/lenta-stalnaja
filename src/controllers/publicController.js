@@ -711,9 +711,9 @@ async function kalkulyatorVesaLenty(req, res) {
 
 async function gostIndex(req, res) {
   res.render('static/gost-index.html', {
-    title: 'ГОСТы на стальную ленту — справочник стандартов по всем маркам',
-    h1: 'ГОСТы на стальную ленту',
-    metaDescription: 'Справочник ГОСТов на стальную и специальную ленту: ' + GOSTS.map((g) => g.number).join(', ') + '. По каждому — область применения, сортамент, марки, ссылка на официальный текст.',
+    title: 'ГОСТы на металлическую ленту — справочник стандартов, марок и сортамента',
+    h1: 'ГОСТы на металлическую ленту',
+    metaDescription: 'Справочник действующих ГОСТов на стальную, нержавеющую и специальную ленту: ' + GOSTS.map((g) => g.number).join(', ') + '. По каждому — область применения, сортамент, марки, PDF полного текста стандарта.',
     canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + '/gost/',
     gosts: GOSTS,
     breadcrumbs: [{ name: 'ГОСТы', url: '/gost/' }],
