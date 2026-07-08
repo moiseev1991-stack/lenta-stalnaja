@@ -49,4 +49,14 @@ jobs:
             rm -f ~/node.sock
             setsid bash "$APP/start_node.sh" </dev/null >/dev/null 2>&1 &
             sleep 5
+
+            # Пингуем Яндекс.Вебмастер о свежем sitemap.
+            # Google убрал sitemap-ping ещё в 2023-м, там ничего не пингуем.
+            # Errors non-fatal — деплой не должен падать из-за яндекс-эндпоинта.
+            echo "==> ping Yandex Webmaster sitemap"
+            curl -sS --max-time 10 \
+              "https://webmaster.yandex.ru/ping?sitemap=https://lenta-stalnaja.ru/sitemap.xml" \
+              -o /dev/null -w "yandex ping: HTTP %{http_code}\n" \
+              || echo "Yandex ping failed (non-fatal)"
+
             echo "==> Done: $(date)"
