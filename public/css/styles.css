@@ -836,6 +836,10 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 
 /* ========== INFO PAGES ========== */
 .page-content { max-width: 720px; }
+.page-content--wide { max-width: 1040px; }
+/* Keep prose/forms readable even on wide contacts pages */
+.page-content--wide .lead-form-compact,
+.page-content--wide > .card { max-width: 720px; }
 .page-content p { margin: 0.6rem 0; line-height: 1.65; }
 .page-content h1 { margin-bottom: 1rem; }
 .content { line-height: 1.65; }
