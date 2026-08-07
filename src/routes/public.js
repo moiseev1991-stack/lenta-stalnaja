@@ -27,6 +27,8 @@ router.get('/download/certificates', (req, res) => {
 // ── Static / utility pages (must precede parameterized catch-all routes) ───────
 router.get('/about/', controller.about);
 router.get('/contacts/', controller.contacts);
+router.get('/contacts/spb/', controller.contactsSpb);
+router.get('/contacts/nizhniy-novgorod/', controller.contactsNn);
 router.get('/delivery/', controller.delivery);
 router.get('/payment/', controller.payment);
 router.get('/faq/', controller.faq);

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block head %}
+  <script type="application/ld+json">
+{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ siteUrl }}{{ city.path }}#localbusiness","name":"{{ city.sign }} — {{ city.name }}","url":"{{ siteUrl }}{{ city.path }}","image":"{{ siteUrl }}{{ city.photo }}","telephone":"+7-800-100-08-74","email":"info@lenta-stalnaja.ru","address":{"@type":"PostalAddress","streetAddress":{{ city.address | json | safe }},"addressLocality":{{ city.name | json | safe }},"addressCountry":"RU"},{% if city.geo %}"geo":{"@type":"GeoCoordinates","latitude":{{ city.geo.lat }},"longitude":{{ city.geo.lng }}},{% endif %}"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}],"priceRange":"$$","areaServed":{"@type":"City","name":{{ city.name | json | safe }}}}
+  </script>
+{% endblock %}
+{% block content %}
+<div class="page-content">
+  <h1>{{ h1 }}</h1>
+
+  <h2 style="font-size:1.1rem;margin:0 0 1rem;">Офис и отгрузка {{ city.inCity }}</h2>
+
+  {% include "partials/contacts_office.html" %}
+
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <p><strong>Общие вопросы:</strong> <a href="mailto:info@lenta-stalnaja.ru">info@lenta-stalnaja.ru</a></p>
+    <p><strong>Заказы и заявки:</strong> <a href="mailto:orders@lenta-stalnaja.ru">orders@lenta-stalnaja.ru</a></p>
+    <p><strong>Режим работы:</strong> {{ city.hours }}</p>
+  </div>
+
+  <div class="lead-form-compact" id="lead">
+    <h3>Оставить заявку {{ city.inCity }}</h3>
+    {% if leadStatus == 'ok' %}
+    <p class="lead-message success">Заявка отправлена! Мы свяжемся с вами в ближайшее время.</p>
+    {% endif %}
+    {% if leadStatus == 'error' %}
+    <p class="lead-message error">Пожалуйста, укажите имя и телефон.</p>
+    {% endif %}
+    <form class="lead-form" method="post" action="/lead">
+      <input type="hidden" name="redirect" value="{{ city.path }}#lead">
+      <div class="form-group">
+        <label>Имя *</label>
+        <input type="text" name="name" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Телефон *</label>
+        <input type="tel" name="phone" class="input" required>
+      </div>
+      <div class="form-group">
+        <label>Комментарий</label>
+        <textarea name="message" class="input" rows="3"></textarea>
+      </div>
+      <label class="form-consent">
+        <input type="checkbox" name="consent" required checked>
+        <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a> и <a href="/terms/" target="_blank">условиями использования сайта</a>.</span>
+      </label>
+      <button type="submit" class="btn btn-primary">Отправить</button>
+    </form>
+  </div>
+
+  <div class="contacts-other-cities">
+    <span class="contacts-other-cities__label">Другие офисы:</span>
+    {% for c in otherCities %}
+      <a href="{{ c.path }}" class="contacts-other-cities__link">{{ c.name }}</a>
+    {% endfor %}
+  </div>
+
+  {% include "partials/usp_block.html" %}
+</div>
+{% endblock %}

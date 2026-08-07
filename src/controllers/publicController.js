@@ -545,16 +545,92 @@ function privacy(req, res)      { staticPage(req, res, 'static/privacy.html',  '
 function cookies(req, res)      { staticPage(req, res, 'static/cookies.html',  'Cookies',           'Политика в отношении файлов cookie', 'Какие файлы cookie использует сайт lenta-stalnaja.ru, как ими управлять и отказаться.'); }
 function terms(req, res)        { staticPage(req, res, 'static/terms.html',    'Пользовательское соглашение', 'Пользовательское соглашение', 'Правила использования сайта lenta-stalnaja.ru — права и обязанности сторон, интеллектуальная собственность, ответственность.'); }
 
+// ── Contacts (главная + отдельные страницы городов) ────────────────────────────
+// Единая вывеска «Лента стальная» на всех офисах (для модерации Яндекс.Карт).
+const OFFICE_SIGN = 'Лента стальная';
+
+const CITY_CONTACTS = {
+  msk: {
+    key: 'msk',
+    path: '/contacts/',
+    name: 'Москва',
+    inCity: 'в Москве',
+    address: 'Москва, Рябиновая ул., 26, стр. 2',
+    photo: '/img/offices/moscow.jpg',
+    mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeLY1',
+    mapsLink: 'https://yandex.com/maps/-/CPGAeLY1',
+  },
+  spb: {
+    key: 'spb',
+    path: '/contacts/spb/',
+    name: 'Санкт-Петербург',
+    inCity: 'в Санкт-Петербурге',
+    address: 'Санкт-Петербург, ул. Центральная, 1, лит. А (Металлострой)',
+    photo: '/img/offices/spb.jpg',
+    mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAiVJ7',
+    mapsLink: 'https://yandex.com/maps/-/CPGAiVJ7',
+  },
+  nn: {
+    key: 'nn',
+    path: '/contacts/nizhniy-novgorod/',
+    name: 'Нижний Новгород',
+    inCity: 'в Нижнем Новгороде',
+    address: 'Нижний Новгород, Московское ш., 52, корп. 4',
+    photo: '/img/offices/nizhniy-novgorod.jpg',
+    mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeGkz',
+    mapsLink: 'https://yandex.com/maps/-/CPGAeGkz',
+    geo: { lat: 56.2822, lng: 43.9806 },
+  },
+};
+
+// Все офисы одной строкой (единый sign, телефон и часы) для JSON-LD и шаблонов.
+function cityWithDefaults(city) {
+  return {
+    ...city,
+    sign: OFFICE_SIGN,
+    phone: '8-800-100-08-74',
+    phoneTel: '+78001000874',
+    hours: 'пн–пт 9:00–18:00',
+  };
+}
+
 function contacts(req, res) {
+  const city = cityWithDefaults(CITY_CONTACTS.msk);
   renderPage(res, 'static/contacts.html', {
     title: 'Контакты | ' + config.siteName,
     h1:    'Контакты',
-    metaDescription: 'Контакты «' + config.siteName + '»: телефон, e-mail, адрес. Оставьте заявку на расчёт стоимости металлической ленты — ответим за 15 минут.',
+    metaDescription: 'Контакты «' + config.siteName + '»: офис и отгрузка в Москве, телефон, e-mail, адрес. Оставьте заявку на расчёт стоимости металлической ленты — ответим за 15 минут.',
     canonical: config.siteUrl + '/contacts/',
     breadcrumbs: [{ name: 'Контакты', url: '/contacts/' }],
     leadStatus: req.query.lead,
+    city,
+    otherCities: [cityWithDefaults(CITY_CONTACTS.spb), cityWithDefaults(CITY_CONTACTS.nn)],
   });
 }
+
+function renderCityContacts(req, res, cityKey) {
+  const raw = CITY_CONTACTS[cityKey];
+  const city = cityWithDefaults(raw);
+  const others = Object.values(CITY_CONTACTS)
+    .filter(c => c.key !== cityKey)
+    .map(cityWithDefaults);
+  renderPage(res, 'static/contacts-city.html', {
+    title: 'Контакты ' + city.inCity + ' | ' + config.siteName,
+    h1:    'Контакты ' + city.inCity,
+    metaDescription: 'Офис и отгрузка металлической ленты ' + city.inCity + ': ' + city.address + '. Телефон ' + city.phone + ', режим работы ' + city.hours + '. Оставьте заявку на расчёт.',
+    canonical: config.siteUrl + city.path,
+    breadcrumbs: [
+      { name: 'Контакты', url: '/contacts/' },
+      { name: city.name, url: city.path },
+    ],
+    leadStatus: req.query.lead,
+    city,
+    otherCities: others,
+  });
+}
+
+function contactsSpb(req, res) { renderCityContacts(req, res, 'spb'); }
+function contactsNn(req, res)  { renderCityContacts(req, res, 'nn'); }
 
 // ── Sitemap ───────────────────────────────────────────────────────────────────
 
@@ -748,7 +824,7 @@ async function gostDetail(req, res) {
 module.exports = {
   home, catalogRoot, categoryPage, landingPage, productPage, oldProductRedirect,
   genericCatalogPage, productBySlugPage,
-  about, contacts, delivery, payment, faq, certificates,
+  about, contacts, contactsSpb, contactsNn, delivery, payment, faq, certificates,
   privacy, cookies, terms,
   llmsTxt, llmsFullTxt,
   search, sitemapHtml, sitemapXml, robotsTxt, submitLead,

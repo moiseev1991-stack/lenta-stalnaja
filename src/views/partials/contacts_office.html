@@ -1,0 +1,25 @@
+<div class="contacts-office">
+  <div class="contacts-office__media">
+    <img src="{{ city.photo }}" alt="Офис «{{ city.sign }}» — {{ city.address }}"
+         width="1000" height="600" loading="lazy" class="contacts-office__photo">
+  </div>
+  <div class="contacts-office__info">
+    <h3>Адрес</h3>
+    <p class="region-address">{{ city.address }}</p>
+    <p class="contacts-office__sign">Вывеска на входе: «{{ city.sign }}»</p>
+    <a href="tel:{{ city.phoneTel }}" class="region-phone-link">{{ city.phone }}</a>
+    <p class="region-hours">{{ city.hours }}</p>
+    <a href="{{ city.mapsLink }}" class="region-directions" target="_blank" rel="noopener">
+      Построить маршрут →
+    </a>
+    <p class="contacts-office__pass">
+      Объект режимный: работает пропускная система. Просьба записаться заранее
+      по телефону {{ city.phone }}, чтобы мы оформили пропуск к вашему приезду.
+    </p>
+  </div>
+  <div class="contacts-office__map">
+    <iframe src="{{ city.mapWidget }}"
+      width="100%" height="320" frameborder="0" allowfullscreen
+      title="{{ city.name }} — схема проезда" loading="lazy"></iframe>
+  </div>
+</div>

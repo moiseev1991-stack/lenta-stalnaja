@@ -72,6 +72,8 @@ async function getStaticUrls() {
     { loc: buildLoc(base),                 changefreq: 'weekly',  priority: 1.0, lastmod: today },
     { loc: buildLoc(base, 'about'),        changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'contacts'),     changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'contacts', 'spb'),              changefreq: 'monthly', priority: 0.5, lastmod: today },
+    { loc: buildLoc(base, 'contacts', 'nizhniy-novgorod'), changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'delivery'),     changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'payment'),      changefreq: 'monthly', priority: 0.5, lastmod: today },
     { loc: buildLoc(base, 'faq'),          changefreq: 'monthly', priority: 0.5, lastmod: today },

@@ -1679,6 +1679,124 @@ body.menu-open .mobile-menu { display: block; }
   .contacts-region-tab { flex: none; }
 }
 
+/* ── Single office block (city contacts pages) ───────────────── */
+.contacts-office {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+.contacts-office__media { grid-column: 1 / -1; line-height: 0; }
+.contacts-office__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+}
+.contacts-office__info {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.contacts-office__info h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+.contacts-office__info .region-address {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0 0 0.35rem;
+}
+.contacts-office__sign {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+.contacts-office__info .region-phone-link {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 0.25rem;
+  text-decoration: none;
+}
+.contacts-office__info .region-phone-link:hover { text-decoration: underline; }
+.contacts-office__info .region-hours {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+}
+.contacts-office__info .region-directions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.contacts-office__info .region-directions:hover { background: #1b5e20; text-decoration: none; }
+.contacts-office__pass {
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.9rem;
+  background: #fff8e1;
+  border: 1px solid #ffe0a3;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #6d4c00;
+}
+.contacts-office__map { line-height: 0; border-top: 1px solid var(--border); }
+.contacts-office__map iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: none;
+}
+
+.contacts-other-cities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+}
+.contacts-other-cities__label { font-size: 0.85rem; color: var(--muted); }
+.contacts-other-cities__link {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s;
+}
+.contacts-other-cities__link:hover { background: var(--bg); border-color: #2e7d32; }
+
+@media (max-width: 640px) {
+  .contacts-office {
+    grid-template-columns: 1fr;
+  }
+  .contacts-office__info {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
 /* ── Map section ─────────────────────────────────────────────── */
 .map-section {
   background: var(--surface);
