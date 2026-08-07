@@ -35,42 +35,6 @@
     </div>
   </div>
   <div class="lead-cta">
-    <div class="lead-bonus">
-      <span class="lead-bonus__icon" aria-hidden="true">🎁</span>
-      <span class="lead-bonus__text">Бонус до <b>10%</b> на первый заказ — оставьте заявку сегодня</span>
-    </div>
-    <div class="lead-countdown" data-countdown aria-live="polite">
-      <span class="lead-countdown__label">До конца акции:</span>
-      <span class="lead-countdown__clock"><span data-cd-h>00</span>:<span data-cd-m>00</span>:<span data-cd-s>00</span></span>
-    </div>
-    <a href="/contacts/#lead" class="btn btn-primary btn-lg lead-cta__btn">Оставить заявку</a>
+    <a href="/contacts/#lead" class="btn btn-primary">Оставить заявку</a>
   </div>
 </section>
-
-<script>
-(function () {
-  if (window.__leadCountdownInit) return;
-  window.__leadCountdownInit = true;
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function tick() {
-    var els = document.querySelectorAll('[data-countdown]');
-    if (!els.length) return;
-    var now = new Date();
-    var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-    var diff = Math.max(0, Math.floor((end - now) / 1000));
-    var h = Math.floor(diff / 3600);
-    var m = Math.floor((diff % 3600) / 60);
-    var s = diff % 60;
-    els.forEach(function (el) {
-      var eh = el.querySelector('[data-cd-h]');
-      var em = el.querySelector('[data-cd-m]');
-      var es = el.querySelector('[data-cd-s]');
-      if (eh) eh.textContent = pad(h);
-      if (em) em.textContent = pad(m);
-      if (es) es.textContent = pad(s);
-    });
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
-</script>
