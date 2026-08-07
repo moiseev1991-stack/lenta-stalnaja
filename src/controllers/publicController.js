@@ -607,6 +607,7 @@ function contacts(req, res) {
     breadcrumbs: [{ name: 'Контакты', url: '/contacts/' }],
     leadStatus: req.query.lead,
     city,
+    footerRegion: city.key,
     otherCities: [cityWithDefaults(CITY_CONTACTS.spb), cityWithDefaults(CITY_CONTACTS.nn)],
   });
 }
@@ -628,6 +629,7 @@ function renderCityContacts(req, res, cityKey) {
     ],
     leadStatus: req.query.lead,
     city,
+    footerRegion: city.key,
     otherCities: others,
   });
 }
