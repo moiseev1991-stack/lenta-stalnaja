@@ -1688,13 +1688,30 @@ body.menu-open .mobile-menu { display: block; }
   overflow: hidden;
   margin-bottom: 1.25rem;
 }
-.contacts-office__media { grid-column: 1 / -1; line-height: 0; }
+.contacts-office__media {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+.contacts-office__figure { margin: 0; position: relative; line-height: 0; background: var(--bg); }
 .contacts-office__photo {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 360px;
+  height: 260px;
   object-fit: cover;
+}
+.contacts-office__figure figcaption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  border-top-right-radius: var(--radius-sm);
 }
 .contacts-office__info {
   padding: 1.5rem;
@@ -1789,6 +1806,9 @@ body.menu-open .mobile-menu { display: block; }
 
 @media (max-width: 640px) {
   .contacts-office {
+    grid-template-columns: 1fr;
+  }
+  .contacts-office__media {
     grid-template-columns: 1fr;
   }
   .contacts-office__info {

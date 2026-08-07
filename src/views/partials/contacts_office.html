@@ -1,7 +1,17 @@
 <div class="contacts-office">
   <div class="contacts-office__media">
-    <img src="{{ city.photo }}" alt="Офис «{{ city.sign }}» — {{ city.address }}"
-         width="1000" height="600" loading="lazy" class="contacts-office__photo">
+    <figure class="contacts-office__figure">
+      <img src="{{ city.photo }}" alt="Офисное здание «{{ city.sign }}» — {{ city.address }}"
+           width="1000" height="600" loading="lazy" class="contacts-office__photo">
+      <figcaption>Офисное здание</figcaption>
+    </figure>
+    {% if city.photoDoor %}
+    <figure class="contacts-office__figure">
+      <img src="{{ city.photoDoor }}" alt="Дверь кабинета «{{ city.sign }}» {{ city.inCity }}"
+           width="1000" height="600" loading="lazy" class="contacts-office__photo">
+      <figcaption>Кабинет компании</figcaption>
+    </figure>
+    {% endif %}
   </div>
   <div class="contacts-office__info">
     <h3>Адрес</h3>
