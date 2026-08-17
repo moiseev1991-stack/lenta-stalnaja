@@ -108,7 +108,7 @@ async function home(req, res, next) {
     const [homeTitle, homeH1, homeMetaDesc, homeIntro, homeHtml, homeFaqRaw, categories] = await Promise.all([
       getSetting('home_title', 'Лента стальная купить оптом — все марки, доставка по России'),
       getSetting('home_h1', 'Каталог стальной ленты — более 7000 типоразмеров в наличии'),
-      getSetting('home_meta_description', 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: 8-800-100-08-74.'),
+      getSetting('home_meta_description', 'Стальная лента всех марок: 12Х18Н10Т, 65Г, 20Х13, Х20Н80 и другие. Коррозионностойкие, жаростойкие, прецизионные сплавы. Доставка по России. Тел: +7 (495) 023-88-60.'),
       getSetting('home_intro', ''),
       getSetting('home_main_text', ''),
       getSetting('home_faq_json', '[]'),
@@ -184,8 +184,8 @@ function productCanonical(product) {
 }
 
 const COMPANY_CONTACTS = {
-  phone: '+7 (800) 100-08-74',
-  phoneHref: 'tel:+78001000874',
+  phone: '+7 (495) 023-88-60',
+  phoneHref: 'tel:+74950238860',
   email: 'orders@lenta-stalnaja.ru',
   emailHref: 'mailto:orders@lenta-stalnaja.ru',
   responseTime: 'Ответ по наличию и цене в течение 15 минут',
@@ -250,7 +250,7 @@ function buildCompactProductDescription(product) {
     parts.push(`Марка ${mark} — ${gradeShortDesc}.`);
   }
   parts.push('Поставляем нарезку под заказ, доставка по всей России.');
-  parts.push('Для уточнения цены и наличия звоните: 8-800-100-08-74.');
+  parts.push('Для уточнения цены и наличия звоните: +7 (495) 023-88-60.');
   html.push(`<p>${escapeHtml(parts.join(' '))}</p>`);
 
   return html.join('\n');
@@ -555,6 +555,8 @@ const CITY_CONTACTS = {
     path: '/contacts/',
     name: 'Москва',
     inCity: 'в Москве',
+    phone: '+7 (495) 023-88-60',
+    phoneTel: '+74950238860',
     address: 'Москва, Рябиновая ул., 26, стр. 2',
     photo: '/img/offices/moscow.jpg',
     photoDoor: '/img/offices/moscow-door.jpg',
@@ -566,6 +568,8 @@ const CITY_CONTACTS = {
     path: '/contacts/spb/',
     name: 'Санкт-Петербург',
     inCity: 'в Санкт-Петербурге',
+    phone: '+7 (812) 426-56-38',
+    phoneTel: '+78124265638',
     address: 'Санкт-Петербург, ул. Центральная, 1, лит. А (Металлострой)',
     photo: '/img/offices/spb.jpg',
     photoDoor: '/img/offices/spb-door.jpg',
@@ -577,6 +581,8 @@ const CITY_CONTACTS = {
     path: '/contacts/nizhniy-novgorod/',
     name: 'Нижний Новгород',
     inCity: 'в Нижнем Новгороде',
+    phone: '+7 (831) 211-96-18',
+    phoneTel: '+78312119618',
     address: 'Нижний Новгород, Московское ш., 52, корп. 4',
     photo: '/img/offices/nizhniy-novgorod.jpg',
     photoDoor: '/img/offices/nizhniy-novgorod-door.jpg',
@@ -591,8 +597,6 @@ function cityWithDefaults(city) {
   return {
     ...city,
     sign: OFFICE_SIGN,
-    phone: '8-800-100-08-74',
-    phoneTel: '+78001000874',
     hours: 'пн–пт 9:00–18:00',
   };
 }

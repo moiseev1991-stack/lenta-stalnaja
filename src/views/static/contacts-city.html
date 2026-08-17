@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block head %}
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ siteUrl }}{{ city.path }}#localbusiness","name":"{{ city.sign }} — {{ city.name }}","url":"{{ siteUrl }}{{ city.path }}","image":"{{ siteUrl }}{{ city.photo }}","telephone":"+7-800-100-08-74","email":"info@lenta-stalnaja.ru","address":{"@type":"PostalAddress","streetAddress":{{ city.address | json | safe }},"addressLocality":{{ city.name | json | safe }},"addressCountry":"RU"},{% if city.geo %}"geo":{"@type":"GeoCoordinates","latitude":{{ city.geo.lat }},"longitude":{{ city.geo.lng }}},{% endif %}"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}],"priceRange":"$$","areaServed":{"@type":"City","name":{{ city.name | json | safe }}}}
+{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ siteUrl }}{{ city.path }}#localbusiness","name":"{{ city.sign }} — {{ city.name }}","url":"{{ siteUrl }}{{ city.path }}","image":"{{ siteUrl }}{{ city.photo }}","telephone":"{{ city.phoneTel }}","email":"info@lenta-stalnaja.ru","address":{"@type":"PostalAddress","streetAddress":{{ city.address | json | safe }},"addressLocality":{{ city.name | json | safe }},"addressCountry":"RU"},{% if city.geo %}"geo":{"@type":"GeoCoordinates","latitude":{{ city.geo.lat }},"longitude":{{ city.geo.lng }}},{% endif %}"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}],"priceRange":"$$","areaServed":{"@type":"City","name":{{ city.name | json | safe }}}}
   </script>
 {% endblock %}
 {% block content %}

@@ -211,7 +211,7 @@ function buildProductSEO(product, siteName) {
   // Description: "Лента стальная {Марка}, толщина {Толщина} мм, ширина {Ширина} мм. ..."
   const descParts = [];
   if (mark && thickness && width) {
-    descParts.push(`Лента стальная ${mark}, толщина ${thickness} мм, ширина ${width} мм. Наличие на складе, доставка по России. Цена по запросу. Тел: 8-800-100-08-74.`);
+    descParts.push(`Лента стальная ${mark}, толщина ${thickness} мм, ширина ${width} мм. Наличие на складе, доставка по России. Цена по запросу. Тел: +7 (495) 023-88-60.`);
   } else {
     const qualifiers = [state, surface].filter(Boolean).join(', ');
     const dp = [`Купить ленту ${join([mark, dims])}`.trim()];
@@ -245,7 +245,7 @@ function buildGradeSEO(grade, siteName) {
 
   // Description: "Стальная лента марки {Марка} — полный каталог размеров. ..."
   const metaDescription = realVal(grade.seo_description) ||
-    `Стальная лента марки ${mark} — полный каталог размеров. Нарезка под заказ, доставка по РФ. Цена по запросу. Тел: 8-800-100-08-74.`;
+    `Стальная лента марки ${mark} — полный каталог размеров. Нарезка под заказ, доставка по РФ. Цена по запросу. Тел: +7 (495) 023-88-60.`;
 
   return { title, h1, metaDescription };
 }
@@ -269,7 +269,7 @@ function buildGroupSEO(group, siteName) {
 
   // Description: "Стальная лента: {Группа}. Все марки и типоразмеры в наличии. ..."
   const metaDescription = realVal(group.seo_description) ||
-    `Стальная лента: ${groupName}. Все марки и типоразмеры в наличии. Нарезка под заказ, доставка по России. Тел: 8-800-100-08-74.`;
+    `Стальная лента: ${groupName}. Все марки и типоразмеры в наличии. Нарезка под заказ, доставка по России. Тел: +7 (495) 023-88-60.`;
 
   return { title, h1, metaDescription };
 }

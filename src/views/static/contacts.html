@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block head %}
   <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ siteUrl }}{{ city.path }}#localbusiness","name":"{{ city.sign }} — {{ city.name }}","url":"{{ siteUrl }}{{ city.path }}","image":"{{ siteUrl }}{{ city.photo }}","telephone":"+7-800-100-08-74","email":"info@lenta-stalnaja.ru","address":{"@type":"PostalAddress","streetAddress":"Рябиновая ул., 26, стр. 2","addressLocality":"Москва","addressCountry":"RU"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}],"priceRange":"$$","areaServed":{"@type":"City","name":"Москва"}}
+{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ siteUrl }}{{ city.path }}#localbusiness","name":"{{ city.sign }} — {{ city.name }}","url":"{{ siteUrl }}{{ city.path }}","image":"{{ siteUrl }}{{ city.photo }}","telephone":"{{ city.phoneTel }}","email":"info@lenta-stalnaja.ru","address":{"@type":"PostalAddress","streetAddress":"Рябиновая ул., 26, стр. 2","addressLocality":"Москва","addressCountry":"RU"},"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens":"09:00","closes":"18:00"}],"priceRange":"$$","areaServed":{"@type":"City","name":"Москва"}}
   </script>
 {% endblock %}
 {% block content %}
