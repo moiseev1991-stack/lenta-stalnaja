@@ -22,4 +22,11 @@ module.exports = {
   mysqlDatabase: process.env.MYSQL_DATABASE || 'metal_catalog',
   deployGitSha:  process.env.DEPLOY_GIT_SHA || 'unknown',
   deployBootAt:  process.env.DEPLOY_BOOT_AT || '',
+  smtpHost:     process.env.SMTP_HOST     || '',
+  smtpPort:     parseInt(process.env.SMTP_PORT || '465', 10),
+  smtpSecure:   process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : true,
+  smtpUser:     process.env.SMTP_USER     || '',
+  smtpPassword: process.env.SMTP_PASSWORD || '',
+  smtpFrom:     process.env.SMTP_FROM     || process.env.SMTP_USER || '',
+  leadNotifyTo: process.env.LEAD_NOTIFY_TO || '',
 };

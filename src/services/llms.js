@@ -86,7 +86,7 @@ async function buildLlmsTxt() {
   lines.push('- E-mail (общий): info@lenta-stalnaja.ru');
   lines.push('- E-mail (заказы): orders@lenta-stalnaja.ru');
   lines.push('- Телефон (Москва): +7 (495) 023-88-60');
-  lines.push('- Телефон (Санкт-Петербург): +7 (812) 426-56-38');
+  lines.push('- Телефон (Санкт-Петербург): +7 (812) 426-56-37');
   lines.push('- Телефон (Нижний Новгород): +7 (831) 211-96-18');
   lines.push('- Регионы отгрузки: Нижний Новгород, Москва, Санкт-Петербург');
   lines.push('- Режим работы: пн–пт 9:00–18:00 МСК');

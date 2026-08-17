@@ -4,6 +4,7 @@ const lenta           = require('../services/lenta');
 const sitemapService  = require('../services/sitemap');
 const ymlService      = require('../services/yml');
 const llmsService     = require('../services/llms');
+const mailer          = require('../services/mailer');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -568,8 +569,8 @@ const CITY_CONTACTS = {
     path: '/contacts/spb/',
     name: 'Санкт-Петербург',
     inCity: 'в Санкт-Петербурге',
-    phone: '+7 (812) 426-56-38',
-    phoneTel: '+78124265638',
+    phone: '+7 (812) 426-56-37',
+    phoneTel: '+78124265637',
     address: 'Санкт-Петербург, ул. Центральная, 1, лит. А (Металлострой)',
     photo: '/img/offices/spb.jpg',
     photoDoor: '/img/offices/spb-door.jpg',
@@ -760,6 +761,7 @@ async function submitLead(req, res) {
   const consent = !!req.body.consent;
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
   if (!name || !phone || !consent) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
+  const redirect = (req.body.redirect || '/contacts/').trim();
   try {
     await pool.query(
       'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
@@ -768,7 +770,10 @@ async function submitLead(req, res) {
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  const redirect = (req.body.redirect || '/contacts/').trim();
+  // Уведомление на почту (не блокирует ответ пользователю и не роняет заявку при сбое SMTP).
+  mailer
+    .sendLeadNotification({ name, phone, message, product_id, page: redirect })
+    .catch((err) => console.error('lead mail error:', err.message));
   res.redirect(redirect + (redirect.includes('?') ? '&' : '?') + 'lead=ok');
 }
 
