@@ -177,6 +177,37 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 }
 .header-contacts__email:hover { color: #cbd5e1; text-decoration: none; }
 
+/* Footer region switcher */
+.footer-region-switch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0.3rem;
+}
+.footer-region-switch__label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-right: 0.2rem;
+}
+.footer-region-btn {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.footer-region-btn:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.4); }
+.footer-region-btn.active {
+  color: #fff;
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
 /* Footer address */
 .footer-address {
   font-size: 0.82rem;

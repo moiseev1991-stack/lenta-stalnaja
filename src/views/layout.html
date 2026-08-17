@@ -63,7 +63,13 @@
   <noscript><div><img src="https://mc.yandex.ru/watch/109623356" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
   <!-- /Yandex.Metrika counter -->
 </head>
-<body>
+<body data-footer-region="{{ footerRegion or 'msk' }}">
+  {% set footerRegions = {
+    "msk": {"in":"в Москве","phone":"+7 (495) 023-88-60","phoneTel":"+74950238860","addressFull":"Москва,<br>Рябиновая ул., 26, стр. 2","addressText":"Москва, Рябиновая ул., 26, стр. 2","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAeLY1","mapsLink":"https://yandex.com/maps/-/CPGAeLY1"},
+    "spb": {"in":"в Санкт-Петербурге","phone":"+7 (812) 426-56-38","phoneTel":"+78124265638","addressFull":"Санкт-Петербург,<br>ул. Центральная, 1, лит. А (Металлострой)","addressText":"Санкт-Петербург, ул. Центральная, 1, лит. А","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAiVJ7","mapsLink":"https://yandex.com/maps/-/CPGAiVJ7"},
+    "nn": {"in":"в Нижнем Новгороде","phone":"+7 (831) 211-96-18","phoneTel":"+78312119618","addressFull":"Нижний Новгород,<br>Московское ш., 52, корп. 4","addressText":"Нижний Новгород, Московское ш., 52, корп. 4","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAeGkz","mapsLink":"https://yandex.com/maps/-/CPGAeGkz"}
+  } %}
+  {% set fr = footerRegions[footerRegion] or footerRegions["msk"] %}
   <header class="header">
     <div class="container">
       <a href="/" class="logo">
@@ -111,7 +117,7 @@
         <a href="/contacts/">Контакты</a>
       </nav>
       <div class="header-contacts">
-        <a href="tel:+74950238860" class="header-contacts__phone" id="headerPhone">+7 (495) 023-88-60</a>
+        <a href="tel:{{ fr.phoneTel }}" class="header-contacts__phone" id="headerPhone">{{ fr.phone }}</a>
         <span class="header-contacts__note">Работаем по всей России</span>
         <a href="mailto:info@lenta-stalnaja.ru" class="header-contacts__email">info@lenta-stalnaja.ru</a>
       </div>
@@ -153,7 +159,7 @@
     </nav>
     {# ГОСТы оставлены в мобильном меню — там есть место, десктоп-нав перегружался. #}
     <div class="mobile-menu-contacts">
-      <a href="tel:+74950238860" class="mobile-menu-contacts__phone" id="mobileHeaderPhone">+7 (495) 023-88-60</a>
+      <a href="tel:{{ fr.phoneTel }}" class="mobile-menu-contacts__phone" id="mobileHeaderPhone">{{ fr.phone }}</a>
       <span class="mobile-menu-contacts__note">Работаем по всей России</span>
       <a href="mailto:info@lenta-stalnaja.ru" class="mobile-menu-contacts__email">info@lenta-stalnaja.ru</a>
     </div>
@@ -265,28 +271,23 @@
     {% endif %}
     {% block content %}{% endblock %}
     </div>
-    {% set footerRegions = {
-      "msk": {"in":"в Москве","addressFull":"Москва,<br>Рябиновая ул., 26, стр. 2","addressText":"Москва, Рябиновая ул., 26, стр. 2","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAeLY1","mapsLink":"https://yandex.com/maps/-/CPGAeLY1"},
-      "spb": {"in":"в Санкт-Петербурге","addressFull":"Санкт-Петербург,<br>ул. Центральная, 1, лит. А (Металлострой)","addressText":"Санкт-Петербург, ул. Центральная, 1, лит. А","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAiVJ7","mapsLink":"https://yandex.com/maps/-/CPGAiVJ7"},
-      "nn": {"in":"в Нижнем Новгороде","addressFull":"Нижний Новгород,<br>Московское ш., 52, корп. 4","addressText":"Нижний Новгород, Московское ш., 52, корп. 4","mapWidget":"https://yandex.ru/map-widget/v1/-/CPGAeGkz","mapsLink":"https://yandex.com/maps/-/CPGAeGkz"}
-    } %}
-    {% set fr = footerRegions[footerRegion] or footerRegions["msk"] %}
     <section class="map-section">
       <div class="container">
         <div class="map-section__layout">
           <div class="map-section__info">
-            <h2 class="map-section__title">Как нас найти {{ fr.in }}</h2>
-            <p class="map-section__address">{{ fr.addressFull | safe }}</p>
+            <h2 class="map-section__title" id="mapSectionTitle">Как нас найти {{ fr.in }}</h2>
+            <p class="map-section__address" id="mapSectionAddress">{{ fr.addressFull | safe }}</p>
             <ul class="map-section__details">
-              <li><a href="tel:+74950238860" class="map-section__phone-link">+7 (495) 023-88-60</a></li>
+              <li><a href="tel:{{ fr.phoneTel }}" class="map-section__phone-link" id="mapSectionPhone">{{ fr.phone }}</a></li>
               <li>пн–пт 9:00–18:00</li>
               <li>Отгружаем по всей России</li>
             </ul>
-            <a href="{{ fr.mapsLink }}" class="btn btn-primary btn-sm map-section__directions" target="_blank" rel="noopener">Построить маршрут →</a>
+            <a href="{{ fr.mapsLink }}" class="btn btn-primary btn-sm map-section__directions" id="mapSectionDirections" target="_blank" rel="noopener">Построить маршрут →</a>
             <a href="/contacts/" class="btn btn-outline btn-sm" style="margin-top:0.5rem">Все склады и филиалы</a>
           </div>
           <div class="map-section__map">
             <iframe
+              id="mapSectionMap"
               src="{{ fr.mapWidget }}"
               width="100%" height="360" frameborder="0" allowfullscreen
               title="Схема проезда {{ fr.in }}"></iframe>
@@ -321,9 +322,15 @@
       {% endif %}
       <p>&copy; Лента стальная — каталог металлопроката</p>
       <p class="footer-legal">ИП Галанов Антон Олегович · ИНН 526016545409</p>
+      <div class="footer-region-switch" role="group" aria-label="Выбрать город">
+        <span class="footer-region-switch__label">Ваш город:</span>
+        <button type="button" class="footer-region-btn" data-footer-region="msk">Москва</button>
+        <button type="button" class="footer-region-btn" data-footer-region="spb">Санкт-Петербург</button>
+        <button type="button" class="footer-region-btn" data-footer-region="nn">Нижний Новгород</button>
+      </div>
       <p class="footer-address" id="footerAddress">{{ fr.addressText }}</p>
       <div class="footer-contacts">
-        <a href="tel:+74950238860" class="footer-contacts__phone" id="footerPhone">+7 (495) 023-88-60</a>
+        <a href="tel:{{ fr.phoneTel }}" class="footer-contacts__phone" id="footerPhone">{{ fr.phone }}</a>
         <a href="mailto:info@lenta-stalnaja.ru" class="footer-contacts__email">info@lenta-stalnaja.ru</a>
       </div>
       <nav class="footer-nav">
@@ -432,62 +439,84 @@
   {% block body_end %}{% endblock %}
   <script>
   (function() {
+    // Города для переключателя в подвале. Меняет шапку, «Как нас найти» и подвал.
     var REGIONS = {
-      nn: {
-        name: 'Нижний Новгород',
-        addressShort: 'Московское ш., 52, корп. 4',
-        addressFull: 'Нижний Новгород,<br>Московское ш., 52, корп. 4',
-        addressText: 'Нижний Новгород, Московское ш., 52, корп. 4',
-        mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeGkz',
-        mapsLink: 'https://yandex.com/maps/-/CPGAeGkz'
-      },
       msk: {
-        name: 'Москва',
-        addressShort: 'Рябиновая ул., 26, стр. 2',
+        name: 'Москва', in: 'в Москве',
+        phone: '+7 (495) 023-88-60', phoneTel: '+74950238860',
         addressFull: 'Москва,<br>Рябиновая ул., 26, стр. 2',
         addressText: 'Москва, Рябиновая ул., 26, стр. 2',
         mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeLY1',
         mapsLink: 'https://yandex.com/maps/-/CPGAeLY1'
       },
       spb: {
-        name: 'Санкт-Петербург',
-        addressShort: 'ул. Центральная, 1, лит. А',
+        name: 'Санкт-Петербург', in: 'в Санкт-Петербурге',
+        phone: '+7 (812) 426-56-38', phoneTel: '+78124265638',
         addressFull: 'Санкт-Петербург,<br>ул. Центральная, 1, лит. А (Металлострой)',
         addressText: 'Санкт-Петербург, ул. Центральная, 1, лит. А',
         mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAiVJ7',
         mapsLink: 'https://yandex.com/maps/-/CPGAiVJ7'
+      },
+      nn: {
+        name: 'Нижний Новгород', in: 'в Нижнем Новгороде',
+        phone: '+7 (831) 211-96-18', phoneTel: '+78312119618',
+        addressFull: 'Нижний Новгород,<br>Московское ш., 52, корп. 4',
+        addressText: 'Нижний Новгород, Московское ш., 52, корп. 4',
+        mapWidget: 'https://yandex.ru/map-widget/v1/-/CPGAeGkz',
+        mapsLink: 'https://yandex.com/maps/-/CPGAeGkz'
       }
     };
 
-    // Переключатель регионов работает только на странице /contacts/ (панели складов).
-    // На остальных страницах телефон/email/шапка — единые (задача 1.8 SEO-аудита).
-    function applyRegion(key) {
-      if (!REGIONS[key]) return;
-      document.querySelectorAll('.contacts-region-tab').forEach(function(btn) {
-        btn.classList.toggle('active', btn.dataset.region === key);
-      });
-      document.querySelectorAll('.contacts-region-panel').forEach(function(panel) {
-        panel.classList.toggle('active', panel.dataset.region === key);
-      });
-      try { localStorage.setItem('region', key); } catch(e) {}
+    function setPhone(el, r) {
+      if (!el) return;
+      el.textContent = r.phone;
+      el.setAttribute('href', 'tel:' + r.phoneTel);
     }
 
-    function initRegion() {
-      var tabs = document.querySelectorAll('.contacts-region-tab');
-      if (!tabs.length) return;
-      var saved = 'nn';
-      try { saved = localStorage.getItem('region') || 'nn'; } catch(e) {}
-      if (!REGIONS[saved]) saved = 'nn';
-      applyRegion(saved);
-      tabs.forEach(function(btn) {
-        btn.addEventListener('click', function() { applyRegion(btn.dataset.region); });
+    function applyFooterRegion(key, persist) {
+      var r = REGIONS[key];
+      if (!r) return;
+      setPhone(document.getElementById('headerPhone'), r);
+      setPhone(document.getElementById('mobileHeaderPhone'), r);
+      setPhone(document.getElementById('footerPhone'), r);
+      setPhone(document.getElementById('mapSectionPhone'), r);
+      var fa = document.getElementById('footerAddress');
+      if (fa) fa.textContent = r.addressText;
+      var mt = document.getElementById('mapSectionTitle');
+      if (mt) mt.textContent = 'Как нас найти ' + r.in;
+      var ma = document.getElementById('mapSectionAddress');
+      if (ma) ma.innerHTML = r.addressFull;
+      var md = document.getElementById('mapSectionDirections');
+      if (md) md.setAttribute('href', r.mapsLink);
+      var mp = document.getElementById('mapSectionMap');
+      if (mp && mp.getAttribute('src') !== r.mapWidget) mp.setAttribute('src', r.mapWidget);
+      document.querySelectorAll('.footer-region-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.footerRegion === key);
+      });
+      if (persist) { try { localStorage.setItem('footerRegion', key); } catch(e) {} }
+    }
+
+    function initFooterRegion() {
+      var btns = document.querySelectorAll('.footer-region-btn');
+      if (!btns.length) return;
+      var pageRegion = document.body.getAttribute('data-footer-region') || 'msk';
+      // На странице офиса города (карточка присутствует) регион задаёт сама страница.
+      var isCityPage = !!document.querySelector('.contacts-office');
+      var saved = null;
+      try { saved = localStorage.getItem('footerRegion'); } catch(e) {}
+      var active = isCityPage ? pageRegion : (REGIONS[saved] ? saved : pageRegion);
+      applyFooterRegion(active, isCityPage);
+      btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          applyFooterRegion(btn.dataset.footerRegion, true);
+        });
       });
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initRegion);
+      document.addEventListener('DOMContentLoaded', initFooterRegion);
     } else {
-      initRegion();
+      initFooterRegion();
     }
   })();
   </script>
