@@ -33,6 +33,9 @@ jobs:
             echo "==> git pull"
             git pull origin main
 
+            echo "==> stamp deploy sha"
+            git rev-parse --short HEAD > .deploy_sha 2>/dev/null || true
+
             echo "==> npm ci"
             npm ci --omit=dev
 

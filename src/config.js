@@ -1,5 +1,26 @@
 try { require('dotenv').config(); } catch (e) { if (e && e.code !== 'MODULE_NOT_FOUND') throw e; }
 
+// Resolve the deployed commit even when node is started without the
+// DEPLOY_GIT_SHA env (e.g. start_node.sh on deploy, or a cron/PHP restart).
+// Order: env -> live git -> .deploy_sha stamp file -> 'unknown'.
+function resolveDeploySha() {
+  const envSha = (process.env.DEPLOY_GIT_SHA || '').trim();
+  if (envSha && envSha !== 'unknown') return envSha;
+  const path = require('path');
+  const repoRoot = path.join(__dirname, '..');
+  try {
+    const sha = require('child_process')
+      .execSync('git rev-parse --short HEAD', { cwd: repoRoot, timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString().trim();
+    if (sha) return sha;
+  } catch (_) {}
+  try {
+    const sha = require('fs').readFileSync(path.join(repoRoot, '.deploy_sha'), 'utf8').trim();
+    if (sha) return sha;
+  } catch (_) {}
+  return 'unknown';
+}
+
 module.exports = {
   port: parseInt(process.env.PORT || '8765', 10),
   socketPath: process.env.SOCKET_PATH || '',
@@ -20,8 +41,8 @@ module.exports = {
   mysqlUser:     process.env.MYSQL_USER     || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '',
   mysqlDatabase: process.env.MYSQL_DATABASE || 'metal_catalog',
-  deployGitSha:  process.env.DEPLOY_GIT_SHA || 'unknown',
-  deployBootAt:  process.env.DEPLOY_BOOT_AT || '',
+  deployGitSha:  resolveDeploySha(),
+  deployBootAt:  process.env.DEPLOY_BOOT_AT || new Date().toISOString(),
   smtpHost:     process.env.SMTP_HOST     || '',
   smtpPort:     parseInt(process.env.SMTP_PORT || '465', 10),
   smtpSecure:   process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : true,

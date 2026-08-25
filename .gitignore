@@ -18,3 +18,4 @@ tmp/
 _commit_msg.txt
 commit_msg.txt
 .ftp-deploy-sync-state-v4.json
+.deploy_sha

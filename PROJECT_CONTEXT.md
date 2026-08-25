@@ -108,6 +108,14 @@
 
 ### Последние выполненные изменения (журнал)
 
+- **2026-08-25** — Фикс `X-Deploy-Sha: unknown` (нода не рапортовала git-sha).
+  - **Причина:** деплой (GitHub Actions) стартует ноду через `start_node.sh` (лежит на сервере, не в репо), который не передаёт env `DEPLOY_GIT_SHA` → `config.js` брал `process.env.DEPLOY_GIT_SHA || 'unknown'`. Стамп-файл `.deploy_sha` никто не писал (PHP-прокси читал его как fallback, но он отсутствовал; сам прокси sha берёт живым `git rev-parse`, потому `X-Deploy-Php-Sha` был корректен).
+  - **Что изменено:**
+    - `src/config.js` — `resolveDeploySha()`: env → `git rev-parse --short HEAD` (cwd = корень репо, timeout 3с) → `.deploy_sha` → `'unknown'`. `deployBootAt` при отсутствии env = `new Date().toISOString()` (реальное время старта ноды вместо пустой строки).
+    - `.github/workflows/deploy.yml` — после `git pull` пишем `git rev-parse --short HEAD > .deploy_sha` (гарантированный fallback, если git недоступен из контекста ноды).
+    - `.gitignore` — добавлен `.deploy_sha` (серверный штамп не коммитим).
+  - **Что проверить (на проде):** `curl -sI https://lenta-stalnaja.ru/ | grep -i x-deploy-sha` → реальный короткий sha (не `unknown`), `X-Deploy-Boot-At` — валидная дата.
+
 - **2026-08-25** — Мобильный hero: постер вместо тяжёлых видео + компактный cookie-баннер.
   - **Задача (по скринам с телефона):** (1) на мобильном не грузятся плитки hero-коллажа — тёмные пустые квадраты; (2) cookie-баннер «Принять» занимает >половины экрана; (3) жалоба «сайт у многих работает только без VPN».
   - **Причина #1:** hero-коллаж (`hero-collage.js`) на всех устройствах грузит 6 ячеек видео из пула `/vid/*.MOV|.mp4` (~2–3.2 МБ каждое, `video/quicktime`/HEVC). На мобильном это 20–30 МБ на загрузку, а QuickTime/HEVC многие Android-браузеры вообще не декодируют → ячейка остаётся пустой (был фон `#0f172a`).
