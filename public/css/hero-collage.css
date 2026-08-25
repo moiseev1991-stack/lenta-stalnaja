@@ -13,13 +13,15 @@
   width: 100%;
   height: 100%;
   gap: 2px;
-  background: #050c1a;
+  /* Poster fallback: always visible behind the cells, so a cell whose video
+     is still loading (or failed) reveals the steel photo instead of a dark void. */
+  background: #050c1a url('/img/hero/steel-coil-poster.jpg') center / cover no-repeat;
 }
 
 .hero-collage__cell {
   position: relative;
   overflow: hidden;
-  background: #0f172a;
+  background: transparent;
 }
 
 .hero-collage__cell video,
@@ -116,6 +118,9 @@
   .hero-collage__grid {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(3, 1fr);
+    /* Lighter poster on mobile; videos are skipped here (see hero-collage.js),
+       so this static image is what the visitor actually sees. */
+    background-image: url('/img/hero/steel-coil-poster-mobile.jpg');
   }
 
   .hero-collage__content {

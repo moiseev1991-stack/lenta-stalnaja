@@ -139,7 +139,21 @@
     }
   }
 
+  function shouldSkipVideo() {
+    // Mobile: 6 cells × ~2-3 MB QuickTime/HEVC clips = 20-30 MB per load and
+    // many phones can't even decode video/quicktime — cells end up blank.
+    // Show the static poster (CSS) instead. Also honour Data-Saver / slow links.
+    if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return true;
+    var c = navigator.connection;
+    if (c) {
+      if (c.saveData) return true;
+      if (c.effectiveType && /(^|\W)(slow-2g|2g|3g)$/.test(c.effectiveType)) return true;
+    }
+    return false;
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
+    if (shouldSkipVideo()) return;  // poster stays visible, no heavy downloads
     document.querySelectorAll('.hero-collage__cell').forEach(function (cell, i) {
       initCell(cell, i * CELL_STAGGER_MS);
     });

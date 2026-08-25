@@ -937,8 +937,10 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.5; }
 .cookie-banner a { color: #93c5fd; }
 .cookie-banner a:hover { color: #fff; }
 @media (max-width: 600px) {
-  .cookie-banner__inner { flex-direction: column; align-items: stretch; }
-  .cookie-banner__text { font-size: 0.8rem; }
+  .cookie-banner { padding: 0.5rem 0; }
+  .cookie-banner__inner { flex-wrap: nowrap; gap: 0.6rem; align-items: center; }
+  .cookie-banner__text { font-size: 0.72rem; line-height: 1.3; flex: 1 1 auto; }
+  .cookie-banner__inner .btn { flex: 0 0 auto; padding: 0.4rem 0.85rem; white-space: nowrap; }
 }
 
 /* ========== SEARCH ========== */
