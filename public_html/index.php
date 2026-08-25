@@ -130,8 +130,9 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__setup__') {
                  . "SITE_URL=$siteUrl\nSITE_NAME=$siteName\n"
                  . "SOCKET_PATH=/home/i/infogkmeta/node.sock\nNODE_ENV=production\n";
             file_put_contents($envFile, $env);
-            // Restart node
-            exec('pkill -f "node.*app.js" 2>/dev/null');
+            // Restart node (SIGKILL: a hung node ignores the default SIGTERM
+            // and lingers as a zombie, eventually hitting the account process limit)
+            exec('pkill -9 -f "node.*app.js" 2>/dev/null');
             if (file_exists(NODE_SOCKET)) @unlink(NODE_SOCKET);
             sleep(1);
             startNode();
@@ -208,7 +209,7 @@ if (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/__debug__') {
     // Optional: force a node start via ?start=1
     $dbgStartLog = '';
     if (isset($_GET['start'])) {
-        exec('pkill -f "node.*app.js" 2>/dev/null');
+        exec('pkill -9 -f "node.*app.js" 2>/dev/null');
         if (file_exists(NODE_SOCKET)) @unlink(NODE_SOCKET);
         sleep(1);
         startNode();
@@ -470,7 +471,7 @@ if ($canExec && !isNodePortOpen()) {
         if (flock($startFh, LOCK_EX | LOCK_NB)) {
             // Got the lock: we are the only request starting node
             if (!isNodePortOpen()) {          // double-check under lock
-                exec('pkill -f "node.*app.js" 2>/dev/null');
+                exec('pkill -9 -f "node.*app.js" 2>/dev/null');
                 sleep(1);
                 startNode();
             }

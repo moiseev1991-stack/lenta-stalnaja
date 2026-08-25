@@ -307,12 +307,43 @@ app.use((err, req, res, next) => {
 
 if (config.socketPath) {
   // Unix domain socket — bypasses per-process network namespace isolation on shared hosting
-  try { fs.unlinkSync(config.socketPath); } catch (_) {}
-  app.listen(config.socketPath, () => {
-    // Make socket readable/writable by web server process
-    try { fs.chmodSync(config.socketPath, 0o666); } catch (_) {}
-    console.log('Server at unix:' + config.socketPath);
-  });
+  const net = require('net');
+  const socketPath = config.socketPath;
+
+  const startListening = () => {
+    const server = app.listen(socketPath, () => {
+      // Make socket readable/writable by web server process
+      try { fs.chmodSync(socketPath, 0o666); } catch (_) {}
+      console.log('Server at unix:' + socketPath);
+    });
+    // If, despite our checks, the address is still in use, another instance
+    // won the race — exit instead of crashing/leaving a half-open state.
+    server.on('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        console.error('Socket ' + socketPath + ' in use by another instance; exiting.');
+        process.exit(0);
+      }
+      throw err;
+    });
+  };
+
+  if (!fs.existsSync(socketPath)) {
+    startListening();
+  } else {
+    // Socket file exists. Probe it: if a live process answers, it owns the
+    // socket — do NOT delete it (that was the old race that killed a healthy
+    // instance). Only a stale socket from a dead process gets removed.
+    const probe = net.connect(socketPath);
+    probe.on('connect', () => {
+      probe.destroy();
+      console.error('Another instance already listening on ' + socketPath + '; exiting.');
+      process.exit(0);
+    });
+    probe.on('error', () => {
+      try { fs.unlinkSync(socketPath); } catch (_) {}
+      startListening();
+    });
+  }
 } else {
   app.listen(config.port, '0.0.0.0', () => {
     console.log('Server at http://localhost:' + config.port);
