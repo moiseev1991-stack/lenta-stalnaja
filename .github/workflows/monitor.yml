@@ -1,0 +1,89 @@
+name: Uptime monitor (external backstop)
+
+# Runs on GitHub's infrastructure — OFF the SpaceWeb box. That is the whole point:
+# when the account hits its process limit and the server's own cron can't fork
+# curl, this monitor still pings from outside and delivers the Telegram alert.
+# It is the guaranteed-alert backstop; the on-box tools/healthcheck.sh (*/5) still
+# handles fast recovery in the common case when the box can still fork.
+on:
+  schedule:
+    # Every 30 min keeps us safely under the 2000-min/month free tier for a
+    # PRIVATE repo (~1440 min/month). If this repo is public (Actions minutes are
+    # unlimited/free), change to '*/5 * * * *' for faster detection.
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: uptime-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping site
+        id: ping
+        run: |
+          set +e
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 -A 'gh-uptime-monitor' https://lenta-stalnaja.ru/)
+          echo "HTTP $code"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          case "$code" in
+            200|301|302) echo "up=1" >> "$GITHUB_OUTPUT" ;;
+            *)           echo "up=0" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Alert — site is down
+        if: steps.ping.outputs.up == '0'
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          TOKEN="${TG_BOT_TOKEN:-8853408571:AAFqHcGiEnEXgQGy5Ms2560R2aRWyM_m07k}"
+          CHAT="${TG_CHAT_ID:-90186966}"
+          curl -s --max-time 15 "https://api.telegram.org/bot$TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$CHAT" \
+            --data-urlencode "text=🔴 lenta-stalnaja.ru недоступен (HTTP ${{ steps.ping.outputs.code }}). Запускаю восстановление по SSH…" \
+            -o /dev/null || true
+
+      - name: Recover via SSH (hard kill + fresh start)
+        if: steps.ping.outputs.up == '0'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST || secrets.FTP_HOST }}
+          username: ${{ secrets.SSH_USER || secrets.FTP_USER }}
+          password: ${{ secrets.SSH_PASSWORD || secrets.FTP_PASSWORD }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          command_timeout: 3m
+          script: |
+            # SIGKILL every node process for this account to free the process
+            # slots that zombie nodes have exhausted, then clear the stale socket
+            # and launch a fresh node. This bash session is not node, so it survives.
+            pkill -9 -u "$(id -un)" node 2>/dev/null || true
+            sleep 2
+            rm -f ~/node.sock
+            APP="${{ secrets.DEPLOY_DIR }}"
+            [ -z "$APP" ] && APP="$HOME/lenta-stalnaja"
+            cd "$APP" || exit 0
+            setsid bash "$APP/start_node.sh" </dev/null >/dev/null 2>&1 &
+            sleep 8
+
+      - name: Verify recovery + notify result
+        if: steps.ping.outputs.up == '0'
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          TOKEN="${TG_BOT_TOKEN:-8853408571:AAFqHcGiEnEXgQGy5Ms2560R2aRWyM_m07k}"
+          CHAT="${TG_CHAT_ID:-90186966}"
+          sleep 5
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 https://lenta-stalnaja.ru/)
+          echo "recheck HTTP $code"
+          case "$code" in
+            200|301|302) msg="🟢 lenta-stalnaja.ru снова работает (HTTP $code). Node поднят автоматически (GitHub Actions)." ;;
+            *)           msg="⚠️ lenta-stalnaja.ru всё ещё лежит после авто-восстановления (HTTP $code). Нужны руки / SSH." ;;
+          esac
+          curl -s --max-time 15 "https://api.telegram.org/bot$TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$CHAT" \
+            --data-urlencode "text=$msg" -o /dev/null || true

@@ -46,8 +46,11 @@ jobs:
             node scripts/import_seo_texts.js || echo "SEO import skipped (non-fatal)"
 
             echo "==> restart"
-            # pkill -x matches exact process name "node", never matches this bash script
-            pkill -x node 2>/dev/null || true
+            # SIGKILL (not plain SIGTERM) every node for this account: a hung node
+            # ignores SIGTERM and lingers as a zombie until it exhausts the account
+            # process limit — the root cause of the recurring 503. This bash session
+            # is not a node process, so it is never matched.
+            pkill -9 -u "$(id -un)" node 2>/dev/null || true
             sleep 2
             rm -f ~/node.sock
             setsid bash "$APP/start_node.sh" </dev/null >/dev/null 2>&1 &
