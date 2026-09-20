@@ -37,12 +37,15 @@
     </tbody>
   </table>
 
-  {% if gost.marks and gost.marks.length %}
+  {% if markLinks and markLinks.length %}
   <div class="gost-detail__marks-block">
     <h2 id="marks-in-catalog">Марки из нашего каталога по этому ГОСТу</h2>
     <ul class="gost-detail__marks">
-      {% for m in gost.marks %}
-      <li><a href="/?mark={{ m }}" rel="nofollow">{{ m }}</a></li>
+      {% for m in markLinks %}
+      <li>
+        {% if m.slug %}<a href="/{{ m.slug }}/">{{ m.name }}</a>
+        {% else %}<a href="/?mark={{ m.name }}" rel="nofollow">{{ m.name }}</a>{% endif %}
+      </li>
       {% endfor %}
     </ul>
     <p class="gost-detail__marks-hint">Кликните на марку — увидите доступные типоразмеры в наличии и цены за килограмм.</p>
@@ -93,6 +96,17 @@
   <aside class="gost-detail__disclaimer" role="note">
     <p><strong>Ознакомительный материал.</strong> На этой странице приведён обзор содержания {{ gost.shortTitle }} для удобства подбора ленты — область применения, ключевые марки, диапазоны размеров, состояния поставки, методы контроля. Официальный полный текст стандарта с точными числовыми таблицами допусков, испытательных нагрузок и режимов, поддерживаемый актуальными изменениями и поправками, размещён на портале «Кодекс» <a href="{{ gost.officialUrl }}" target="_blank" rel="noopener nofollow">docs.cntd.ru</a> — при заказе ленты и составлении технической документации ориентируйтесь на официальный источник.</p>
   </aside>
+
+  {% if relatedArticles and relatedArticles.length %}
+  <section class="article-related">
+    <h2>Статьи по этому стандарту</h2>
+    <ul class="article-related__list">
+      {% for a in relatedArticles %}
+      <li><a href="/stati/{{ a.slug }}/">{{ a.h1 }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 
   <div class="gost-detail__nav">
     <a href="/gost/">← Все ГОСТы</a>

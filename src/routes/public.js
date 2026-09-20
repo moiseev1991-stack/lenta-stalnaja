@@ -39,6 +39,8 @@ router.get('/terms/', controller.terms);
 router.get('/kalkulyator-vesa-lenty/', controller.kalkulyatorVesaLenty);
 router.get('/gost/', controller.gostIndex);
 router.get('/gost/:slug/', controller.gostDetail);
+router.get('/stati/', controller.statiIndex);
+router.get('/stati/:slug/', controller.statiDetail);
 router.get('/search/', controller.search);
 router.get('/sitemap/', controller.sitemapHtml);
 router.get('/sitemap.xml', controller.sitemapXml);

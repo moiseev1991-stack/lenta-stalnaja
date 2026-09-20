@@ -1,14 +1,23 @@
 // llms.txt generator — see https://llmstxt.org/ (de-facto standard for AI crawlers).
-// Compact, plain-text site index optimized for LLM ingestion (≤ ~10 KB).
+// Plain-text site index optimized for LLM ingestion: ключевые страницы,
+// статьи, стандарты, марки и группы каталога. llms-full.txt дополнительно
+// отдаёт прямые ответы и FAQ из статей.
 const pool = require('../db/mysql');
 const config = require('../config');
+const { GOSTS } = require('../data/gosts');
+const { ARTICLES } = require('../data/articles');
 
 const SITE = String(config.siteUrl || '').replace(/\/+$/, '');
+
+// Перечень номеров берём из самого справочника, чтобы он не устаревал
+// при добавлении новых стандартов в src/data/gosts.js.
+const GOST_NUMBERS = GOSTS.map((g) => g.number).join(', ');
 
 const STATIC_PAGES = [
   ['Главная',                    '/',                          'каталог стальной ленты с фильтром по марке, толщине, ширине'],
   ['Калькулятор веса ленты',     '/kalkulyator-vesa-lenty/',   'онлайн-расчёт массы по толщине/ширине/длине для 20 марок'],
-  ['Справочник ГОСТов',          '/gost/',                     'ГОСТы 4986-79, 2283-79, 14117-85, 12766 и др. — сортамент, марки, PDF'],
+  ['Справочник ГОСТов',          '/gost/',                     `ГОСТы ${GOST_NUMBERS} — сортамент, марки, PDF`],
+  ['Статьи',                     '/stati/',                    'справочные статьи по маркам, состояниям поставки, термообработке, допускам и расчётам'],
   ['Контакты',                   '/contacts/',                 'телефоны 3 регионов, e-mail, банковские реквизиты ИП'],
   ['О компании',                 '/about/',                    'информация о поставщике и юридическом лице'],
   ['Доставка',                   '/delivery/',                 'самовывоз, ТК (Деловые Линии, ПЭК, ЖДЭ), сроки и стоимость'],
@@ -54,7 +63,11 @@ async function buildLlmsTxt() {
     if (groups.length) {
       lines.push('## Лента по назначению');
       lines.push('');
-      groups.forEach(g => lines.push(bullet(`Лента ${g.name.toLowerCase()}`, '/' + g.slug + '/')));
+      groups.forEach(g => {
+        const name = g.name.toLowerCase();
+        // «Лента холоднокатаная» уже содержит слово «лента» — не дублируем.
+        lines.push(bullet(name.startsWith('лента') ? g.name : `Лента ${name}`, '/' + g.slug + '/'));
+      });
       lines.push('');
     }
   } catch (e) { console.error('[llms] groups query failed:', e.message); }
@@ -72,6 +85,18 @@ async function buildLlmsTxt() {
       lines.push('');
     }
   } catch (e) { console.error('[llms] grades query failed:', e.message); }
+
+  if (ARTICLES.length) {
+    lines.push('## Справочные статьи');
+    lines.push('');
+    ARTICLES.forEach(a => lines.push(bullet(a.h1, '/stati/' + a.slug + '/', a.seoDescription)));
+    lines.push('');
+  }
+
+  lines.push('## Стандарты');
+  lines.push('');
+  GOSTS.forEach(g => lines.push(bullet(g.shortTitle, '/gost/' + g.slug + '/', g.title)));
+  lines.push('');
 
   lines.push('## Юридическая информация');
   lines.push('');
@@ -110,6 +135,21 @@ async function buildLlmsFullTxt() {
   extra += '- медицинская / пищевая (12Х18Н10Т, AISI 304, AISI 321);\n';
   extra += '- щёточная (нагартованная пружинная);\n';
   extra += '- электротехническая (трансформаторная сталь).\n\n';
+
+  // Прямые ответы из статей — самая цитируемая часть: короткий факт + URL источника.
+  if (ARTICLES.length) {
+    extra += '## Ответы на частые вопросы\n\n';
+    ARTICLES.forEach(a => {
+      extra += `### ${a.h1}\n\n`;
+      extra += `${a.answer}\n\n`;
+      extra += `Подробно: ${SITE}/stati/${a.slug}/ (обновлено ${a.updated})\n\n`;
+      (a.faq || []).slice(0, 4).forEach(item => {
+        extra += `- ${item.q} — ${item.a}\n`;
+      });
+      if (a.faq && a.faq.length) extra += '\n';
+    });
+  }
+
   return short + extra;
 }
 

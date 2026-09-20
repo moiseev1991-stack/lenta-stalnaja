@@ -201,5 +201,17 @@
 </section>
 {% endif %}
 
+{# Справочные статьи по этой марке #}
+{% if relatedArticles and relatedArticles.length %}
+<section class="article-related">
+  <h2>Статьи по теме</h2>
+  <ul class="article-related__list">
+    {% for a in relatedArticles %}
+    <li><a href="/stati/{{ a.slug }}/">{{ a.h1 }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 {% include "partials/lead_section.html" %}
 {% endblock %}

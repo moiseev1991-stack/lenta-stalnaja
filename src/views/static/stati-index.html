@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":{{ h1 | json | safe }},"description":{{ metaDescription | json | safe }},"url":{{ canonical | json | safe }},"inLanguage":"ru-RU","isPartOf":{"@type":"WebSite","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru"},"mainEntity":{"@type":"ItemList","numberOfItems":{{ articles | length }},"itemListElement":[{% for a in articles %}{% if not loop.first %},{% endif %}{"@type":"ListItem","position":{{ loop.index }},"url":{{ (siteUrl ~ '/stati/' ~ a.slug ~ '/') | json | safe }},"name":{{ a.h1 | json | safe }}}{% endfor %}]}}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-content article-page">
+  <h1>{{ h1 }}</h1>
+  <p class="lead">Инженерный справочник по стальной, нержавеющей и прецизионной ленте: марки и их аналоги, состояния поставки, термообработка, допуски, расчёт веса и требования ГОСТов. Каждая статья отвечает на вопрос в первом абзаце, числа даны с единицами измерения и ссылкой на стандарт.</p>
+
+  {% for g in groups %}
+  <section class="article-cluster">
+    <h2 class="article-cluster__title">{{ g.cluster }}</h2>
+    <ul class="article-list">
+      {% for a in g.items %}
+      <li class="article-list__item">
+        <a href="/stati/{{ a.slug }}/" class="article-card{% if a.image %} article-card--with-image{% endif %}">
+          {% if a.image %}
+          <img class="article-card__thumb" src="{{ a.image.src }}" alt="{{ a.image.alt }}"
+               width="{{ a.image.width }}" height="{{ a.image.height }}" loading="lazy" decoding="async">
+          {% endif %}
+          <div class="article-card__body">
+          <div class="article-card__title">{{ a.h1 }}</div>
+          <div class="article-card__answer">{{ a.answer }}</div>
+          <div class="article-card__meta">
+            <span>Обновлено: {{ a.updated }}</span>
+            {% if a.faq and a.faq.length %}<span>{{ a.faq | length }} вопрос-ответ</span>{% endif %}
+          </div>
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+
+  {% if not groups or not groups.length %}
+  <p class="article-empty">Статьи готовятся к публикации.</p>
+  {% endif %}
+
+  <div class="article-index__links">
+    <a href="/gost/" class="btn btn-outline">Справочник ГОСТов</a>
+    <a href="/kalkulyator-vesa-lenty/" class="btn btn-outline">Калькулятор веса ленты</a>
+  </div>
+
+  {% include "partials/lead_section.html" ignore missing %}
+</div>
+{% endblock %}

@@ -83,6 +83,7 @@ async function getStaticUrls() {
     { loc: buildLoc(base, 'terms'),        changefreq: 'yearly',  priority: 0.3, lastmod: today },
     { loc: buildLoc(base, 'kalkulyator-vesa-lenty'), changefreq: 'monthly', priority: 0.7, lastmod: today },
     { loc: buildLoc(base, 'gost'),         changefreq: 'monthly', priority: 0.6, lastmod: today },
+    { loc: buildLoc(base, 'stati'),        changefreq: 'weekly',  priority: 0.7, lastmod: today },
   ];
   // Отдельные страницы ГОСТов — из статического справочника.
   try {
@@ -93,6 +94,19 @@ async function getStaticUrls() {
         changefreq: 'yearly',
         priority: 0.5,
         lastmod: today,
+      });
+    });
+  } catch (_) {}
+
+  // Информационные статьи — из собранного content/stati/*.md.
+  try {
+    const { ARTICLES } = require('../data/articles');
+    ARTICLES.forEach(a => {
+      urls.push({
+        loc: buildLoc(base, 'stati', a.slug),
+        changefreq: 'monthly',
+        priority: 0.6,
+        lastmod: a.updated || today,
       });
     });
   } catch (_) {}

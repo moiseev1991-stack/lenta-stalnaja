@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":{{ article.h1 | json | safe }},"description":{{ article.answer | json | safe }},"abstract":{{ article.answer | json | safe }},"url":{{ canonical | json | safe }},"mainEntityOfPage":{"@type":"WebPage","@id":{{ canonical | json | safe }}},"inLanguage":"ru-RU","articleSection":{{ article.cluster | json | safe }},"dateModified":{{ article.updated | json | safe }},"datePublished":{{ article.updated | json | safe }},"proficiencyLevel":"Expert","author":{"@type":"Organization","name":"lenta-stalnaja.ru","url":"https://lenta-stalnaja.ru"},"publisher":{"@type":"Organization","name":"lenta-stalnaja.ru","url":"https://lenta-stalnaja.ru","logo":{"@type":"ImageObject","url":"https://lenta-stalnaja.ru/img/logo.svg"}},"isPartOf":{"@type":"WebSite","name":"Лента стальная — каталог металлопроката","url":"https://lenta-stalnaja.ru"},"speakable":{"@type":"SpeakableSpecification","cssSelector":["h1",".article-answer__text"]}{% if article.image %},"image":{"@type":"ImageObject","url":{{ (siteUrl ~ article.image.src) | json | safe }},"width":{{ article.image.width }},"height":{{ article.image.height }},"caption":{{ article.image.alt | json | safe }}}{% endif %}{% if article.sources and article.sources.length %},"citation":[{% for s in article.sources %}{% if not loop.first %},{% endif %}{{ s | json | safe }}{% endfor %}]{% endif %}{% if article.related.grades and article.related.grades.length %},"about":[{% for g in catalogLinks %}{% if not loop.first %},{% endif %}{"@type":"Thing","name":{{ g.name | json | safe }},"url":{{ (siteUrl ~ g.url) | json | safe }}}{% endfor %}]{% endif %}}
+</script>
+{% if article.faq and article.faq.length %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for item in article.faq %}{% if not loop.first %},{% endif %}{"@type":"Question","name":{{ item.q | json | safe }},"acceptedAnswer":{"@type":"Answer","text":{{ item.a | json | safe }}}}{% endfor %}],"speakable":{"@type":"SpeakableSpecification","cssSelector":[".faq-section h2",".faq-item summary"]}}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-content article-detail">
+  <h1>{{ article.h1 }}</h1>
+
+  <div class="article-answer" role="note">
+    <div class="article-answer__label">Коротко</div>
+    <p class="article-answer__text">{{ article.answer }}</p>
+  </div>
+
+  <div class="article-detail__meta">
+    <span>{{ article.cluster }}</span>
+    <span>Обновлено: {{ article.updated }}</span>
+  </div>
+
+  {% if article.image %}
+  <figure class="article-figure">
+    <img src="{{ article.image.src }}" alt="{{ article.image.alt }}"
+         width="{{ article.image.width }}" height="{{ article.image.height }}" loading="eager" decoding="async">
+    {% if article.image.caption %}<figcaption>{{ article.image.caption }}</figcaption>{% endif %}
+  </figure>
+  {% endif %}
+
+  {% if article.keyFactsHtml %}
+  <div class="article-facts">
+    {{ article.keyFactsHtml | safe }}
+  </div>
+  {% endif %}
+
+  {% if article.toc and article.toc.length > 2 %}
+  <nav class="article-toc" aria-label="Содержание статьи">
+    <div class="article-toc__title">Содержание</div>
+    <ol>
+      {% for t in article.toc %}
+      <li><a href="#{{ t.id }}">{{ t.title }}</a></li>
+      {% endfor %}
+    </ol>
+  </nav>
+  {% endif %}
+
+  <article class="article-body content">
+    {{ article.contentHtml | safe }}
+  </article>
+
+  {% if article.faq and article.faq.length %}
+  <section class="faq-section content">
+    <h2>Частые вопросы</h2>
+    <div class="faq-list">
+      {% for item in article.faq %}
+      <details class="faq-item">
+        <summary>{{ item.q }}</summary>
+        <p>{{ item.a }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if catalogLinks and catalogLinks.length %}
+  <section class="article-related">
+    <h2>Смотрите в каталоге</h2>
+    <ul class="article-related__list">
+      {% for l in catalogLinks %}
+      <li><a href="{{ l.url }}">Лента {{ l.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if gostLinks and gostLinks.length %}
+  <section class="article-related">
+    <h2>Стандарты по теме</h2>
+    <ul class="article-related__list">
+      {% for g in gostLinks %}
+      <li><a href="/gost/{{ g.slug }}/">{{ g.title }}</a> — {{ g.scope }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if article.sources and article.sources.length %}
+  <aside class="article-sources" role="note">
+    <div class="article-sources__title">Источники</div>
+    <p>{{ article.sources | join('; ') }}. Числовые значения приведены справочно — при составлении технической документации сверяйтесь с действующей редакцией стандарта.</p>
+  </aside>
+  {% endif %}
+
+  {% if sameCluster and sameCluster.length %}
+  <section class="article-related">
+    <h2>Ещё в разделе «{{ article.cluster }}»</h2>
+    <ul class="article-related__list">
+      {% for a in sameCluster %}
+      <li><a href="/stati/{{ a.slug }}/">{{ a.h1 }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <div class="article-detail__nav">
+    <a href="/stati/">← Все статьи</a>
+  </div>
+
+  {% include "partials/lead_section.html" ignore missing %}
+</div>
+{% endblock %}

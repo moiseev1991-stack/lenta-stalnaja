@@ -7,7 +7,10 @@
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "init-db": "node src/db/migrations.js",
-    "seed": "node src/db/seed.js"
+    "seed": "node src/db/seed.js",
+    "build:articles": "node scripts/build_articles.js",
+    "build:infographics": "python tools/build_infographics.py",
+    "build:content": "python tools/build_infographics.py && node scripts/build_articles.js"
   },
   "engines": {
     "node": ">=18"

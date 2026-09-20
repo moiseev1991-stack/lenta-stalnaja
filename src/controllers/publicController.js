@@ -779,6 +779,8 @@ async function submitLead(req, res) {
 
 // ── Калькулятор веса ленты + справочник ГОСТов (задача 1.6 SEO-аудита) ────
 const { GOSTS, GOSTS_BY_SLUG, GRADE_DENSITIES, GRADE_GROUPS } = require('../data/gosts');
+const { ARTICLES, ARTICLES_BY_SLUG, CLUSTERS, articlesFor } = require('../data/articles');
+const { markSlug, gradeLink, groupLink } = require('../data/catalogLinks');
 const fs = require('fs');
 const path = require('path');
 
@@ -820,6 +822,9 @@ async function gostDetail(req, res) {
   const pdfPath = path.join(__dirname, '..', '..', 'public', 'gost', 'pdf', `${gost.slug}.pdf`);
   const hasPdf = fs.existsSync(pdfPath);
 
+  // Марки этого ГОСТа — ссылкой на страницу марки, если она есть в каталоге.
+  const markLinks = (gost.marks || []).map((m) => ({ name: m, slug: markSlug(m) }));
+
   res.render('static/gost-detail.html', {
     title: `${gost.shortTitle} — ${gost.title}`,
     h1: `${gost.shortTitle}`,
@@ -828,9 +833,73 @@ async function gostDetail(req, res) {
     gost,
     hasPdf,
     pdfUrl: hasPdf ? pdfRel : null,
+    markLinks,
+    relatedArticles: articlesFor('gosts', gost.slug),
     breadcrumbs: [
       { name: 'ГОСТы', url: '/gost/' },
       { name: gost.shortTitle, url: `/gost/${gost.slug}/` },
+    ],
+  });
+}
+
+// ── Информационные статьи /stati/ ────────────────────────────────────────────
+
+async function statiIndex(req, res) {
+  // Группируем по кластерам в фиксированном порядке; пустые кластеры не выводим.
+  const groups = CLUSTERS
+    .map((cluster) => ({ cluster, items: ARTICLES.filter((a) => a.cluster === cluster) }))
+    .filter((g) => g.items.length);
+
+  const other = ARTICLES.filter((a) => !CLUSTERS.includes(a.cluster));
+  if (other.length) groups.push({ cluster: 'Прочее', items: other });
+
+  res.render('static/stati-index.html', {
+    title: 'Статьи о стальной ленте — справочник по маркам, ГОСТам и расчётам',
+    h1: 'Статьи о стальной ленте',
+    metaDescription: `Справочник по стальной и нержавеющей ленте: ${ARTICLES.length} статей о марках, состояниях поставки, термообработке, допусках, расчёте веса и ГОСТах. Без воды, с таблицами и ссылками на стандарты.`,
+    canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + '/stati/',
+    articles: ARTICLES,
+    groups,
+    breadcrumbs: [{ name: 'Статьи', url: '/stati/' }],
+  });
+}
+
+async function statiDetail(req, res) {
+  const slug = String(req.params.slug || '').trim();
+  const article = ARTICLES_BY_SLUG[slug];
+  if (!article) return res.status(404).render('404.html', { siteUrl: res.locals.siteUrl });
+
+  // Связанные страницы каталога — объектами, чтобы вывести человеческое название.
+  const catalogLinks = [
+    ...(article.related.grades || []).map(gradeLink).filter(Boolean),
+    ...(article.related.groups || []).map(groupLink).filter(Boolean),
+  ];
+  const gostLinks = (article.related.gosts || [])
+    .map((s) => GOSTS_BY_SLUG[s])
+    .filter(Boolean)
+    .map((g) => ({ slug: g.slug, title: g.shortTitle, scope: g.title }));
+
+  // Ещё статьи того же кластера — до 4 штук, для перелинковки внутри раздела.
+  const sameCluster = ARTICLES
+    .filter((a) => a.cluster === article.cluster && a.slug !== article.slug)
+    .slice(0, 4);
+
+  res.render('static/stati-detail.html', {
+    title: article.seoTitle,
+    h1: article.h1,
+    metaDescription: article.seoDescription,
+    canonical: (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + `/stati/${article.slug}/`,
+    ogType: 'article',
+    ogImage: article.image
+      ? (res.locals.siteUrl || 'https://lenta-stalnaja.ru') + article.image.src
+      : undefined,
+    article,
+    catalogLinks,
+    gostLinks,
+    sameCluster,
+    breadcrumbs: [
+      { name: 'Статьи', url: '/stati/' },
+      { name: article.h1, url: `/stati/${article.slug}/` },
     ],
   });
 }
@@ -846,4 +915,5 @@ module.exports = {
   ymlFeed,
   parseFilters, hasFilters, renderPage,
   kalkulyatorVesaLenty, gostIndex, gostDetail,
+  statiIndex, statiDetail,
 };

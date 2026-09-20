@@ -3,6 +3,7 @@ const path        = require('path');
 const config      = require('../config');
 const lenta       = require('../services/lenta');
 const markdownArticles = require('../services/markdownArticles');
+const { articlesFor } = require('../data/articles');
 const { buildGradeSEO, buildGroupSEO, buildCategorySEO } = require('../helpers/seoTemplates');
 const { setLastModified } = require('../helpers/httpCache');
 
@@ -229,6 +230,7 @@ async function gradePage(req, res, next) {
         { name: grade.name, url: pageUrl },
       ],
       grade, relatedGrades, faqItems,
+      relatedArticles: articlesFor('grades', req.params.slug),
       products:   result.products,
       total:      result.total,
       page:       result.page,
@@ -287,6 +289,7 @@ async function groupPage(req, res, next) {
       ],
       group, gradesInGroup, topGrades: gradesInGroup.slice(0, 8),
       faqItems,
+      relatedArticles: articlesFor('groups', req.params.slug),
       products:   result.products,
       total:      result.total,
       page:       result.page,
