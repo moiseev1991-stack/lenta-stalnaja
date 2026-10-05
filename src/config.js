@@ -50,4 +50,5 @@ module.exports = {
   smtpPassword: process.env.SMTP_PASSWORD || '',
   smtpFrom:     process.env.SMTP_FROM     || process.env.SMTP_USER || '',
   leadNotifyTo: process.env.LEAD_NOTIFY_TO || '',
+  roistatWebhookUrl: (process.env.ROISTAT_WEBHOOK_URL || '').trim(),
 };

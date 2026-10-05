@@ -165,6 +165,7 @@ async function runMysqlMigrations() {
     `ALTER TABLE grades ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
     `ALTER TABLE \`groups\` ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
     `ALTER TABLE grades ADD COLUMN aisi_analog VARCHAR(100) NULL`,
+    `ALTER TABLE leads ADD COLUMN roistat_visit VARCHAR(64) NULL`,
   ];
 
   for (const sql of alterCols) {

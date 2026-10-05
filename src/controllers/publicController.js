@@ -5,6 +5,7 @@ const sitemapService  = require('../services/sitemap');
 const ymlService      = require('../services/yml');
 const llmsService     = require('../services/llms');
 const mailer          = require('../services/mailer');
+const roistat         = require('../services/roistat');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -762,18 +763,34 @@ async function submitLead(req, res) {
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
   if (!name || !phone || !consent) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
   const redirect = (req.body.redirect || '/contacts/').trim();
+  // Номер визита Roistat из cookie `roistat_visit` (ставится счётчиком в layout.html).
+  const roistat_visit = roistat.parseVisit(req.cookies && req.cookies.roistat_visit);
   try {
-    await pool.query(
-      'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
-      [name, phone, message || null, product_id]
-    );
+    try {
+      await pool.query(
+        'INSERT INTO leads (name, phone, message, product_id, roistat_visit) VALUES (?, ?, ?, ?, ?)',
+        [name, phone, message || null, product_id, roistat_visit]
+      );
+    } catch (err) {
+      // Колонка roistat_visit ещё не создана миграцией — не теряем заявку, пишем без неё.
+      if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
+      await pool.query(
+        'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
+        [name, phone, message || null, product_id]
+      );
+    }
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  // Уведомление на почту (не блокирует ответ пользователю и не роняет заявку при сбое SMTP).
+  const lead = { name, phone, message, product_id, page: redirect, roistat_visit };
+  // Уведомление на почту и отправка в Roistat не блокируют ответ пользователю
+  // и не роняют заявку при сбое SMTP / вебхука.
   mailer
-    .sendLeadNotification({ name, phone, message, product_id, page: redirect })
+    .sendLeadNotification(lead)
     .catch((err) => console.error('lead mail error:', err.message));
+  roistat
+    .sendLead(lead)
+    .catch((err) => console.error('roistat webhook error:', err.message));
   res.redirect(redirect + (redirect.includes('?') ? '&' : '?') + 'lead=ok');
 }
 

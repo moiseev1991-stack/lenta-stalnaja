@@ -43,6 +43,7 @@ async function sendLeadNotification(lead) {
     ['Сообщение', lead.message || '—'],
     ['Товар (ID)', lead.product_id || '—'],
     ['Страница', lead.page || '—'],
+    ['Визит Roistat', lead.roistat_visit || '—'],
   ];
   const html =
     '<h2>Новая заявка с сайта</h2>' +

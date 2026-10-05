@@ -15,6 +15,7 @@
         <th>Телефон</th>
         <th>Сообщение</th>
         <th>Товар</th>
+        <th>Визит Roistat</th>
         <th>Статус</th>
       </tr>
     </thead>
@@ -31,6 +32,7 @@
             <a href="/{{ lead.product_slug }}/" target="_blank">{{ lead.product_name }}</a>
           {% else %}—{% endif %}
         </td>
+        <td class="adm-nowrap">{{ lead.roistat_visit or '—' }}</td>
         <td class="adm-nowrap">
           <form method="post" action="/admin/leads/{{ lead.id }}/done" style="display:inline">
             {% if lead.is_done %}
