@@ -4,6 +4,7 @@ const config      = require('../config');
 const lenta       = require('../services/lenta');
 const markdownArticles = require('../services/markdownArticles');
 const { articlesFor } = require('../data/articles');
+const { GOSTS_BY_SLUG } = require('../data/gosts');
 const { buildGradeSEO, buildGroupSEO, buildCategorySEO } = require('../helpers/seoTemplates');
 const { setLastModified } = require('../helpers/httpCache');
 
@@ -178,6 +179,19 @@ async function lentaIndex(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// «ГОСТ 4986-79» → ссылка на карточку стандарта в справочнике, если он там есть.
+function withSpecGostLinks(summary) {
+  if (!summary) return null;
+  return {
+    ...summary,
+    standards: summary.standards.map((label) => {
+      const m = /ГОСТ\s+([\d.\-]+)/.exec(label);
+      const slug = m && m[1].replace(/[.\-]+$/, '');
+      return { label, slug: slug && GOSTS_BY_SLUG[slug] ? slug : null };
+    }),
+  };
+}
+
 // ── /lenta/marka/:slug/ ───────────────────────────────────────────────────────
 
 async function gradePage(req, res, next) {
@@ -192,9 +206,11 @@ async function gradePage(req, res, next) {
       if (setLastModified(req, res, grade.updated_at)) return;
     }
     const page         = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const [result, filterValues, relatedGrades] = await Promise.all([
+    const [result, filterValues, specSummary, relatedGrades] = await Promise.all([
       lenta.getProductsByGrade(grade.name, filters, page),
       lenta.getFilterValuesByGrade(grade.name),
+      // Блок «Типоразмеры и стандарты»: сбой запроса не должен ронять страницу марки.
+      lenta.getGradeSpecSummary(grade.name).catch((e) => { console.error('specSummary error:', e.message); return null; }),
       grade.group_id ? lenta.getGradesByGroup(grade.group_id).then(
         rows => rows.filter(r => r.id !== grade.id).slice(0, 6)
       ) : Promise.resolve([]),
@@ -230,6 +246,7 @@ async function gradePage(req, res, next) {
         { name: grade.name, url: pageUrl },
       ],
       grade, relatedGrades, faqItems,
+      specSummary: withSpecGostLinks(specSummary),
       relatedArticles: articlesFor('grades', req.params.slug),
       products:   result.products,
       total:      result.total,
