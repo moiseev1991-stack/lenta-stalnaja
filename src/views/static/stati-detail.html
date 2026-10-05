@@ -20,6 +20,11 @@
     <p class="article-answer__text">{{ article.answer }}</p>
   </div>
 
+  <p class="article-cta-strip">
+    <span>Нужна лента? Расчёт за 15 минут.</span>
+    <a href="#article-lead" class="btn btn-primary btn-sm">Запросить цену</a>
+  </p>
+
   <div class="article-detail__meta">
     <span>{{ article.cluster }}</span>
     <span>Обновлено: {{ article.updated }}</span>
@@ -53,6 +58,8 @@
   <article class="article-body content">
     {{ article.contentHtml | safe }}
   </article>
+
+  {% include "partials/article_lead_form.html" %}
 
   {% if article.faq and article.faq.length %}
   <section class="faq-section content">

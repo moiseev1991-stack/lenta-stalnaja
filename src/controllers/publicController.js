@@ -755,34 +755,54 @@ function robotsTxt(req, res) {
 
 // ── Lead (MySQL) ─────────────────────────────────────────────────────────────
 
+// Только локальные пути: редирект из формы не должен уводить на чужой сайт.
+function safeLocalPath(raw, fallback) {
+  const v = String(raw == null ? '' : raw).trim();
+  return /^\/(?!\/)[^\s\\]{0,500}$/.test(v) ? v : fallback;
+}
+
+// Добавляет ?lead=<status> ПЕРЕД #якорем (иначе параметр попадает во фрагмент и сервер его не видит).
+function withLeadStatus(url, status) {
+  const hashAt = url.indexOf('#');
+  const base = hashAt === -1 ? url : url.slice(0, hashAt);
+  const hash = hashAt === -1 ? '' : url.slice(hashAt);
+  return base + (base.includes('?') ? '&' : '?') + 'lead=' + status + hash;
+}
+
 async function submitLead(req, res) {
   const name    = (req.body.name    || '').trim();
   const phone   = (req.body.phone   || '').trim();
   const message = (req.body.message || '').trim();
   const consent = !!req.body.consent;
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
-  if (!name || !phone || !consent) return res.redirect((req.body.redirect || '/contacts/') + '?lead=error');
-  const redirect = (req.body.redirect || '/contacts/').trim();
+  const redirect = safeLocalPath(req.body.redirect, '/contacts/');
+  if (!name || !phone || !consent) return res.redirect(withLeadStatus(redirect, 'error'));
+  // Страница, с которой пришла заявка (для статей — /stati/<slug>/): отдельное скрытое поле, иначе redirect без якоря.
+  const page = safeLocalPath(req.body.source, redirect.split('#')[0]);
   // Номер визита Roistat из cookie `roistat_visit` (ставится счётчиком в layout.html).
   const roistat_visit = roistat.parseVisit(req.cookies && req.cookies.roistat_visit);
+  // От новой схемы к старой: если миграция ещё не добавила колонки — заявку не теряем.
+  const attempts = [
+    ['INSERT INTO leads (name, phone, message, product_id, roistat_visit, page) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, phone, message || null, product_id, roistat_visit, page]],
+    ['INSERT INTO leads (name, phone, message, product_id, roistat_visit) VALUES (?, ?, ?, ?, ?)',
+      [name, phone, message || null, product_id, roistat_visit]],
+    ['INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
+      [name, phone, message || null, product_id]],
+  ];
   try {
-    try {
-      await pool.query(
-        'INSERT INTO leads (name, phone, message, product_id, roistat_visit) VALUES (?, ?, ?, ?, ?)',
-        [name, phone, message || null, product_id, roistat_visit]
-      );
-    } catch (err) {
-      // Колонка roistat_visit ещё не создана миграцией — не теряем заявку, пишем без неё.
-      if (err.code !== 'ER_BAD_FIELD_ERROR') throw err;
-      await pool.query(
-        'INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
-        [name, phone, message || null, product_id]
-      );
+    for (let i = 0; i < attempts.length; i++) {
+      try {
+        await pool.query(attempts[i][0], attempts[i][1]);
+        break;
+      } catch (err) {
+        if (err.code !== 'ER_BAD_FIELD_ERROR' || i === attempts.length - 1) throw err;
+      }
     }
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  const lead = { name, phone, message, product_id, page: redirect, roistat_visit };
+  const lead = { name, phone, message, product_id, page, roistat_visit };
   // Уведомление на почту и отправка в Roistat не блокируют ответ пользователю
   // и не роняют заявку при сбое SMTP / вебхука.
   mailer
@@ -791,7 +811,7 @@ async function submitLead(req, res) {
   roistat
     .sendLead(lead)
     .catch((err) => console.error('roistat webhook error:', err.message));
-  res.redirect(redirect + (redirect.includes('?') ? '&' : '?') + 'lead=ok');
+  res.redirect(withLeadStatus(redirect, 'ok'));
 }
 
 // ── Калькулятор веса ленты + справочник ГОСТов (задача 1.6 SEO-аудита) ────
@@ -914,6 +934,7 @@ async function statiDetail(req, res) {
     catalogLinks,
     gostLinks,
     sameCluster,
+    leadStatus: req.query.lead,
     breadcrumbs: [
       { name: 'Статьи', url: '/stati/' },
       { name: article.h1, url: `/stati/${article.slug}/` },

@@ -2407,3 +2407,33 @@ body.menu-open .mobile-menu { display: block; }
   .page-404__icon { width: 72px; height: 72px; }
   .page-404__section { padding: 1rem; }
 }
+
+/* ── Статьи: путь к заявке ───────────────────────────────────────────────── */
+.article-cta-strip {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+  margin: 0 0 1rem; padding: 0.6rem 0.9rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.92rem; font-weight: 500;
+}
+.article-cta-strip .btn { padding: 0.45rem 0.9rem; font-size: 0.88rem; }
+.article-lead {
+  margin: 2rem 0 0; padding: 1.25rem;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md);
+}
+.article-lead__title { margin: 0 0 0.4rem; font-size: 1.2rem; }
+.article-lead__text { margin: 0 0 0.8rem; color: var(--muted); font-size: 0.95rem; }
+.article-lead__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.9rem; }
+.article-lead__chip {
+  padding: 0.3rem 0.7rem; background: var(--card); border: 1px solid var(--border);
+  border-radius: 999px; font-size: 0.85rem; color: var(--primary); font-weight: 500;
+}
+.article-lead__form { display: grid; gap: 0.6rem; }
+.article-lead__row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.article-lead__form .btn { justify-self: start; }
+@media (max-width: 600px) {
+  .article-lead__row { grid-template-columns: 1fr; }
+  .article-lead__form .btn { justify-self: stretch; }
+}
+.lead-message { margin: 0 0 0.8rem; padding: 0.6rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.92rem; font-weight: 500; }
+.lead-message.success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+.lead-message.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }

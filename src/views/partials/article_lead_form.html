@@ -1,0 +1,33 @@
+{# Форма заявки внутри статьи /stati/. Нужны: article, catalogLinks, leadStatus. #}
+<section class="article-lead" id="article-lead">
+  <h2 class="article-lead__title">Нужна лента? Рассчитаем стоимость за 15 минут</h2>
+  <p class="article-lead__text">Оставьте телефон и напишите, что нужно: марка, размер, количество. Менеджер уточнит детали и пришлёт расчёт. Образцы ленты предоставляем.</p>
+
+  {% if catalogLinks and catalogLinks.length %}
+  <div class="article-lead__chips">
+    {% for l in catalogLinks %}<a class="article-lead__chip" href="{{ l.url }}">Цены на ленту {{ l.name }}</a>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if leadStatus == 'ok' %}
+  <p class="lead-message success">Заявка отправлена! Мы свяжемся с вами в ближайшее время.</p>
+  {% endif %}
+  {% if leadStatus == 'error' %}
+  <p class="lead-message error">Пожалуйста, укажите имя и телефон и подтвердите согласие.</p>
+  {% endif %}
+
+  <form class="article-lead__form" method="post" action="/lead">
+    <input type="hidden" name="redirect" value="/stati/{{ article.slug }}/#article-lead">
+    <input type="hidden" name="source" value="/stati/{{ article.slug }}/">
+    <div class="article-lead__row">
+      <input type="text" name="name" class="input" placeholder="Имя *" autocomplete="name" required>
+      <input type="tel" name="phone" class="input" placeholder="Телефон *" autocomplete="tel" required>
+    </div>
+    <textarea name="message" class="input" rows="2" placeholder="Что нужно: марка, толщина × ширина, количество"></textarea>
+    <label class="form-consent">
+      <input type="checkbox" name="consent" required checked>
+      <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a> и <a href="/terms/" target="_blank">условиями использования сайта</a>.</span>
+    </label>
+    <button type="submit" class="btn btn-primary">Получить расчёт</button>
+  </form>
+</section>
