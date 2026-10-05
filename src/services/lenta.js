@@ -368,8 +368,35 @@ function slugify(str) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Сводка по типоразмерам марки для блока «Типоразмеры и стандарты» на странице марки.
+// Точные min/max из БД (фильтр толщины в buildFilterValues обрезан диапазоном 0,01–2,5 мм).
+async function getGradeSpecSummary(gradeName) {
+  const [[agg]] = await pool.query(`
+    SELECT COUNT(*) AS cnt,
+           MIN(p.thickness_mm) AS t_min, MAX(p.thickness_mm) AS t_max,
+           MIN(p.width_mm)     AS w_min, MAX(p.width_mm)     AS w_max
+    FROM products p JOIN grades gr ON p.grade_id = gr.id
+    WHERE gr.name = ?
+  `, [gradeName]);
+  if (!agg || !Number(agg.cnt)) return null;
+  const [combos] = await pool.query(`
+    SELECT DISTINCT p.state, p.surface, p.gost
+    FROM products p JOIN grades gr ON p.grade_id = gr.id
+    WHERE gr.name = ?
+  `, [gradeName]);
+  const uniq = (key) => [...new Set(combos.map(r => r[key]).filter(Boolean))].sort();
+  const num = (v) => (v == null ? null : Number(v));
+  return {
+    count: Number(agg.cnt),
+    thicknessMin: num(agg.t_min), thicknessMax: num(agg.t_max),
+    widthMin: num(agg.w_min), widthMax: num(agg.w_max),
+    states: uniq('state'), surfaces: uniq('surface'), standards: uniq('gost'),
+  };
+}
+
 module.exports = {
   slugify,
+  getGradeSpecSummary,
   getAllGroups,
   getGroupBySlug,
   getAllGrades,

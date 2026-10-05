@@ -1,0 +1,30 @@
+{# Блок «Типоразмеры и стандарты» на странице марки. Данные — из каталога (lenta.getGradeSpecSummary). #}
+{% if specSummary and specSummary.count %}
+<section class="grade-specs content">
+  <h2>Типоразмеры и стандарты: лента {{ grade.name }}</h2>
+  <table class="specs-table">
+    <tbody>
+      <tr><th>Типоразмеров в каталоге</th><td>{{ specSummary.count }}</td></tr>
+      {% if specSummary.thicknessMin != null and specSummary.thicknessMax != null %}
+      <tr><th>Толщина</th><td>{{ specSummary.thicknessMin | formatMm | replace('.', ',') }}{% if specSummary.thicknessMax != specSummary.thicknessMin %}–{{ specSummary.thicknessMax | formatMm | replace('.', ',') }}{% endif %} мм</td></tr>
+      {% endif %}
+      {% if specSummary.widthMin != null and specSummary.widthMax != null %}
+      <tr><th>Ширина</th><td>{{ specSummary.widthMin | formatMm | replace('.', ',') }}{% if specSummary.widthMax != specSummary.widthMin %}–{{ specSummary.widthMax | formatMm | replace('.', ',') }}{% endif %} мм</td></tr>
+      {% endif %}
+      {% if specSummary.states.length %}
+      <tr><th>Состояние поставки</th><td>{{ specSummary.states | join(', ') | lower }}</td></tr>
+      {% endif %}
+      {% if specSummary.surfaces.length %}
+      <tr><th>Поверхность</th><td>{{ specSummary.surfaces | join(', ') | lower }}</td></tr>
+      {% endif %}
+      {% if specSummary.standards.length %}
+      <tr><th>ГОСТ / ТУ</th><td>{% for s in specSummary.standards %}{% if not loop.first %}, {% endif %}{% if s.slug %}<a href="/gost/{{ s.slug }}/">{{ s.label }}</a>{% else %}{{ s.label }}{% endif %}{% endfor %}</td></tr>
+      {% endif %}
+      {% if grade.aisi_analog %}
+      <tr><th>Зарубежный аналог</th><td>{{ grade.aisi_analog }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  <p>Нужен конкретный типоразмер? <a href="/contacts/#lead">Оставьте заявку</a> — рассчитаем стоимость за 15 минут.</p>
+</section>
+{% endif %}
