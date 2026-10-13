@@ -15,24 +15,42 @@ function isEnabled() {
   return !!config.roistatWebhookUrl;
 }
 
-async function sendLead(lead) {
-  if (!isEnabled()) return false;
-  const body = {
+// Тело запроса — по формату «Интеграция через Webhook» (title, name, email, phone, comment,
+// roistat_visit, fields). Обязателен phone или email; остальное можно передавать null.
+function buildBody(lead) {
+  const files = (lead.attachments || []).map((a) => a.filename).join(', ');
+  const comment = [
+    lead.message || null,
+    lead.page ? 'Страница: ' + lead.page : null,
+    files ? 'Файлы (во вложении к письму): ' + files : null,
+  ].filter(Boolean).join('\n');
+  const fields = { site: 'lenta-stalnaja.ru' };
+  if (lead.page) fields.page = String(lead.page);
+  if (lead.product_id) fields.product_id = String(lead.product_id);
+  return {
     title: 'Заявка с сайта lenta-stalnaja.ru',
     name: lead.name || null,
     phone: lead.phone || null,
-    comment: lead.message || null,
-    roistat_visit: lead.roistat_visit || 'nocookie',
-    fields: { page: lead.page || null, product_id: lead.product_id || null },
+    comment: comment || null,
+    // Без cookie номер визита не передаём (по документации допустим null): источник определить нельзя.
+    roistat_visit: lead.roistat_visit || null,
+    fields,
   };
+}
+
+async function sendLead(lead) {
+  if (!isEnabled()) return false;
   const res = await fetch(config.roistatWebhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(buildBody(lead)),
     signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) throw new Error('Roistat webhook HTTP ' + res.status);
+  const answer = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200);
+  // Ответ Roistat в лог (без ключа): по нему видно, принята ли заявка, не заходя на сервер.
+  console.log('roistat webhook: HTTP', res.status, answer);
+  if (!res.ok) throw new Error('Roistat webhook HTTP ' + res.status + (answer ? ' ' + answer : ''));
   return true;
 }
 
-module.exports = { parseVisit, isEnabled, sendLead };
+module.exports = { parseVisit, isEnabled, sendLead, buildBody };
