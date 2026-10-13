@@ -23,12 +23,19 @@ function esc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Получатели: LEAD_NOTIFY_TO (через запятую) — на обе Яндекс-почты сразу.
+// Публичный ящик сайта (тот, что в шапке) получает копию каждой заявки независимо от .env.
+const ALWAYS_NOTIFY = ['info@lenta-stalnaja.ru'];
+
+// Получатели: LEAD_NOTIFY_TO (через запятую) + ящик сайта, без дублей.
 function recipients() {
-  return String(config.leadNotifyTo || '')
+  const list = String(config.leadNotifyTo || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+  for (const addr of ALWAYS_NOTIFY) {
+    if (!list.some((s) => s.toLowerCase() === addr)) list.push(addr);
+  }
+  return list;
 }
 
 async function sendLeadNotification(lead) {
@@ -55,7 +62,7 @@ async function sendLeadNotification(lead) {
     (site ? `<p style="color:#888;font-size:12px">${esc(site)}</p>` : '');
   const text = rows.map(([k, v]) => `${k}: ${v == null ? '' : v}`).join('\n');
 
-  await tx.sendMail({
+  const info = await tx.sendMail({
     from: config.smtpFrom || config.smtpUser,
     to,
     replyTo: undefined,
@@ -63,6 +70,8 @@ async function sendLeadNotification(lead) {
     text,
     html,
   });
+  // Результат в лог: иначе по серверу не видно, принял ли SMTP получателей.
+  console.log('lead mail sent:', info.messageId, 'accepted:', (info.accepted || []).join(','), 'rejected:', (info.rejected || []).join(','));
   return true;
 }
 
