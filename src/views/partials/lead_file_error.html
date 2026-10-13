@@ -1,0 +1,10 @@
+{# Сообщения об ошибках вложения (?lead=toobig|toomany|badtype|filesError). Нужна переменная leadStatus. #}
+{% if leadStatus == 'toobig' %}
+<p class="lead-message error">Файл слишком большой: допустимо до 5 МБ на файл. Заявка не отправлена.</p>
+{% elif leadStatus == 'toomany' %}
+<p class="lead-message error">Можно прикрепить не больше 3 файлов. Заявка не отправлена.</p>
+{% elif leadStatus == 'badtype' %}
+<p class="lead-message error">Такой тип файла не принимается. Подойдут PDF, Word, Excel, PowerPoint, CSV, TXT, изображения, DWG/DXF, ZIP/RAR/7z. Заявка не отправлена.</p>
+{% elif leadStatus == 'filesError' %}
+<p class="lead-message error">Не удалось загрузить файл. Отправьте заявку без файла или попробуйте позже.</p>
+{% endif %}

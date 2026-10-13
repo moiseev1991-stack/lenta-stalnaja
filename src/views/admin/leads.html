@@ -25,7 +25,7 @@
       {% for lead in leads %}
       <tr class="{{ 'adm-lead-done' if lead.is_done else '' }}">
         <td>{{ lead.id }}</td>
-        <td class="adm-nowrap">{{ lead.created_at | replace('T', ' ') | truncate(16, true, '') }}</td>
+        <td class="adm-nowrap">{{ lead.created_at }}</td>
         <td>{{ lead.name }}</td>
         <td><a href="tel:{{ lead.phone }}">{{ lead.phone }}</a></td>
         <td>{{ lead.message or '—' }}</td>

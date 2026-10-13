@@ -62,6 +62,7 @@ async function sendLeadNotification(lead) {
     ['Телефон', lead.phone],
     ['Сообщение', lead.message || '—'],
     ['Товар (ID)', lead.product_id || '—'],
+    ['Файлы', (lead.attachments || []).map((a) => a.filename).join(', ') || '—'],
     ['Страница', lead.page || '—'],
     ['Визит Roistat', lead.roistat_visit || '—'],
   ];
@@ -82,6 +83,7 @@ async function sendLeadNotification(lead) {
     subject: `Заявка с формы сайта ${siteHost()}: ${lead.name || 'без имени'} (${lead.phone || 'без телефона'})`,
     text,
     html,
+    attachments: (lead.attachments || []).map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })),
   });
   // Результат в лог: иначе по серверу не видно, принял ли SMTP получателей.
   console.log('lead mail sent:', info.messageId, 'accepted:', (info.accepted || []).join(','), 'rejected:', (info.rejected || []).join(','));

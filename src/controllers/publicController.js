@@ -6,6 +6,7 @@ const ymlService      = require('../services/yml');
 const llmsService     = require('../services/llms');
 const mailer          = require('../services/mailer');
 const roistat         = require('../services/roistat');
+const { cleanFileName } = require('../middleware/leadUpload');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -535,10 +536,11 @@ function staticPage(req, res, templateName, title, h1, metaDesc) {
     title: title + ' | ' + config.siteName, h1, metaDescription: metaDesc,
     canonical: config.siteUrl + req.path,
     breadcrumbs: [{ name: h1, url: req.path }],
+    leadStatus: req.query.lead,
   });
 }
 
-function about(req, res)        { staticPage(req, res, 'static/about.html',   'О компании',        'О компании',        'О компании «' + config.siteName + '»: металлическая лента от поставщика. Документы, сертификаты, сроки поставки по всей России.'); }
+function about(req, res)       { staticPage(req, res, 'static/about.html',   'О компании',        'О компании',        'О компании «' + config.siteName + '»: металлическая лента от поставщика. Документы, сертификаты, сроки поставки по всей России.'); }
 function delivery(req, res)     { staticPage(req, res, 'static/delivery.html', 'Доставка',          'Доставка',          'Условия доставки металлической ленты: самовывоз, транспортная компания, доставка по Москве и регионам. Сроки и стоимость.'); }
 function payment(req, res)      { staticPage(req, res, 'static/payment.html',  'Оплата',            'Оплата',            'Способы оплаты металлопроката: безналичный расчёт для юридических лиц, оплата по счёту. Работаем с НДС.'); }
 function faq(req, res)          { staticPage(req, res, 'static/faq.html',      'Вопросы и ответы',  'Вопросы и ответы',  'Ответы на часто задаваемые вопросы о металлической ленте: подбор марки, расчёт веса, минимальный заказ, сроки.'); }
@@ -770,13 +772,23 @@ function withLeadStatus(url, status) {
 }
 
 async function submitLead(req, res) {
-  const name    = (req.body.name    || '').trim();
-  const phone   = (req.body.phone   || '').trim();
-  const message = (req.body.message || '').trim();
+  // Поле может прийти массивом (name=a&name=b): без приведения .trim() падал, а необработанная
+  // ошибка в async-обработчике завершает процесс Node.
+  const field = (v) => String(Array.isArray(v) ? v[0] : (v == null ? '' : v)).trim();
+  const name    = field(req.body.name);
+  const phone   = field(req.body.phone);
+  const message = field(req.body.message);
   const consent = !!req.body.consent;
   const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
   const redirect = safeLocalPath(req.body.redirect, '/contacts/');
+  // Файл не прошёл проверку (размер, количество, тип) — возвращаем на форму с пояснением.
+  if (req.leadUploadError) return res.redirect(withLeadStatus(redirect, req.leadUploadError));
   if (!name || !phone || !consent) return res.redirect(withLeadStatus(redirect, 'error'));
+  const attachments = (req.files || []).map((f) => ({
+    filename: cleanFileName(f.originalname),
+    content: f.buffer,
+    contentType: f.mimetype || undefined,
+  }));
   // Страница, с которой пришла заявка (для статей — /stati/<slug>/): отдельное скрытое поле, иначе redirect без якоря.
   const page = safeLocalPath(req.body.source, redirect.split('#')[0]);
   // Номер визита Roistat из cookie `roistat_visit` (ставится счётчиком в layout.html).
@@ -804,7 +816,8 @@ async function submitLead(req, res) {
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  const lead = { name, phone, message, product_id, page, roistat_visit };
+  const lead = { name, phone, message, product_id, page, roistat_visit, attachments };
+  const filesNote = attachments.length ? 'файлы: ' + attachments.map((a) => a.filename).join(', ') : null;
   // Уведомление на почту и отправка в Roistat не блокируют ответ пользователю
   // и не роняют заявку при сбое SMTP / вебхука.
   // Итог каждой отправки пишем в leads.notify_status — виден в админке («Заявки» → «Отправка»),
@@ -825,7 +838,8 @@ async function submitLead(req, res) {
     });
   Promise.all([mailStatus, roistatStatus])
     .then((parts) => (leadId == null ? null
-      : pool.query('UPDATE leads SET notify_status = ? WHERE id = ?', [parts.join('; ').slice(0, 500), leadId])))
+      : pool.query('UPDATE leads SET notify_status = ? WHERE id = ?',
+        [parts.concat(filesNote || []).join('; ').slice(0, 500), leadId])))
     .catch(() => {});
   res.redirect(withLeadStatus(redirect, 'ok'));
 }

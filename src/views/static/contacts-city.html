@@ -26,7 +26,8 @@
     {% if leadStatus == 'error' %}
     <p class="lead-message error">Пожалуйста, укажите имя и телефон.</p>
     {% endif %}
-    <form class="lead-form" method="post" action="/lead">
+    {% include "partials/lead_file_error.html" %}
+    <form class="lead-form" method="post" action="/lead" enctype="multipart/form-data">
       <input type="hidden" name="redirect" value="{{ city.path }}#lead">
       <div class="form-group">
         <label>Имя *</label>
@@ -40,6 +41,7 @@
         <label>Комментарий</label>
         <textarea name="message" class="input" rows="3"></textarea>
       </div>
+      {% include "partials/lead_file_field.html" %}
       <label class="form-consent">
         <input type="checkbox" name="consent" required checked>
         <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a> и <a href="/terms/" target="_blank">условиями использования сайта</a>.</span>

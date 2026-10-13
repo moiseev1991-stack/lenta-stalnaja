@@ -15,8 +15,9 @@
   {% if leadStatus == 'error' %}
   <p class="lead-message error">Пожалуйста, укажите имя и телефон и подтвердите согласие.</p>
   {% endif %}
+  {% include "partials/lead_file_error.html" %}
 
-  <form class="article-lead__form" method="post" action="/lead">
+  <form class="article-lead__form" method="post" action="/lead" enctype="multipart/form-data">
     <input type="hidden" name="redirect" value="/stati/{{ article.slug }}/#article-lead">
     <input type="hidden" name="source" value="/stati/{{ article.slug }}/">
     <div class="article-lead__row">
@@ -24,6 +25,7 @@
       <input type="tel" name="phone" class="input" placeholder="Телефон *" autocomplete="tel" required>
     </div>
     <textarea name="message" class="input" rows="2" placeholder="Что нужно: марка, толщина × ширина, количество"></textarea>
+    {% include "partials/lead_file_field.html" %}
     <label class="form-consent">
       <input type="checkbox" name="consent" required checked>
       <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a> и <a href="/terms/" target="_blank">условиями использования сайта</a>.</span>

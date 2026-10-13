@@ -1,0 +1,7 @@
+{# Результат отправки заявки (?lead=…) для форм, где нет своих сообщений. Нужна переменная leadStatus. #}
+{% if leadStatus == 'ok' %}
+<p class="lead-message success">Заявка отправлена! Мы свяжемся с вами в ближайшее время.</p>
+{% elif leadStatus == 'error' %}
+<p class="lead-message error">Пожалуйста, укажите имя и телефон и подтвердите согласие.</p>
+{% endif %}
+{% include "partials/lead_file_error.html" %}

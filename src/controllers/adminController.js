@@ -407,6 +407,16 @@ async function listLeads(req, res) {
       LIMIT ? OFFSET ?
     `, [perPage, offset]);
 
+    // mysql2 отдаёт Date, а фильтры шаблона работают со строкой (раньше страница падала с «Server error»).
+    // Время показываем как в БД (пул читает DATETIME как UTC, поэтому и форматируем в UTC).
+    const fmt = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+    leads.forEach((l) => {
+      const d = l.created_at instanceof Date ? l.created_at : new Date(l.created_at);
+      l.created_at = Number.isNaN(d.getTime()) ? '' : fmt.format(d);
+    });
+
     const totalPages = Math.ceil(total / perPage) || 1;
     res.render('admin/leads.html', { leads, total, page, totalPages });
   } catch (err) {

@@ -22,7 +22,8 @@
 
   <div class="lead-form-compact" id="lead">
     <h3>Рассчитать доставку</h3>
-    <form class="lead-form" method="post" action="/lead">
+    {% include "partials/lead_status.html" %}
+    <form class="lead-form" method="post" action="/lead" enctype="multipart/form-data">
       <input type="hidden" name="redirect" value="/delivery/#lead">
       <div class="form-group">
         <label>Имя</label>
@@ -32,6 +33,7 @@
         <label>Телефон</label>
         <input type="tel" name="phone" class="input" required>
       </div>
+      {% include "partials/lead_file_field.html" %}
       <label class="form-consent">
         <input type="checkbox" name="consent" required checked>
         <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a>.</span>

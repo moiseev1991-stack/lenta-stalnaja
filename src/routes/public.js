@@ -5,6 +5,7 @@ const router = express.Router();
 const controller = require('../controllers/publicController');
 const lentaController = require('../controllers/lentaController');
 const indexnow = require('../services/indexnow');
+const { leadUpload } = require('../middleware/leadUpload');
 
 router.get('/', controller.home);
 
@@ -61,7 +62,7 @@ if (indexnow.isEnabled()) {
   });
 }
 
-router.post('/lead', controller.submitLead);
+router.post('/lead', leadUpload, controller.submitLead);
 
 // ── 301 redirects from old /catalog/lenta/ URLs ───────────────────────────────
 router.get('/catalog/', (req, res) => res.redirect(301, '/'));
