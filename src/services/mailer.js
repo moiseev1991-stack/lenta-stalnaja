@@ -22,11 +22,6 @@ function getTransporter() {
   return transporter;
 }
 
-function esc(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 // Публичный ящик сайта (тот, что в шапке) получает копию каждой заявки независимо от .env.
 const ALWAYS_NOTIFY = ['info@lenta-stalnaja.ru'];
 
@@ -66,15 +61,12 @@ async function sendLeadNotification(lead) {
     ['Страница', lead.page || '—'],
     ['Визит Roistat', lead.roistat_visit || '—'],
   ];
-  const html =
-    '<h2>Новая заявка с сайта</h2>' +
-    '<table cellpadding="6" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px">' +
-    rows.map(([k, v]) =>
-      `<tr><td style="border:1px solid #ddd;background:#f7f7f7"><b>${esc(k)}</b></td>` +
-      `<td style="border:1px solid #ddd">${esc(v)}</td></tr>`).join('') +
-    '</table>' +
-    (site ? `<p style="color:#888;font-size:12px">${esc(site)}</p>` : '');
-  const text = rows.map(([k, v]) => `${k}: ${v == null ? '' : v}`).join('\n');
+  // Только текстовая часть: в старой веб-почте SpaceWeb HTML-версия отображалась мусорным вложением
+  // «untitled-[1.2].html». Все поля заявки в тексте есть.
+  const text =
+    `Новая заявка с формы сайта ${siteHost()}\n\n` +
+    rows.map(([k, v]) => `${k}: ${v == null ? '' : v}`).join('\n') +
+    (site ? `\n\n${site}` : '');
 
   const info = await tx.sendMail({
     from: config.smtpFrom || config.smtpUser,
@@ -82,7 +74,6 @@ async function sendLeadNotification(lead) {
     replyTo: undefined,
     subject: `Заявка с формы сайта ${siteHost()}: ${lead.name || 'без имени'} (${lead.phone || 'без телефона'})`,
     text,
-    html,
     attachments: (lead.attachments || []).map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })),
   });
   // Результат в лог: иначе по серверу не видно, принял ли SMTP получателей.
