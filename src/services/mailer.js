@@ -38,6 +38,15 @@ function recipients() {
   return list;
 }
 
+// Адрес сайта для темы письма: хост из SITE_URL (lenta-stalnaja.ru).
+function siteHost() {
+  try {
+    return new URL(config.siteUrl).host || 'lenta-stalnaja.ru';
+  } catch (_) {
+    return 'lenta-stalnaja.ru';
+  }
+}
+
 async function sendLeadNotification(lead) {
   const tx = getTransporter();
   const to = recipients();
@@ -66,7 +75,7 @@ async function sendLeadNotification(lead) {
     from: config.smtpFrom || config.smtpUser,
     to,
     replyTo: undefined,
-    subject: `Заявка с сайта: ${lead.name || 'без имени'} (${lead.phone || 'без телефона'})`,
+    subject: `Заявка с формы сайта ${siteHost()}: ${lead.name || 'без имени'} (${lead.phone || 'без телефона'})`,
     text,
     html,
   });

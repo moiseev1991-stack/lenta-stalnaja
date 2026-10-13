@@ -110,7 +110,7 @@
 
 - **2026-10-13** — Заявки с форм: копия на `info@lenta-stalnaja.ru`, лог результата отправки; диагностика «заявки не приходят».
   - **Диагностика:** 6 форм шлют POST на `/lead`; сервер отвечает `302 ?lead=ok` даже если письмо не ушло (ошибки SMTP и вебхука только в `console.error`). Заявки шли только на адреса из `LEAD_NOTIFY_TO`, на `info@` — нет. `ROISTAT_WEBHOOK_URL` на сервере не задан, поэтому в Roistat заявки не уходят.
-  - **Что изменено:** `src/services/mailer.js` — `recipients()` всегда добавляет `info@lenta-stalnaja.ru` (без дублей, регистр не важен) к `LEAD_NOTIFY_TO`; после `sendMail` в лог пишется `lead mail sent: <id> accepted: … rejected: …`.
+  - **Что изменено:** `src/services/mailer.js` — `recipients()` всегда добавляет `info@lenta-stalnaja.ru` (без дублей, регистр не важен) к `LEAD_NOTIFY_TO`; после `sendMail` в лог пишется `lead mail sent: <id> accepted: … rejected: …`; тема письма теперь «Заявка с формы сайта <хост из SITE_URL>: <имя> (<телефон>)».
   - **Что проверить:** тестовая заявка с любой формы → письмо на `info@` и на адреса из `LEAD_NOTIFY_TO` (смотреть «Спам»); в логе приложения на сервере строка `lead mail sent` (при сбое — `lead mail error`).
   - **Не сделано:** передача заявок в Roistat — нужен URL вебхука из кабинета Roistat и запись `ROISTAT_WEBHOOK_URL` в серверный `.env`.
 
