@@ -14,6 +14,10 @@ function getTransporter() {
     port: config.smtpPort,
     secure: config.smtpSecure,
     auth: { user: config.smtpUser, pass: config.smtpPassword },
+    // Короткие таймауты: при недоступном SMTP ошибка видна сразу, а не через 2 минуты.
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
   });
   return transporter;
 }
@@ -81,6 +85,9 @@ async function sendLeadNotification(lead) {
   });
   // Результат в лог: иначе по серверу не видно, принял ли SMTP получателей.
   console.log('lead mail sent:', info.messageId, 'accepted:', (info.accepted || []).join(','), 'rejected:', (info.rejected || []).join(','));
+  if (info.rejected && info.rejected.length) {
+    throw new Error('SMTP отклонил получателей: ' + info.rejected.join(', '));
+  }
   return true;
 }
 

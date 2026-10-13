@@ -17,6 +17,7 @@
         <th>Товар</th>
         <th>Страница</th>
         <th>Визит Roistat</th>
+        <th>Отправка</th>
         <th>Статус</th>
       </tr>
     </thead>
@@ -35,6 +36,7 @@
         </td>
         <td>{% if lead.page %}<a href="{{ lead.page }}" target="_blank">{{ lead.page }}</a>{% else %}—{% endif %}</td>
         <td class="adm-nowrap">{{ lead.roistat_visit or '—' }}</td>
+        <td>{{ lead.notify_status or '—' }}</td>
         <td class="adm-nowrap">
           <form method="post" action="/admin/leads/{{ lead.id }}/done" style="display:inline">
             {% if lead.is_done %}

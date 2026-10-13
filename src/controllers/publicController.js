@@ -790,10 +790,12 @@ async function submitLead(req, res) {
     ['INSERT INTO leads (name, phone, message, product_id) VALUES (?, ?, ?, ?)',
       [name, phone, message || null, product_id]],
   ];
+  let leadId = null;
   try {
     for (let i = 0; i < attempts.length; i++) {
       try {
-        await pool.query(attempts[i][0], attempts[i][1]);
+        const [ins] = await pool.query(attempts[i][0], attempts[i][1]);
+        leadId = ins && ins.insertId ? ins.insertId : null;
         break;
       } catch (err) {
         if (err.code !== 'ER_BAD_FIELD_ERROR' || i === attempts.length - 1) throw err;
@@ -805,12 +807,26 @@ async function submitLead(req, res) {
   const lead = { name, phone, message, product_id, page, roistat_visit };
   // Уведомление на почту и отправка в Roistat не блокируют ответ пользователю
   // и не роняют заявку при сбое SMTP / вебхука.
-  mailer
+  // Итог каждой отправки пишем в leads.notify_status — виден в админке («Заявки» → «Отправка»),
+  // иначе сбой SMTP/вебхука заметен только в логе сервера.
+  const mailStatus = mailer
     .sendLeadNotification(lead)
-    .catch((err) => console.error('lead mail error:', err.message));
-  roistat
+    .then((sent) => (sent ? 'почта: отправлена' : 'почта: не настроена'))
+    .catch((err) => {
+      console.error('lead mail error:', err.message);
+      return 'почта: ОШИБКА ' + err.message;
+    });
+  const roistatStatus = roistat
     .sendLead(lead)
-    .catch((err) => console.error('roistat webhook error:', err.message));
+    .then((sent) => (sent ? 'Roistat: отправлена' : 'Roistat: вебхук не задан'))
+    .catch((err) => {
+      console.error('roistat webhook error:', err.message);
+      return 'Roistat: ОШИБКА ' + err.message;
+    });
+  Promise.all([mailStatus, roistatStatus])
+    .then((parts) => (leadId == null ? null
+      : pool.query('UPDATE leads SET notify_status = ? WHERE id = ?', [parts.join('; ').slice(0, 500), leadId])))
+    .catch(() => {});
   res.redirect(withLeadStatus(redirect, 'ok'));
 }
 
