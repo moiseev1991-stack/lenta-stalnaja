@@ -46,6 +46,16 @@ function siteHost() {
   }
 }
 
+// Отправитель в заголовке From — не сам ящик сайта. Письмо «от info@ на info@» почтовые интеграции
+// (Roistat, amoCRM), подключённые к info@ по IMAP, считают исходящим и заявку из него не создают.
+// Переопределить: LEAD_MAIL_FROM в .env (например: Заявки с сайта <site@lenta-stalnaja.ru>).
+function headerFrom() {
+  if (config.leadMailFrom) return config.leadMailFrom;
+  const addr = config.smtpFrom || config.smtpUser;
+  const domain = String(addr || '').split('@')[1];
+  return domain ? `"Заявки с сайта" <site@${domain}>` : addr;
+}
+
 async function sendLeadNotification(lead) {
   const tx = getTransporter();
   const to = recipients();
@@ -68,8 +78,11 @@ async function sendLeadNotification(lead) {
     rows.map(([k, v]) => `${k}: ${v == null ? '' : v}`).join('\n') +
     (site ? `\n\n${site}` : '');
 
+  const smtpAddr = config.smtpFrom || config.smtpUser;
   const info = await tx.sendMail({
-    from: config.smtpFrom || config.smtpUser,
+    from: headerFrom(),
+    // Конверт (MAIL FROM) остаётся адресом ящика, под которым вошли в SMTP: хостинг это проверяет.
+    envelope: { from: smtpAddr, to },
     to,
     replyTo: undefined,
     subject: `Заявка с формы сайта ${siteHost()}: ${lead.name || 'без имени'} (${lead.phone || 'без телефона'})`,
