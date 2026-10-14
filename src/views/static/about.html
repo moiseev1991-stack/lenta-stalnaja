@@ -20,7 +20,6 @@
     {% include "partials/lead_status.html" %}
     <form class="lead-form" method="post" action="/lead" enctype="multipart/form-data">
       <input type="hidden" name="redirect" value="/about/#lead">
-      {% include "partials/lead_protect.html" %}
       <div class="form-group">
         <label>Имя</label>
         <input type="text" name="name" class="input" required>
@@ -35,6 +34,7 @@
         <span>Я согласен(на) с <a href="/privacy/" target="_blank">обработкой персональных данных</a>.</span>
       </label>
       <button type="submit" class="btn btn-primary">Перезвоните мне</button>
+      {% include "partials/lead_protect.html" %}
     </form>
   </div>
 </div>
