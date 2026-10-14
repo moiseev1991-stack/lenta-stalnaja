@@ -151,6 +151,14 @@ function rateLimitOk({ ip, phoneDigits, now = Date.now() }) {
   return ok;
 }
 
+// Заявки без токена капчи: свой жёсткий лимит, чтобы бот без JS не мог этим путём слать много.
+const LIMIT_UNVERIFIED_PER_IP = 3;      // в час с одного IP
+const LIMIT_UNVERIFIED_GLOBAL = 20;     // в час всего
+
+function unverifiedOk({ ip, now = Date.now() }) {
+  return hit('nocaptcha-ip:' + (ip || 'unknown'), LIMIT_UNVERIFIED_PER_IP, HOUR, now) && hit('nocaptcha-global', LIMIT_UNVERIFIED_GLOBAL, HOUR, now);
+}
+
 // ── Google reCAPTCHA v3 ──────────────────────────────────────────────────────
 
 function captchaEnabled() {
@@ -164,7 +172,9 @@ function captchaEnabled() {
 async function verifyCaptcha(token, ip) {
   if (!captchaEnabled()) return { ok: true, skipped: true };
   const t = String(Array.isArray(token) ? token[0] : (token == null ? '' : token));
-  if (!t) return { ok: false, reason: 'no-token' };
+  // Нет токена: скрипт Google не загрузился (медленная сеть, блокировщик) или это бот без JS.
+  // Мягкий режим: пропускаем с пометкой `missing` (дальше действует жёсткий лимит unverifiedOk).
+  if (!t) return { ok: !config.recaptchaStrict, missing: true, reason: 'no-token' };
   try {
     const params = new URLSearchParams({ secret: config.recaptchaSecret, response: t });
     if (ip) params.set('remoteip', ip);
@@ -181,5 +191,5 @@ async function verifyCaptcha(token, ip) {
 
 module.exports = {
   issueToken, verifyToken, originOk, clientIp, normalizePhone, validateLead,
-  rateLimitOk, captchaEnabled, verifyCaptcha, MIN_FILL_MS,
+  rateLimitOk, unverifiedOk, captchaEnabled, verifyCaptcha, MIN_FILL_MS,
 };

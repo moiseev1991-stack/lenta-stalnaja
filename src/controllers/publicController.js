@@ -807,6 +807,17 @@ async function submitLead(req, res) {
     console.warn('lead captcha rejected:', captcha.reason, captcha.score == null ? '' : 'score=' + captcha.score);
     return res.redirect(withLeadStatus(redirect, 'captcha'));
   }
+  // Токена нет, но заявка прошла остальные проверки (скрипт Google не загрузился): принимаем с пометкой
+  // для менеджера и жёстким лимитом.
+  let captchaNote = null;
+  if (captcha.missing) {
+    if (!leadGuard.unverifiedOk({ ip })) {
+      console.warn('lead without captcha token: limit', ip || 'unknown ip');
+      return res.redirect(withLeadStatus(redirect, 'captcha'));
+    }
+    captchaNote = 'токена нет (скрипт Google не загрузился или заблокирован)';
+    console.warn('lead accepted without captcha token:', ip || 'unknown ip');
+  }
 
   const attachments = (req.files || []).map((f) => ({
     filename: cleanFileName(f.originalname),
@@ -840,8 +851,11 @@ async function submitLead(req, res) {
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  const lead = { name, phone, message, product_id, page, roistat_visit, attachments };
-  const filesNote = attachments.length ? 'файлы: ' + attachments.map((a) => a.filename).join(', ') : null;
+  const lead = { name, phone, message, product_id, page, roistat_visit, attachments, captchaNote };
+  const filesNote = [
+    attachments.length ? 'файлы: ' + attachments.map((a) => a.filename).join(', ') : null,
+    captchaNote ? 'капча: ' + captchaNote : null,
+  ].filter(Boolean).join('; ') || null;
   // Уведомление на почту и отправка в Roistat не блокируют ответ пользователю
   // и не роняют заявку при сбое SMTP / вебхука.
   // Итог каждой отправки пишем в leads.notify_status — виден в админке («Заявки» → «Отправка»),

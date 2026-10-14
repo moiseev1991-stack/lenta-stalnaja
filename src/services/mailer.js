@@ -71,6 +71,8 @@ async function sendLeadNotification(lead) {
     ['Страница', lead.page || '—'],
     ['Визит Roistat', lead.roistat_visit || '—'],
   ];
+  // Заявка принята без проверки капчи (скрипт Google не загрузился): менеджер видит это в письме.
+  if (lead.captchaNote) rows.push(['Проверка от спама', 'не пройдена: ' + lead.captchaNote]);
   // Только текстовая часть: в старой веб-почте SpaceWeb HTML-версия отображалась мусорным вложением
   // «untitled-[1.2].html». Все поля заявки в тексте есть.
   const text =

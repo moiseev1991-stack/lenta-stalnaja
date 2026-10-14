@@ -55,6 +55,9 @@ module.exports = {
   recaptchaSiteKey: (process.env.RECAPTCHA_SITE_KEY || '').trim(),
   recaptchaSecret: (process.env.RECAPTCHA_SECRET_KEY || '').trim(),
   recaptchaMinScore: parseFloat(process.env.RECAPTCHA_MIN_SCORE || '0.5'),
+  // RECAPTCHA_STRICT=1: заявка без токена капчи отклоняется. По умолчанию — принимается с пометкой и жёстким лимитом
+  // (скрипт Google из России грузится медленно или блокируется, терять из-за этого заявки нельзя).
+  recaptchaStrict: process.env.RECAPTCHA_STRICT === '1',
   recaptchaVerifyUrl: process.env.RECAPTCHA_VERIFY_URL || 'https://www.google.com/recaptcha/api/siteverify',
   roistatWebhookUrl: (process.env.ROISTAT_WEBHOOK_URL || '').trim(),
 };
