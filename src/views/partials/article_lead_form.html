@@ -20,6 +20,7 @@
   <form class="article-lead__form" method="post" action="/lead" enctype="multipart/form-data">
     <input type="hidden" name="redirect" value="/stati/{{ article.slug }}/#article-lead">
     <input type="hidden" name="source" value="/stati/{{ article.slug }}/">
+    {% include "partials/lead_protect.html" %}
     <div class="article-lead__row">
       <input type="text" name="name" class="input" placeholder="Имя *" autocomplete="name" required>
       <input type="tel" name="phone" class="input" placeholder="Телефон *" autocomplete="tel" required>

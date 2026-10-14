@@ -51,5 +51,10 @@ module.exports = {
   smtpFrom:     process.env.SMTP_FROM     || process.env.SMTP_USER || '',
   leadNotifyTo: process.env.LEAD_NOTIFY_TO || '',
   leadMailFrom: (process.env.LEAD_MAIL_FROM || '').trim(),
+  // Google reCAPTCHA v3 (необязательно): включается, только если заданы оба ключа.
+  recaptchaSiteKey: (process.env.RECAPTCHA_SITE_KEY || '').trim(),
+  recaptchaSecret: (process.env.RECAPTCHA_SECRET_KEY || '').trim(),
+  recaptchaMinScore: parseFloat(process.env.RECAPTCHA_MIN_SCORE || '0.5'),
+  recaptchaVerifyUrl: process.env.RECAPTCHA_VERIFY_URL || 'https://www.google.com/recaptcha/api/siteverify',
   roistatWebhookUrl: (process.env.ROISTAT_WEBHOOK_URL || '').trim(),
 };

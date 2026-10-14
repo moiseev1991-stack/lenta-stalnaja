@@ -126,6 +126,10 @@ function isMojibake(s) {
 njkEnv.addFilter('safeSiteName', (v) => (!v || isMojibake(v)) ? FALLBACK_SITE_NAME : v);
 // Единственный источник для og:site_name и JSON-LD name — не зависит от res.locals и кодировки шаблона
 njkEnv.addGlobal('fixedSiteName', FALLBACK_SITE_NAME);
+// Защита формы заявки: одноразовый токен для скрытого поля и ключ reCAPTCHA (пусто — капча выключена).
+const leadGuard = require('./services/leadGuard');
+njkEnv.addGlobal('leadFormToken', () => leadGuard.issueToken());
+njkEnv.addGlobal('recaptchaSiteKey', leadGuard.captchaEnabled() ? config.recaptchaSiteKey : '');
 
 // «Каталог металлопроката» в виде кракозябры — только коды, без кириллицы в файле (иначе на сервере строка могла не совпасть)
 const MOJIBAKE_SITE = String.fromCharCode(

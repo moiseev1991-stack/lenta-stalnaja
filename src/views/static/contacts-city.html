@@ -28,6 +28,7 @@
     {% include "partials/lead_file_error.html" %}
     <form class="lead-form" method="post" action="/lead" enctype="multipart/form-data">
       <input type="hidden" name="redirect" value="{{ city.path }}#lead">
+      {% include "partials/lead_protect.html" %}
       <div class="form-group">
         <label>Имя *</label>
         <input type="text" name="name" class="input" required>

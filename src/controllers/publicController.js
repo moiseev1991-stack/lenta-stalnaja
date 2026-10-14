@@ -7,6 +7,7 @@ const llmsService     = require('../services/llms');
 const mailer          = require('../services/mailer');
 const roistat         = require('../services/roistat');
 const { cleanFileName } = require('../middleware/leadUpload');
+const leadGuard       = require('../services/leadGuard');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -779,11 +780,34 @@ async function submitLead(req, res) {
   const phone   = field(req.body.phone);
   const message = field(req.body.message);
   const consent = !!req.body.consent;
-  const product_id = req.body.product_id ? parseInt(req.body.product_id, 10) : null;
+  const pid = parseInt(field(req.body.product_id), 10);
+  const product_id = Number.isInteger(pid) && pid > 0 ? pid : null;
   const redirect = safeLocalPath(req.body.redirect, '/contacts/');
   // Файл не прошёл проверку (размер, количество, тип) — возвращаем на форму с пояснением.
   if (req.leadUploadError) return res.redirect(withLeadStatus(redirect, req.leadUploadError));
+
+  // ── Защита от ботов и спама (src/services/leadGuard.js) ──
+  // Ботам отвечаем «успехом», ничего не сохраняя и не отправляя: так они не узнают, что их распознали.
+  const fakeOk = () => res.redirect(withLeadStatus(redirect, 'ok'));
+  if (field(req.body.hp_url)) return fakeOk();                        // поле-приманка заполнено
+  if (!leadGuard.originOk(req)) return fakeOk();                      // отправка не с нашего сайта
+  const tok = leadGuard.verifyToken(req.body.form_token, { phone });
+  if (tok.state === 'fast' || tok.state === 'duplicate') return fakeOk(); // слишком быстро / двойной клик
+  if (tok.state !== 'ok') return res.redirect(withLeadStatus(redirect, 'refresh')); // нет токена, подделан, устарел
   if (!name || !phone || !consent) return res.redirect(withLeadStatus(redirect, 'error'));
+  const check = leadGuard.validateLead({ name, phone, message });
+  if (!check.ok) return res.redirect(withLeadStatus(redirect, check.status));
+  const ip = leadGuard.clientIp(req);
+  if (!leadGuard.rateLimitOk({ ip, phoneDigits: check.phoneDigits })) {
+    console.warn('lead rate limit:', ip || 'unknown ip');
+    return res.redirect(withLeadStatus(redirect, 'ratelimit'));
+  }
+  const captcha = await leadGuard.verifyCaptcha(req.body.recaptcha_token, ip);
+  if (!captcha.ok) {
+    console.warn('lead captcha rejected:', captcha.reason, captcha.score == null ? '' : 'score=' + captcha.score);
+    return res.redirect(withLeadStatus(redirect, 'captcha'));
+  }
+
   const attachments = (req.files || []).map((f) => ({
     filename: cleanFileName(f.originalname),
     content: f.buffer,

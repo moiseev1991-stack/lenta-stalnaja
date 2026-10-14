@@ -1,4 +1,4 @@
-{# Сообщения об ошибках вложения (?lead=toobig|toomany|badtype|filesError). Нужна переменная leadStatus. #}
+{# Сообщения об ошибках формы заявки (?lead=…), кроме ok/error. Нужна переменная leadStatus. #}
 {% if leadStatus == 'toobig' %}
 <p class="lead-message error">Файл слишком большой: допустимо до 5 МБ на файл. Заявка не отправлена.</p>
 {% elif leadStatus == 'toomany' %}
@@ -7,4 +7,16 @@
 <p class="lead-message error">Такой тип файла не принимается. Подойдут PDF, Word, Excel, PowerPoint, CSV, TXT, изображения, DWG/DXF, ZIP/RAR/7z. Заявка не отправлена.</p>
 {% elif leadStatus == 'filesError' %}
 <p class="lead-message error">Не удалось загрузить файл. Отправьте заявку без файла или попробуйте позже.</p>
+{% elif leadStatus == 'badphone' %}
+<p class="lead-message error">Проверьте номер телефона: нужно от 10 до 15 цифр, например +7 495 123-45-67.</p>
+{% elif leadStatus == 'badname' %}
+<p class="lead-message error">Проверьте имя: от 2 символов, без ссылок и специальных знаков.</p>
+{% elif leadStatus == 'spam' %}
+<p class="lead-message error">Сообщение не отправлено: уберите лишние ссылки и HTML-теги (допустима одна ссылка) и отправьте снова.</p>
+{% elif leadStatus == 'refresh' %}
+<p class="lead-message error">Страница устарела. Обновите её и отправьте заявку ещё раз.</p>
+{% elif leadStatus == 'ratelimit' %}
+<p class="lead-message error">Слишком много заявок за короткое время. Позвоните нам или повторите позже.</p>
+{% elif leadStatus == 'captcha' %}
+<p class="lead-message error">Не удалось пройти проверку от спама. Обновите страницу и попробуйте снова или позвоните нам.</p>
 {% endif %}
