@@ -810,13 +810,15 @@ async function submitLead(req, res) {
   // Токена нет, но заявка прошла остальные проверки (скрипт Google не загрузился): принимаем с пометкой
   // для менеджера и жёстким лимитом.
   let captchaNote = null;
-  if (captcha.missing) {
+  if (captcha.missing || captcha.flagged) {
     if (!leadGuard.unverifiedOk({ ip })) {
-      console.warn('lead without captcha token: limit', ip || 'unknown ip');
+      console.warn('lead with failed captcha: limit', ip || 'unknown ip');
       return res.redirect(withLeadStatus(redirect, 'captcha'));
     }
-    captchaNote = 'токена нет (скрипт Google не загрузился или заблокирован)';
-    console.warn('lead accepted without captcha token:', ip || 'unknown ip');
+    captchaNote = captcha.missing
+      ? 'токена нет (скрипт Google не загрузился или заблокирован)'
+      : 'Google счёл посетителя подозрительным (' + (captcha.score == null ? captcha.reason : 'оценка ' + captcha.score) + ')';
+    console.warn('lead accepted with captcha flag:', captcha.missing ? 'no-token' : 'score=' + captcha.score, ip || 'unknown ip');
   }
 
   const attachments = (req.files || []).map((f) => ({

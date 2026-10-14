@@ -181,8 +181,14 @@ async function verifyCaptcha(token, ip) {
     const res = await fetch(config.recaptchaVerifyUrl, { method: 'POST', body: params, signal: AbortSignal.timeout(5000) });
     const data = await res.json();
     const scoreOk = data.score == null || data.score >= config.recaptchaMinScore;
-    const ok = !!data.success && scoreOk && (!data.action || data.action === 'lead');
-    return { ok, score: data.score, reason: ok ? '' : ((data['error-codes'] || []).join(',') || 'low-score') };
+    const passed = !!data.success && scoreOk && (!data.action || data.action === 'lead');
+    if (passed) return { ok: true, score: data.score, reason: '' };
+    // Google счёл посетителя подозрительным (низкая оценка, недействительный токен). Оценка v3 у живых людей
+    // тоже бывает низкой (VPN, чистый профиль), поэтому в мягком режиме не отклоняем, а помечаем (`flagged`).
+    return {
+      ok: !config.recaptchaStrict, flagged: true, score: data.score,
+      reason: (data['error-codes'] || []).join(',') || 'low-score',
+    };
   } catch (err) {
     console.error('recaptcha verify error:', err.message);
     return { ok: true, skipped: true, error: true };
