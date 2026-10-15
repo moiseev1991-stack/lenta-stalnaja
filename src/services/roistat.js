@@ -27,8 +27,14 @@ function buildBody(lead) {
   const fields = { site: 'lenta-stalnaja.ru' };
   if (lead.page) fields.page = String(lead.page);
   if (lead.product_id) fields.product_id = String(lead.product_id);
+  // Текст заявки дублируем в название сделки: в CRM поле «комментарий» иногда показывается не там,
+  // где его ждёт менеджер (вместо текста видно, например, «мессенджер»), а название видно всегда.
+  const snippet = String(lead.message || '').replace(/\s+/g, ' ').trim();
+  const title = snippet
+    ? 'Заявка с сайта lenta-stalnaja.ru: ' + snippet.slice(0, 100) + (snippet.length > 100 ? '…' : '')
+    : 'Заявка с сайта lenta-stalnaja.ru';
   return {
-    title: 'Заявка с сайта lenta-stalnaja.ru',
+    title,
     name: lead.name || null,
     phone: lead.phone || null,
     comment: comment || null,
