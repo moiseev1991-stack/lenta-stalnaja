@@ -69,7 +69,7 @@ function verifyToken(token, { phone, now = Date.now() } = {}) {
   if (age < MIN_FILL_MS) return { state: 'fast' };
   pruneUsed(now);
   usedNonces.set(nonce, { phone: digitsOf(phone), at: now });
-  return { state: 'ok' };
+  return { state: 'ok', nonce };
 }
 
 // ── Origin и IP ──────────────────────────────────────────────────────────────

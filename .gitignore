@@ -20,3 +20,6 @@ commit_msg.txt
 .ftp-deploy-sync-state-v4.json
 .deploy_sha
 tools/healthcheck.env
+
+# Файлы, приложенные к заявкам с формы (хранятся на сервере, в git не попадают)
+storage/

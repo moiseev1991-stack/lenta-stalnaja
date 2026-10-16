@@ -415,6 +415,12 @@ async function listLeads(req, res) {
     leads.forEach((l) => {
       const d = l.created_at instanceof Date ? l.created_at : new Date(l.created_at);
       l.created_at = Number.isNaN(d.getTime()) ? '' : fmt.format(d);
+      // Файлы заявки: ссылки на скачивание (колонка leads.files = {key, items:[{n,name,size}]}).
+      l.fileLinks = [];
+      try {
+        const f = l.files ? JSON.parse(l.files) : null;
+        if (f && f.key && Array.isArray(f.items)) l.fileLinks = f.items.map((it) => ({ name: it.name, url: '/lead-file/' + f.key + '/' + it.n }));
+      } catch (_) { /* битый JSON — просто без ссылок */ }
     });
 
     const totalPages = Math.ceil(total / perPage) || 1;

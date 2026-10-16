@@ -8,6 +8,7 @@ const mailer          = require('../services/mailer');
 const roistat         = require('../services/roistat');
 const { cleanFileName } = require('../middleware/leadUpload');
 const leadGuard       = require('../services/leadGuard');
+const leadFiles       = require('../services/leadFiles');
 const pool            = require('../db/mysql');
 const { normalizeProductName } = require('../helpers/normalize');
 const { buildProductSEO, buildProductShortText, getGradeShortDesc, fmtMm } = require('../helpers/seoTemplates');
@@ -725,6 +726,16 @@ async function llmsFullTxt(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// Скачивание файла, приложенного к заявке, по секретной ссылке /lead-file/<ключ>/<номер>.
+function leadFile(req, res) {
+  const f = leadFiles.find(req.params.nonce, req.params.n);
+  if (!f) return res.status(404).send('Файл не найден');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.download(f.path, f.name); // Content-Disposition: attachment — файл только скачивается, не открывается в браузере
+}
+
 function robotsTxt(req, res) {
   const sitemapLine = 'Sitemap: ' + config.siteUrl + '/sitemap.xml';
   const utmParams   = 'utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&gclid&fbclid';
@@ -733,6 +744,7 @@ function robotsTxt(req, res) {
   res.send(
     'User-agent: *\n' +
     'Disallow: /admin/\n' +
+    'Disallow: /lead-file/\n' +
     'Disallow: /cart/\n' +
     'Disallow: /order/\n' +
     'Disallow: /search/\n' +
@@ -742,6 +754,7 @@ function robotsTxt(req, res) {
     '\n' +
     'User-agent: Yandex\n' +
     'Disallow: /admin/\n' +
+    'Disallow: /lead-file/\n' +
     'Disallow: /cart/\n' +
     'Disallow: /order/\n' +
     'Disallow: /search/\n' +
@@ -826,6 +839,12 @@ async function submitLead(req, res) {
     content: f.buffer,
     contentType: f.mimetype || undefined,
   }));
+  // Файлы сохраняем на сервере: письма о заявках выключены, а в CRM файл можно передать только ссылкой.
+  let fileItems = [];
+  if (attachments.length) {
+    try { fileItems = leadFiles.save(tok.nonce, attachments); } catch (err) { console.error('lead files save error:', err.message); }
+  }
+  const fileLinks = fileItems.map((it) => ({ name: it.name, url: leadFiles.url(tok.nonce, it.n) }));
   // Страница, с которой пришла заявка (для статей — /stati/<slug>/): отдельное скрытое поле, иначе redirect без якоря.
   const page = safeLocalPath(req.body.source, redirect.split('#')[0]);
   // Номер визита Roistat из cookie `roistat_visit` (ставится счётчиком в layout.html).
@@ -853,7 +872,10 @@ async function submitLead(req, res) {
   } catch (err) {
     console.error('submitLead error:', err.message);
   }
-  const lead = { name, phone, message, product_id, page, roistat_visit, attachments, captchaNote };
+  const lead = { name, phone, message, product_id, page, roistat_visit, attachments, captchaNote, fileLinks };
+  if (leadId != null && fileItems.length) {
+    pool.query('UPDATE leads SET files = ? WHERE id = ?', [JSON.stringify({ key: tok.nonce, items: fileItems }), leadId]).catch(() => {});
+  }
   const filesNote = [
     attachments.length ? 'файлы: ' + attachments.map((a) => a.filename).join(', ') : null,
     captchaNote ? 'капча: ' + captchaNote : null,
@@ -1018,7 +1040,7 @@ module.exports = {
   about, contacts, contactsSpb, contactsNn, delivery, payment, faq, certificates,
   privacy, cookies, terms,
   llmsTxt, llmsFullTxt,
-  search, sitemapHtml, sitemapXml, robotsTxt, submitLead,
+  search, sitemapHtml, sitemapXml, robotsTxt, submitLead, leadFile,
   sitemapStatic, sitemapGrades, sitemapGroups, sitemapProducts,
   ymlFeed,
   parseFilters, hasFilters, renderPage,

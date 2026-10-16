@@ -63,6 +63,7 @@ if (indexnow.isEnabled()) {
 }
 
 router.post('/lead', leadUpload, controller.submitLead);
+router.get('/lead-file/:nonce/:n', controller.leadFile);
 
 // ── 301 redirects from old /catalog/lenta/ URLs ───────────────────────────────
 router.get('/catalog/', (req, res) => res.redirect(301, '/'));

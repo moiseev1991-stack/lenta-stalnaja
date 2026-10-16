@@ -168,6 +168,7 @@ async function runMysqlMigrations() {
     `ALTER TABLE leads ADD COLUMN roistat_visit VARCHAR(64) NULL`,
     `ALTER TABLE leads ADD COLUMN page VARCHAR(512) NULL`,
     `ALTER TABLE leads ADD COLUMN notify_status VARCHAR(512) NULL`,
+    `ALTER TABLE leads ADD COLUMN files TEXT NULL`,
   ];
 
   for (const sql of alterCols) {

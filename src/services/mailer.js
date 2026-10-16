@@ -66,7 +66,7 @@ async function sendLeadNotification(lead) {
     ['Телефон', lead.phone],
     ['Сообщение', lead.message || '—'],
     ['Товар (ID)', lead.product_id || '—'],
-    ['Файлы', (lead.attachments || []).map((a) => a.filename).join(', ') || '—'],
+    ['Файлы', (lead.fileLinks || []).map((f) => f.name + ' — ' + f.url).join('\n') || (lead.attachments || []).map((a) => a.filename).join(', ') || '—'],
     ['Страница', lead.page || '—'],
     ['Визит Roistat', lead.roistat_visit || '—'],
   ];

@@ -21,11 +21,11 @@ function isEnabled() {
 // Тело запроса — по формату «Интеграция через Webhook» (title, name, email, phone, comment,
 // roistat_visit, fields). Обязателен phone или email; остальное можно передавать null.
 function buildBody(lead) {
-  const files = (lead.attachments || []).map((a) => a.filename).join(', ');
+  const links = (lead.fileLinks || []).map((f) => f.name + ' — ' + f.url);
   const comment = [
     lead.message || null,
     lead.page ? 'Страница: ' + lead.page : null,
-    files ? 'Файлы (во вложении к письму): ' + files : null,
+    links.length ? 'Файлы:\n' + links.join('\n') : null,
   ].filter(Boolean).join('\n');
   const fields = { site: 'lenta-stalnaja.ru' };
   if (lead.page) fields.page = String(lead.page);

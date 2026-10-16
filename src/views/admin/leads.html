@@ -14,6 +14,7 @@
         <th>Имя</th>
         <th>Телефон</th>
         <th>Сообщение</th>
+        <th>Файлы</th>
         <th>Товар</th>
         <th>Страница</th>
         <th>Визит Roistat</th>
@@ -29,6 +30,7 @@
         <td>{{ lead.name }}</td>
         <td><a href="tel:{{ lead.phone }}">{{ lead.phone }}</a></td>
         <td>{{ lead.message or '—' }}</td>
+        <td>{% if lead.fileLinks and lead.fileLinks.length %}{% for f in lead.fileLinks %}<a href="{{ f.url }}">{{ f.name }}</a>{% if not loop.last %}<br>{% endif %}{% endfor %}{% else %}—{% endif %}</td>
         <td>
           {% if lead.product_name %}
             <a href="/{{ lead.product_slug }}/" target="_blank">{{ lead.product_name }}</a>
