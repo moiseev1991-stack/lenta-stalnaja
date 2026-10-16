@@ -62,4 +62,5 @@ module.exports = {
   recaptchaStrict: process.env.RECAPTCHA_STRICT === '1',
   recaptchaVerifyUrl: process.env.RECAPTCHA_VERIFY_URL || 'https://www.google.com/recaptcha/api/siteverify',
   roistatWebhookUrl: (process.env.ROISTAT_WEBHOOK_URL || '').trim(),
+  roistatWebhookEnabled: process.env.ROISTAT_WEBHOOK_ENABLED === '1',
 };

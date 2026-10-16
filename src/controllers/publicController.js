@@ -871,7 +871,7 @@ async function submitLead(req, res) {
     });
   const roistatStatus = roistat
     .sendLead(lead)
-    .then((sent) => (sent ? 'Roistat: отправлена' : 'Roistat: вебхук не задан'))
+    .then((sent) => (sent ? 'Roistat: отправлена' : 'Roistat: серверный вебхук выключен (заявку собирает счётчик Roistat)'))
     .catch((err) => {
       console.error('roistat webhook error:', err.message);
       return 'Roistat: ОШИБКА ' + err.message;

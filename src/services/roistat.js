@@ -11,8 +11,11 @@ function parseVisit(raw) {
   return /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null;
 }
 
+// Серверный Webhook включается ТОЛЬКО явно (ROISTAT_WEBHOOK_ENABLED=1 вместе с ROISTAT_WEBHOOK_URL).
+// Заявки с формы в Roistat уже собирает счётчик в браузере («Настройки → Заявки с форм сайта»); если
+// включить оба канала, в CRM появятся дубли.
 function isEnabled() {
-  return !!config.roistatWebhookUrl;
+  return !!config.roistatWebhookUrl && config.roistatWebhookEnabled;
 }
 
 // Тело запроса — по формату «Интеграция через Webhook» (title, name, email, phone, comment,
