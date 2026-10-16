@@ -864,7 +864,7 @@ async function submitLead(req, res) {
   // иначе сбой SMTP/вебхука заметен только в логе сервера.
   const mailStatus = mailer
     .sendLeadNotification(lead)
-    .then((sent) => (sent ? 'почта: отправлена' : 'почта: не настроена'))
+    .then((sent) => (sent ? 'почта: отправлена' : 'почта: выключена (нет получателей)'))
     .catch((err) => {
       console.error('lead mail error:', err.message);
       return 'почта: ОШИБКА ' + err.message;

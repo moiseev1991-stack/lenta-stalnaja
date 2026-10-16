@@ -22,17 +22,16 @@ function getTransporter() {
   return transporter;
 }
 
-// Публичный ящик сайта (тот, что в шапке) получает копию каждой заявки независимо от .env.
-const ALWAYS_NOTIFY = ['info@lenta-stalnaja.ru'];
-
-// Получатели: LEAD_NOTIFY_TO (через запятую) + ящик сайта, без дублей.
+// Получатели писем о заявках: только то, что задано в .env (LEAD_NOTIFY_TO, LEAD_NOTIFY_ALWAYS), через запятую.
+// Если не задано ничего — письма о заявках НЕ отправляются.
+// Важно: не добавлять сюда ящик, который читают Roistat/amoCRM (info@): они превратят письмо о заявке
+// во вторую заявку, и в CRM появится дубль.
 function recipients() {
-  const list = String(config.leadNotifyTo || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  for (const addr of ALWAYS_NOTIFY) {
-    if (!list.some((s) => s.toLowerCase() === addr)) list.push(addr);
+  const list = [];
+  for (const raw of [config.leadNotifyTo, config.leadNotifyAlways]) {
+    for (const addr of String(raw || '').split(',').map((s) => s.trim()).filter(Boolean)) {
+      if (!list.some((s) => s.toLowerCase() === addr.toLowerCase())) list.push(addr);
+    }
   }
   return list;
 }

@@ -51,6 +51,8 @@ module.exports = {
   smtpFrom:     process.env.SMTP_FROM     || process.env.SMTP_USER || '',
   leadNotifyTo: process.env.LEAD_NOTIFY_TO || '',
   leadMailFrom: (process.env.LEAD_MAIL_FROM || '').trim(),
+  // Дополнительные получатели писем о заявках (по умолчанию пусто; info@ сюда не добавлять — см. mailer.js).
+  leadNotifyAlways: (process.env.LEAD_NOTIFY_ALWAYS || '').trim(),
   // Google reCAPTCHA v3 (необязательно): включается, только если заданы оба ключа.
   recaptchaSiteKey: (process.env.RECAPTCHA_SITE_KEY || '').trim(),
   recaptchaSecret: (process.env.RECAPTCHA_SECRET_KEY || '').trim(),
